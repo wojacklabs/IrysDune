@@ -1,0 +1,42 @@
+<svg viewBox="0 0 64 64" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for better visibility -->
+  <rect width="64" height="64" fill="#f0f9ff" rx="8"/>
+  
+  <!-- Center the cloud group -->
+  <g transform="translate(32, 34)">
+    <!-- Scale down slightly and adjust position -->
+    <g transform="scale(1.1) translate(-5, -2)">
+      <!-- Cloud shadow for depth -->
+      <path
+        d="M 18 8 C 20 8, 22 6, 22 3 C 22 0, 20 -2, 18 -2 C 17.5 -5, 15 -7, 12 -7 C 9 -7, 6.5 -5.5, 5 -3 C 3.5 -5.5, 1 -7, -3 -7 C -7 -7, -10 -4, -10 0 C -10 0.5, -10 1, -9.5 1.5 C -11.5 2, -13 4, -13 6 C -13 9, -10 12, -7 12 L 15 12 C 17 12, 18 10.5, 18 8.5 Z"
+        fill="#cbd5e1"
+        opacity="0.3"
+        transform="translate(2, 2)"
+      />
+      
+      <!-- Main cloud -->
+      <path
+        d="M 18 8 C 20 8, 22 6, 22 3 C 22 0, 20 -2, 18 -2 C 17.5 -5, 15 -7, 12 -7 C 9 -7, 6.5 -5.5, 5 -3 C 3.5 -5.5, 1 -7, -3 -7 C -7 -7, -10 -4, -10 0 C -10 0.5, -10 1, -9.5 1.5 C -11.5 2, -13 4, -13 6 C -13 9, -10 12, -7 12 L 15 12 C 17 12, 18 10.5, 18 8.5 Z"
+        fill="#ffffff"
+        stroke="#2563eb"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      
+      <!-- Left eye -->
+      <circle cx="-2" cy="-1" r="2" fill="#1e40af" />
+      <!-- Right eye -->
+      <circle cx="8" cy="-1" r="2" fill="#1e40af" />
+      
+      <!-- Cute smile -->
+      <path
+        d="M 0 3 Q 3 5, 6 3"
+        fill="none"
+        stroke="#2563eb"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </g>
+  </g>
+</svg> 

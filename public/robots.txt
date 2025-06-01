@@ -1,0 +1,17 @@
+# IrysDune Robots.txt
+# This is a legitimate analytics dashboard for the Irys ecosystem
+# Contact: https://github.com/IrysDune
+
+User-agent: *
+Allow: /
+
+# Security verification files
+Allow: /.well-known/security.txt
+Allow: /humans.txt
+
+# Help search engines understand this is a legitimate site
+Sitemap: https://irys-dune.vercel.app/sitemap.xml
+
+# IrysDune - Irys Ecosystem Analytics Dashboard
+# This is a legitimate Web3 analytics platform
+Sitemap: https://irys-dune.vercel.app/sitemap.xml

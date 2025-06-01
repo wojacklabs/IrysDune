@@ -1,0 +1,29 @@
+/* TEAM */
+Project: IrysDune - Irys Ecosystem Analytics
+Description: Official analytics dashboard for tracking Irys ecosystem projects
+Purpose: Educational and analytical tool for the Irys community
+Contact: https://github.com/IrysDune
+
+/* THANKS */
+Irys Network: For providing the permanent storage infrastructure
+Community: For supporting and using our analytics platform
+
+/* SITE */
+Last update: 2024
+Standards: HTML5, CSS3, ES6+
+Components: React, TypeScript, Vite
+Blockchain: Irys Network, Ethereum (for wallet connections)
+
+/* LEGITIMATE FEATURES */
+- Real-time analytics for Irys ecosystem projects
+- Custom dashboard creation with transparent fees
+- Achievement badge NFTs for community engagement
+- All features are optional and clearly explained
+
+/* SECURITY NOTE */
+This is NOT a phishing site. We never request:
+- Private keys or seed phrases
+- Unnecessary wallet permissions
+- Hidden transactions or approvals
+
+All costs are clearly displayed before any transaction.

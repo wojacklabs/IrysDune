@@ -1,0 +1,29 @@
+# IrysDune Security Policy
+
+Contact: https://github.com/IrysDune/issues
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: en, ko
+
+# About IrysDune
+IrysDune is an official analytics dashboard for the Irys ecosystem.
+This is NOT a phishing site. All features are transparent and optional.
+
+# Legitimate Features
+- Analytics Dashboard: View Irys ecosystem statistics
+- Dashboard Creation: Create custom dashboards (0.1 IRYS fee for storage)
+- Achievement Badges: Mint NFT badges for achievements (0.1 IRYS fee)
+- All fees go directly to Irys network for permanent storage
+
+# Security Practices
+- No private keys are ever requested or stored
+- All wallet interactions use standard Web3 protocols
+- Smart contracts are deployed on Irys Testnet
+- Source code is open source
+
+# Verification
+GitHub: https://github.com/yourusername/IrysDune
+Website: https://irys-dune.vercel.app
+Team: IrysDune Development Team
+
+# Report Issues
+If you believe this site has been incorrectly flagged, please contact us.
