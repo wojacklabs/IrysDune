@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Dashboard, DashboardFilter, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
 import Chart from './Chart';
-import { generateChartData, generateShareText } from '../utils/chartUtils';
+import { generateChartData, generateShareText, filterDataByPeriod } from '../utils/chartUtils';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
 import { 
   fetchDashboards, 
@@ -502,6 +502,21 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   });
                 }
                 
+                // Filter data by time period with proper type mapping
+                const timePeriodMap: { [key: string]: '7d' | '30d' | '3M' | '6M' } = {
+                  'week': '7d',
+                  'month': '30d',
+                  'quarter': '3M',
+                  'year': '6M'
+                };
+                const mappedPeriod = timePeriodMap[chart.timePeriod] || '30d';
+                
+                const filteredData = filterDataByPeriod(
+                  chartDataForDisplay, 
+                  mappedPeriod, 
+                  chart.chartType === 'stacked'
+                );
+                
                 return (
                   <div key={chart.id} className="dashboard-chart-wrapper">
                     <div className="chart-header">
@@ -509,7 +524,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                       {chart.description && <p className="chart-description">{chart.description}</p>}
                     </div>
                     <Chart 
-                      data={generateChartData(chartDataForDisplay, queriesForDisplay, chart.chartType)}
+                      data={generateChartData(filteredData, queriesForDisplay, chart.chartType)}
                       chartType={chart.chartType}
                       title=""
                       shareText={generateShareText(queriesForDisplay, chart.chartType)}

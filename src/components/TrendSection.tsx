@@ -184,8 +184,8 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   }, [selectedApps]);
 
   const selectedPresets = getPresetsByIds(selectedApps);
-  const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod);
-  const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod);
+  const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod, chartType === 'stacked');
+  const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod, ecosystemChartType === 'stacked');
   const chartData = generateChartData(individualFilteredData, selectedPresets, chartType);
   const wholeEcosystemData = generateWholeEcosystemData(ecosystemFilteredData, ecosystemChartType);
   const shareText = generateShareText(selectedPresets, chartType);

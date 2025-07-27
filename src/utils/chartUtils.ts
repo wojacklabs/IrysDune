@@ -64,7 +64,8 @@ function generateDefaultDataPoints(period: '7d' | '30d' | '3M' | '6M'): number[]
 
 export function filterDataByPeriod(
   data: { [key: string]: QueryResult[] },
-  period: '7d' | '30d' | '3M' | '6M'
+  period: '7d' | '30d' | '3M' | '6M',
+  isForCumulative: boolean = false
 ): { [key: string]: QueryResult[] } {
   const now = Date.now();
   const periodMs = {
@@ -89,13 +90,23 @@ export function filterDataByPeriod(
                          period === '3M' ? 4 * 24 * 60 * 60 * 1000 : // 4 days for 3M (around each Monday)
                          4 * 24 * 60 * 60 * 1000; // 4 days for 6M (around each Monday)
       
-      // Find all actual data points within the time window and sum them
-      const relevantData = results.filter(result => 
-        Math.abs(result.timestamp - timestamp) <= timeWindow && 
-        result.timestamp >= cutoffTime
-      );
+      // For cumulative charts, we need to sum ALL historical data up to this point
+      // For non-cumulative charts, we only sum data within the time window AND after cutoff
+      let relevantData;
+      if (isForCumulative) {
+        // Include ALL data up to this timestamp for accurate cumulative totals
+        relevantData = results.filter(result => 
+          result.timestamp <= timestamp + timeWindow
+        );
+      } else {
+        // Only include data within the time window and after cutoff for period view
+        relevantData = results.filter(result => 
+          Math.abs(result.timestamp - timestamp) <= timeWindow && 
+          result.timestamp >= cutoffTime
+        );
+      }
       
-      // Sum all counts within the time window for aggregated view
+      // Sum all counts
       const totalCount = relevantData.reduce((sum, item) => sum + item.count, 0);
       
       return {
@@ -536,20 +547,25 @@ export function generateWholeEcosystemData(
 export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartType) {
   const isCumulative = chartType === 'stacked';
   
+  // Check if mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  
   const baseOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top' as const,
+        display: !isMobile || isMultipleDatasets, // Hide legend on mobile for single datasets
         labels: {
           font: {
             family: 'Inter',
-            size: 12
+            size: isMobile ? 10 : 12
           },
-          padding: 16,
+          padding: isMobile ? 8 : 16,
           usePointStyle: true,
-          pointStyle: 'circle'
+          pointStyle: 'circle',
+          boxWidth: isMobile ? 12 : 20
         }
       },
       tooltip: {
@@ -561,15 +577,15 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
         borderColor: '#e2e8f0',
         borderWidth: 1,
         cornerRadius: 8,
-        padding: 12,
+        padding: isMobile ? 8 : 12,
         titleFont: {
           family: 'Inter',
-          size: 14,
+          size: isMobile ? 12 : 14,
           weight: 'bold' as const
         },
         bodyFont: {
           family: 'Inter',
-          size: 12
+          size: isMobile ? 11 : 12
         },
         callbacks: {
           label: function(context: any) {
@@ -589,7 +605,7 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
       x: {
         display: true,
         title: {
-          display: true,
+          display: !isMobile, // Hide axis titles on mobile to save space
           text: 'Date',
           font: {
             family: 'Inter',
@@ -600,14 +616,18 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
         },
         grid: {
           color: 'rgba(148, 163, 184, 0.1)',
-          drawBorder: false
+          drawBorder: false,
+          display: !isMobile // Hide grid on mobile for cleaner look
         },
         ticks: {
           font: {
             family: 'Inter',
-            size: 10
+            size: isMobile ? 9 : 10
           },
-          color: '#64748b'
+          color: '#64748b',
+          maxRotation: isMobile ? 45 : 0, // Rotate labels on mobile if needed
+          autoSkip: true,
+          maxTicksLimit: isMobile ? 6 : 12 // Show fewer ticks on mobile
         }
       },
       ...(isCumulative ? {
@@ -616,11 +636,11 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           display: true,
           position: 'left' as const,
           title: {
-            display: true,
+            display: !isMobile,
             text: 'Cumulative Transactions',
             font: {
               family: 'Inter',
-              size: 12,
+              size: isMobile ? 10 : 12,
               weight: 'bold' as const
             },
             color: '#64748b'
@@ -630,14 +650,16 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           suggestedMax: 10, // Minimum suggested max for better visualization when data is zero
           grid: {
             color: 'rgba(148, 163, 184, 0.1)',
-            drawBorder: false
+            drawBorder: false,
+            display: !isMobile
           },
           ticks: {
             font: {
               family: 'Inter',
-              size: 10
+              size: isMobile ? 9 : 10
             },
             color: '#64748b',
+            maxTicksLimit: isMobile ? 6 : 10,
             callback: function(value: any) {
               return new Intl.NumberFormat('en-US', {
                 notation: 'compact',
@@ -652,11 +674,11 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           display: true,
           position: 'left' as const,
           title: {
-            display: true,
+            display: !isMobile,
             text: 'Relative Activity (%)',
             font: {
               family: 'Inter',
-              size: 12,
+              size: isMobile ? 10 : 12,
               weight: 'bold' as const
             },
             color: '#64748b'
@@ -666,14 +688,16 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           suggestedMax: 100, // Set max to 100% for relative charts
           grid: {
             color: 'rgba(148, 163, 184, 0.1)',
-            drawBorder: false
+            drawBorder: false,
+            display: !isMobile
           },
           ticks: {
             font: {
               family: 'Inter',
-              size: 10
+              size: isMobile ? 9 : 10
             },
             color: '#64748b',
+            maxTicksLimit: isMobile ? 6 : 10,
             callback: function(value: any) {
               return value + '%';
             }
@@ -685,11 +709,11 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           display: true,
           position: 'left' as const,
           title: {
-            display: true,
+            display: !isMobile,
             text: 'Daily Transactions',
             font: {
               family: 'Inter',
-              size: 12,
+              size: isMobile ? 10 : 12,
               weight: 'bold' as const
             },
             color: '#64748b'
@@ -699,14 +723,16 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           suggestedMax: 10, // Minimum suggested max for better visualization when data is zero
           grid: {
             color: 'rgba(148, 163, 184, 0.1)',
-            drawBorder: false
+            drawBorder: false,
+            display: !isMobile
           },
           ticks: {
             font: {
               family: 'Inter',
-              size: 10
+              size: isMobile ? 9 : 10
             },
             color: '#64748b',
+            maxTicksLimit: isMobile ? 6 : 10,
             callback: function(value: any) {
               return new Intl.NumberFormat('en-US', {
                 notation: 'compact',
