@@ -81,42 +81,81 @@ export function filterDataByPeriod(
   // Always generate period-specific timestamps for consistent time axis
   const periodTimestamps = generateDefaultDataPoints(period);
   
+  // Debug logging
+  console.log(`[FilterData] Period: ${period}, isForCumulative: ${isForCumulative}`);
+  console.log(`[FilterData] Generated ${periodTimestamps.length} timestamps`);
+  
   Object.entries(data).forEach(([key, results]) => {
-    // Create data points for each period timestamp
-    const mappedData = periodTimestamps.map(timestamp => {
-      // Find the closest actual data point within a reasonable time window
-      const timeWindow = period === '7d' ? 18 * 60 * 60 * 1000 : // 18 hours for 7d (morning to evening)
-                         period === '30d' ? 36 * 60 * 60 * 1000 : // 36 hours for 30d (1.5 days)
-                         period === '3M' ? 4 * 24 * 60 * 60 * 1000 : // 4 days for 3M (around each Monday)
-                         4 * 24 * 60 * 60 * 1000; // 4 days for 6M (around each Monday)
-      
-      // For cumulative charts, we need to sum ALL historical data up to this point
-      // For non-cumulative charts, we only sum data within the time window AND after cutoff
-      let relevantData;
-      if (isForCumulative) {
-        // Include ALL data up to this timestamp for accurate cumulative totals
-        // Do NOT add timeWindow here - that causes data to be counted multiple times
-        relevantData = results.filter(result => 
+    console.log(`[FilterData] Processing ${key}: ${results.length} data points`);
+    
+    if (isForCumulative) {
+      // For cumulative charts, accumulate all data up to each timestamp
+      const mappedData = periodTimestamps.map(timestamp => {
+        const relevantData = results.filter(result => 
           result.timestamp <= timestamp
         );
-      } else {
-        // Only include data within the time window and after cutoff for period view
-        relevantData = results.filter(result => 
-          Math.abs(result.timestamp - timestamp) <= timeWindow && 
-          result.timestamp >= cutoffTime
-        );
+        const totalCount = relevantData.reduce((sum, item) => sum + item.count, 0);
+        
+        return {
+          timestamp,
+          count: totalCount
+        };
+      });
+      
+      // Debug: log the final counts for cumulative charts
+      if (key.includes('lofty')) {
+        console.log(`[FilterData] ${key} cumulative values:`, mappedData.map(d => d.count));
+        const finalTotal = mappedData[mappedData.length - 1]?.count || 0;
+        console.log(`[FilterData] ${key} final cumulative total: ${finalTotal}`);
       }
       
-      // Sum all counts
-      const totalCount = relevantData.reduce((sum, item) => sum + item.count, 0);
+      filteredData[key] = mappedData;
+    } else {
+      // For non-cumulative charts, assign each data point to its nearest timestamp
+      // to avoid double-counting
+      const buckets: { [timestamp: number]: number } = {};
       
-      return {
+      // Initialize buckets
+      periodTimestamps.forEach(ts => {
+        buckets[ts] = 0;
+      });
+      
+      // Assign each data point to the nearest timestamp
+      results.forEach(result => {
+        // Only process data within the period
+        if (result.timestamp >= cutoffTime) {
+          // Find the nearest timestamp
+          let nearestTimestamp = periodTimestamps[0];
+          let minDistance = Math.abs(result.timestamp - nearestTimestamp);
+          
+          for (const ts of periodTimestamps) {
+            const distance = Math.abs(result.timestamp - ts);
+            if (distance < minDistance) {
+              minDistance = distance;
+              nearestTimestamp = ts;
+            }
+          }
+          
+          // Add to the nearest bucket
+          buckets[nearestTimestamp] += result.count;
+        }
+      });
+      
+      // Convert buckets to array
+      const mappedData = periodTimestamps.map(timestamp => ({
         timestamp,
-        count: totalCount
-      };
-    });
-    
-    filteredData[key] = mappedData;
+        count: buckets[timestamp]
+      }));
+      
+      // Debug: log the final counts
+      if (key.includes('lofty')) {
+        console.log(`[FilterData] ${key} daily values:`, mappedData.map(d => d.count));
+        const total = mappedData.reduce((sum, d) => sum + d.count, 0);
+        console.log(`[FilterData] ${key} total in period: ${total}`);
+      }
+      
+      filteredData[key] = mappedData;
+    }
   });
   
   // If no projects exist in data, create empty datasets
@@ -332,21 +371,12 @@ export function generateChartData(
   });
 
   if (chartType === 'stacked') {
-    // Cumulative chart: values accumulate over time
+    // Cumulative chart: values are already cumulative from filterDataByPeriod
+    // No need to accumulate again
     const datasets = rawDatasets.map(({ preset, dataPoints }) => {
-      // Calculate cumulative values
-      const cumulativeData = dataPoints.reduce((acc, value, index) => {
-        if (index === 0) {
-          acc.push(value);
-        } else {
-          acc.push(acc[index - 1] + value);
-        }
-        return acc;
-      }, [] as number[]);
-
       return {
         label: preset.name,
-        data: cumulativeData,
+        data: dataPoints,
         backgroundColor: 'transparent',
         borderColor: preset.color,
         borderWidth: 2,
@@ -506,19 +536,11 @@ export function generateWholeEcosystemData(
   });
 
   if (chartType === 'stacked') {
-    // Cumulative total
-    const cumulativeData = totalCounts.reduce((acc, value, index) => {
-      if (index === 0) {
-        acc.push(value);
-      } else {
-        acc.push(acc[index - 1] + value);
-      }
-      return acc;
-    }, [] as number[]);
-
+    // Values are already cumulative from filterDataByPeriod
+    // No need to accumulate again
     const datasets = [{
       label: 'Total Ecosystem Activity (Cumulative)',
-      data: cumulativeData,
+      data: totalCounts,
       backgroundColor: 'transparent',
       borderColor: '#0ea5e9',
       borderWidth: 3,
