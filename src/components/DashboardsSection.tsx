@@ -1,0 +1,664 @@
+import React, { useState, useEffect, useRef } from 'react';
+import type { Dashboard, DashboardFilter, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
+import Chart from './Chart';
+import { generateChartData, generateShareText } from '../utils/chartUtils';
+import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
+import { 
+  fetchDashboards, 
+  toggleDashboardLike,
+  debugFetchAllTransactions,
+  fetchMockDashboards 
+} from '../services/irysUploadService';
+import { 
+  getCachedData, 
+  waitForCache, 
+  saveDashboardData, 
+  getCachedDashboardData,
+  getCachedDashboards 
+} from '../services/storageService';
+import { queryTagCounts, fetchIrysNames } from '../services/irysService';
+import LoadingProgress from './LoadingProgress';
+import { CreateDashboardModal } from './CreateDashboardModal';
+import { Share2, Download } from 'lucide-react';
+
+interface DashboardsSectionProps {
+  walletAddress: string | null;
+  username?: string | null;
+  trendData?: { [key: string]: QueryResult[] };
+}
+
+export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddress, username, trendData }) => {
+  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [filteredDashboards, setFilteredDashboards] = useState<Dashboard[]>([]);
+  const [selectedDashboard, setSelectedDashboard] = useState<Dashboard | null>(null);
+  const [dashboardData, setDashboardData] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const dashboardContentRef = useRef<HTMLDivElement>(null);
+  const [loadingProgress, setLoadingProgress] = useState<LoadingProgressType | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [likedDashboards, setLikedDashboards] = useState<Set<string>>(new Set());
+  const [editingDashboard, setEditingDashboard] = useState<Dashboard | null>(null);
+  const [irysNames, setIrysNames] = useState<Map<string, string>>(new Map());
+  const [filter, setFilter] = useState<DashboardFilter>({
+    sortBy: 'recent'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    loadDashboards();
+  }, []);
+
+  // Check liked status when wallet connects or dashboards change
+  useEffect(() => {
+    if (!walletAddress || dashboards.length === 0) return;
+    
+    // Use likedBy information already included in dashboards
+    const liked = new Set<string>();
+    for (const dashboard of dashboards) {
+      if (dashboard.likedBy?.includes(walletAddress)) {
+        liked.add(dashboard.id);
+      }
+    }
+    setLikedDashboards(liked);
+  }, [walletAddress, dashboards]);
+
+  useEffect(() => {
+    filterDashboards();
+  }, [dashboards, filter, searchTerm]);
+
+  const loadDashboards = async () => {
+    console.log('[DashboardsSection] Loading dashboards...');
+    setIsLoading(true);
+    
+    // Check cached dashboards first
+    const cachedDashboards = getCachedDashboards();
+    if (cachedDashboards && cachedDashboards.length > 0) {
+      console.log('[DashboardsSection] Using cached dashboards');
+      
+      // Process liked status for cached dashboards
+      const dashboardsWithStats = cachedDashboards;
+      setDashboards(dashboardsWithStats);
+      
+      // Fetch Irys Names for all authors
+      fetchIrysNamesForDashboards(dashboardsWithStats);
+      
+      // Check liked status for cached dashboards if wallet is connected
+      if (walletAddress) {
+        const liked = new Set<string>();
+        for (const dashboard of dashboardsWithStats) {
+          if (dashboard.likedBy?.includes(walletAddress)) {
+            liked.add(dashboard.id);
+          }
+        }
+        setLikedDashboards(liked);
+      }
+      
+      setIsLoading(false);
+      
+      // Still fetch in background to get updates
+      fetchDashboards().then(data => {
+        if (data.length > 0) {
+          // Remove duplicates based on dashboard ID
+          const uniqueDashboards = data.filter((dashboard, index, self) =>
+            index === self.findIndex((d) => d.id === dashboard.id)
+          );
+          console.log(`[DashboardsSection] Background fetch: ${data.length} dashboards, ${uniqueDashboards.length} unique`);
+          
+          // Only update if data has actually changed
+          const hasChanges = uniqueDashboards.length !== dashboardsWithStats.length ||
+            uniqueDashboards.some((d, i) => 
+              d.id !== dashboardsWithStats[i]?.id || 
+              d.likes !== dashboardsWithStats[i]?.likes ||
+              d.updatedAt !== dashboardsWithStats[i]?.updatedAt
+            );
+            
+          if (hasChanges) {
+            setDashboards(uniqueDashboards);
+            // Fetch Irys Names for updated dashboards
+            fetchIrysNamesForDashboards(uniqueDashboards);
+          }
+        }
+      }).catch(error => {
+        console.error('[DashboardsSection] Background fetch error:', error);
+      });
+      
+      return;
+    }
+    
+    try {
+      console.log('[DashboardsSection] === DEBUG: Fetching all transactions ===');
+      await debugFetchAllTransactions();
+      
+      console.log('[DashboardsSection] === Starting dashboard data load ===');
+      const data = await fetchDashboards();
+      console.log('[DashboardsSection] Loaded dashboards:', data);
+      
+      // Remove duplicates based on dashboard ID
+      const uniqueDashboards = data.filter((dashboard, index, self) =>
+        index === self.findIndex((d) => d.id === dashboard.id)
+      );
+      
+      setDashboards(uniqueDashboards);
+      
+      // Fetch Irys Names for all authors
+      fetchIrysNamesForDashboards(uniqueDashboards);
+      
+      if (uniqueDashboards.length === 0) {
+        console.log('[DashboardsSection] WARNING: No dashboards found. Check if any dashboards were uploaded.');
+      } else {
+        console.log(`[DashboardsSection] SUCCESS: Loaded ${uniqueDashboards.length} unique dashboards (from ${data.length} total)`);
+      }
+    } catch (error) {
+      console.error('[DashboardsSection] Error loading dashboards:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchIrysNamesForDashboards = async (dashboardList: Dashboard[]) => {
+    // Get unique wallet addresses
+    const uniqueAddresses = [...new Set(dashboardList.map(d => d.authorAddress))];
+    
+    if (uniqueAddresses.length === 0) return;
+    
+    try {
+      const names = await fetchIrysNames(uniqueAddresses);
+      setIrysNames(names);
+    } catch (error) {
+      console.error('[DashboardsSection] Error fetching Irys Names:', error);
+    }
+  };
+
+  const getDisplayName = (address: string) => {
+    return irysNames.get(address) || address;
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getFormattedAuthor = (dashboard: Dashboard) => {
+    const name = getDisplayName(dashboard.authorAddress);
+    if (name === dashboard.authorAddress) {
+      return formatAddress(dashboard.authorAddress);
+    }
+    return name;
+  };
+
+  const filterDashboards = () => {
+    let filtered = [...dashboards];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(d => 
+        d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.author.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Author filter
+    if (filter.author) {
+      filtered = filtered.filter(d => d.authorAddress === filter.author);
+    }
+
+    // Sort
+    switch (filter.sortBy) {
+      case 'recent':
+        filtered.sort((a, b) => b.createdAt - a.createdAt);
+        break;
+      case 'popular':
+        filtered.sort((a, b) => b.likes - a.likes);
+        break;
+    }
+
+    setFilteredDashboards(filtered);
+  };
+
+  const loadDashboardData = async (dashboard: Dashboard) => {
+    setIsLoading(true);
+    setLoadingProgress({ current: 0, total: 1, percentage: 0 });
+    
+    // For old dashboards without charts array, convert to new format
+    if (!dashboard.charts || dashboard.charts.length === 0) {
+      console.log('[DashboardsSection] Legacy dashboard format detected, skipping data load');
+      setIsLoading(false);
+      setLoadingProgress(null);
+      return;
+    }
+    
+    // Check for cached dashboard data first
+    const cachedDashboardData = getCachedDashboardData(dashboard.id);
+    if (cachedDashboardData) {
+      console.log('[DashboardsSection] Using cached dashboard data');
+      setDashboardData(cachedDashboardData);
+      setIsLoading(false);
+      setLoadingProgress(null);
+      return;
+    }
+    
+    try {
+      // First try to get cached data or wait for it if being loaded
+      let cachedData = getCachedData();
+      if (!cachedData && !trendData) {
+        console.log('[DashboardsSection] No cached data available, waiting for cache...');
+        cachedData = await waitForCache(5000); // Wait up to 5 seconds
+      }
+      
+      // Use either cached data or trendData
+      const availableData = cachedData || trendData || {};
+      // Load data for all charts
+      const allChartData: { [chartId: string]: { [queryId: string]: QueryResult[] } } = {};
+      
+      for (let i = 0; i < dashboard.charts.length; i++) {
+        const chart = dashboard.charts[i];
+        console.log(`[DashboardsSection] Loading data for chart: ${chart.title}`);
+        
+        allChartData[chart.id] = {};
+        
+        // Check if chart has queries (new format) or tags (legacy format)
+        if (chart.queries && chart.queries.length > 0) {
+          // New format with multiple queries
+          for (let j = 0; j < chart.queries.length; j++) {
+            const query = chart.queries[j];
+            
+            // Check if data exists in availableData first
+            if (availableData[query.id]) {
+              console.log(`[DashboardsSection] Using cached data for ${query.name}`);
+              allChartData[chart.id][query.id] = availableData[query.id];
+              
+              // Update progress
+              const chartProgress = i + (j + 1) / chart.queries.length;
+              const overallProgress = {
+                current: chartProgress,
+                total: dashboard.charts.length,
+                percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+              };
+              setLoadingProgress(overallProgress);
+            } else {
+              // Query new data if not in trendData
+              const data = await queryTagCounts(query.tags, (progress) => {
+                const chartProgress = i + (j + progress.percentage / 100) / chart.queries.length;
+                const overallProgress = {
+                  current: chartProgress,
+                  total: dashboard.charts.length,
+                  percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
+              });
+              
+              allChartData[chart.id][query.id] = data;
+            }
+          }
+        } else if (chart.tags && chart.tags.length > 0) {
+          // Legacy format with single tags array
+          const data = await queryTagCounts(chart.tags, (progress) => {
+            const overallProgress = {
+              current: i + (progress.percentage / 100),
+              total: dashboard.charts.length,
+              percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
+            };
+            setLoadingProgress(overallProgress);
+          });
+          
+          allChartData[chart.id][chart.id] = data;
+        }
+      }
+      
+      setDashboardData(allChartData);
+      
+      // Save dashboard data to cache
+      saveDashboardData(dashboard.id, allChartData);
+      console.log('[DashboardsSection] Dashboard data saved to cache');
+      
+      // Increment view count (in real app, this would be done server-side)
+      dashboard.views += 1;
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+      setLoadingProgress(null);
+    }
+  };
+
+  const handleDashboardClick = async (dashboard: Dashboard) => {
+    setSelectedDashboard(dashboard);
+    loadDashboardData(dashboard);
+  };
+
+  const handleCreateSuccess = (dashboard: Dashboard) => {
+    setDashboards([dashboard, ...dashboards]);
+    loadDashboards(); // Reload to get the latest data
+  };
+
+  const handleLike = async (dashboard: Dashboard) => {
+    if (!walletAddress) {
+      alert('Please connect your wallet to like dashboards');
+      return;
+    }
+    
+    try {
+      const result = await toggleDashboardLike(dashboard.id, walletAddress);
+      
+      if (result.success) {
+        // Update all instances of this dashboard including likedBy
+        const updatedDashboards = dashboards.map(d => 
+          d.id === dashboard.id ? { 
+            ...d, 
+            likes: result.likes,
+            likedBy: result.liked 
+              ? [...(d.likedBy || []), walletAddress]
+              : (d.likedBy || []).filter((addr: string) => addr !== walletAddress)
+          } : d
+        );
+        setDashboards(updatedDashboards);
+        
+        // Update selected dashboard if it's the same
+        if (selectedDashboard?.id === dashboard.id) {
+          setSelectedDashboard({ 
+            ...selectedDashboard, 
+            likes: result.likes,
+            likedBy: result.liked 
+              ? [...(selectedDashboard.likedBy || []), walletAddress]
+              : (selectedDashboard.likedBy || []).filter((addr: string) => addr !== walletAddress)
+          });
+        }
+        
+        // Update liked status
+        const newLiked = new Set(likedDashboards);
+        if (result.liked) {
+          newLiked.add(dashboard.id);
+        } else {
+          newLiked.delete(dashboard.id);
+        }
+        setLikedDashboards(newLiked);
+      } else {
+        alert('Failed to update like status');
+      }
+    } catch (error) {
+      console.error('Error updating like:', error);
+      alert('Error occurred while updating like');
+    }
+  };
+
+  const handleShareDashboard = async () => {
+    if (!dashboardContentRef.current || !selectedDashboard) return;
+    
+    setIsCapturing(true);
+    try {
+      const shareText = `Check out "${selectedDashboard.name}" on IrysDune - Decentralized Analytics Dashboard powered by @irys_xyz\n\n${selectedDashboard.description || ''}`;
+      
+      await captureAndShare(
+        dashboardContentRef.current, 
+        shareText, 
+        `irys-dashboard-${selectedDashboard.id}.png`
+      );
+    } catch (error) {
+      console.error('Error capturing dashboard:', error);
+      alert('Error occurred while capturing dashboard.');
+    } finally {
+      setIsCapturing(false);
+    }
+  };
+
+  const handleDownloadDashboard = async () => {
+    if (!dashboardContentRef.current || !selectedDashboard) return;
+    
+    try {
+      const blob = await captureElement(dashboardContentRef.current);
+      const filename = `irys-dashboard-${selectedDashboard.name.replace(/\s+/g, '-')}-${Date.now()}.png`;
+      downloadImage(blob, filename);
+    } catch (error) {
+      console.error('Error downloading dashboard:', error);
+      alert('Error occurred while downloading dashboard.');
+    }
+  };
+
+  if (selectedDashboard) {
+    return (
+      <div className="dashboard-view">
+        <div className="container">
+          <button 
+            className="back-btn"
+            onClick={() => {
+              setSelectedDashboard(null);
+              setDashboardData([]);
+            }}
+          >
+            ← Back to Dashboards
+          </button>
+          <div ref={dashboardContentRef}>
+            <div className="dashboard-header">
+            <div className="dashboard-info">
+              <h2>{selectedDashboard.name}</h2>
+              <p>{selectedDashboard.description}</p>
+              <div className="dashboard-meta">
+                <div className="meta-info">
+                  <span>By {getFormattedAuthor(selectedDashboard)}</span>
+                  <span>•</span>
+                  <span>{selectedDashboard.likes} likes</span>
+                  <button 
+                    className={`like-btn ${likedDashboards.has(selectedDashboard.id) ? 'liked' : ''}`}
+                    onClick={() => handleLike(selectedDashboard)}
+                    disabled={!walletAddress}
+                  >
+                    ❤️ {likedDashboards.has(selectedDashboard.id) ? 'Liked' : 'Like'}
+                  </button>
+                </div>
+                <div className="dashboard-actions">
+                  <button 
+                    className="action-btn share-btn"
+                    onClick={handleShareDashboard}
+                    disabled={isCapturing}
+                  >
+                    <Share2 size={16} />
+                    {isCapturing ? 'Capturing...' : 'Share'}
+                  </button>
+                  <button 
+                    className="action-btn download-btn"
+                    onClick={handleDownloadDashboard}
+                  >
+                    <Download size={16} />
+                    Download
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="dashboard-content">
+          {isLoading && loadingProgress ? (
+            <LoadingProgress progress={loadingProgress} />
+          ) : selectedDashboard.charts && selectedDashboard.charts.length > 0 ? (
+            <div className="dashboard-charts-container">
+              {selectedDashboard.charts.map((chart) => {
+                const chartData = dashboardData[chart.id] || {};
+                
+                // Prepare data for Chart component
+                const chartDataForDisplay: { [key: string]: QueryResult[] } = {};
+                const queriesForDisplay: any[] = [];
+                
+                if (chart.queries && chart.queries.length > 0) {
+                  // New format with multiple queries
+                  chart.queries.forEach(query => {
+                    if (chartData[query.id]) {
+                      chartDataForDisplay[query.id] = chartData[query.id];
+                      queriesForDisplay.push({
+                        id: query.id,
+                        name: query.name,
+                        tags: query.tags,
+                        color: query.color
+                      });
+                    }
+                  });
+                } else if (chartData[chart.id]) {
+                  // Legacy format
+                  chartDataForDisplay[chart.id] = chartData[chart.id];
+                  queriesForDisplay.push({
+                    id: chart.id,
+                    name: chart.name || chart.title,
+                    tags: chart.tags || [],
+                    color: chart.color
+                  });
+                }
+                
+                return (
+                  <div key={chart.id} className="dashboard-chart-wrapper">
+                    <div className="chart-header">
+                      <h3>{chart.title}</h3>
+                      {chart.description && <p className="chart-description">{chart.description}</p>}
+                    </div>
+                    <Chart 
+                      data={generateChartData(chartDataForDisplay, queriesForDisplay, chart.chartType)}
+                      chartType={chart.chartType}
+                      title=""
+                      shareText={generateShareText(queriesForDisplay, chart.chartType)}
+                      onTypeChange={() => {}}
+                      hideTypeButtons={true}
+                      hideActions={true}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="no-data">
+              {selectedDashboard.charts ? 'No charts in this dashboard' : 'Loading data...'}
+            </div>
+          )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboards-section">
+      <div className="section-header">
+        <h2>Community Dashboards</h2>
+        <div className="header-buttons">
+          <button 
+            className="test-btn"
+            onClick={async () => {
+              console.log('[DashboardsSection] Loading mock data for testing...');
+              const mockData = await fetchMockDashboards();
+              setDashboards(mockData);
+            }}
+          >
+            Test UI
+          </button>
+          {walletAddress && (
+            <button 
+              className="create-btn"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              + Create Dashboard
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="filters">
+        <input
+          type="text"
+          placeholder="Search dashboards..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        
+        <div className="filter-options">
+          <select 
+            value={filter.sortBy}
+            onChange={(e) => setFilter({ ...filter, sortBy: e.target.value as any })}
+          >
+            <option value="recent">Most Recent</option>
+            <option value="popular">Most Popular</option>
+          </select>
+
+          {walletAddress && (
+            <label className="my-dashboards">
+              <input
+                type="checkbox"
+                checked={filter.author === walletAddress}
+                onChange={(e) => setFilter({ 
+                  ...filter, 
+                  author: e.target.checked ? walletAddress : undefined 
+                })}
+              />
+              My Dashboards
+            </label>
+          )}
+        </div>
+      </div>
+
+      {isLoading && !loadingProgress ? (
+        <div className="loading-message">Loading dashboards...</div>
+      ) : filteredDashboards.length === 0 ? (
+        <div className="empty-state">
+          <p>No dashboards found</p>
+          {walletAddress && (
+            <button 
+              className="create-btn"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Create the first dashboard
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="dashboards-grid">
+          {filteredDashboards.map(dashboard => (
+            <div key={dashboard.id} className="dashboard-card">
+              <div 
+                className="dashboard-clickable"
+                onClick={() => handleDashboardClick(dashboard)}
+              >
+                <h3>{dashboard.name}</h3>
+                <p>{dashboard.description}</p>
+                <div className="dashboard-stats">
+                  <span>📊 {dashboard.charts?.length || 0} charts</span>
+                  <span>❤️ {dashboard.likes}</span>
+                </div>
+                <div className="dashboard-author">
+                  By {getFormattedAuthor(dashboard)}
+                </div>
+              </div>
+              {walletAddress === dashboard.authorAddress && (
+                <div className="dashboard-actions">
+                  <button 
+                    className="edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('[DashboardsSection] Opening dashboard editor...');
+                      setEditingDashboard(dashboard);
+                      setIsCreateModalOpen(true);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {walletAddress && (
+        <CreateDashboardModal
+          isOpen={isCreateModalOpen}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setEditingDashboard(null);
+          }}
+          onSuccess={handleCreateSuccess}
+          authorAddress={walletAddress}
+          authorName={username || undefined}
+          existingDashboard={editingDashboard || undefined}
+          trendData={trendData}
+        />
+      )}
+    </div>
+  );
+}; 

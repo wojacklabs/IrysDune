@@ -1,0 +1,782 @@
+import type { QueryResult, ChartData, ChartType, AppPreset, CustomQuery } from '../types';
+import { APP_PRESETS } from '../constants/appPresets';
+
+export function formatDate(timestamp: number): string {
+  // timestamp is now in milliseconds
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// Generate default data points for a given period
+function generateDefaultDataPoints(period: '7d' | '30d' | '3M' | '6M'): number[] {
+  const now = Date.now();
+  const timestamps: number[] = [];
+  
+  switch (period) {
+    case '7d':
+      // Last 7 days, daily points at noon
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now - (i * 24 * 60 * 60 * 1000));
+        date.setHours(12, 0, 0, 0);
+        timestamps.push(date.getTime());
+      }
+      break;
+    case '30d':
+      // Last 30 days, every 2 days at noon
+      for (let i = 28; i >= 0; i -= 2) {
+        const date = new Date(now - (i * 24 * 60 * 60 * 1000));
+        date.setHours(12, 0, 0, 0);
+        timestamps.push(date.getTime());
+      }
+      break;
+    case '3M':
+      // Last 3 months, weekly points (every Monday at noon)
+      for (let i = 12; i >= 0; i--) {
+        const date = new Date(now - (i * 7 * 24 * 60 * 60 * 1000));
+        // Set to Monday of that week
+        const dayOfWeek = date.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        date.setDate(date.getDate() - daysToMonday);
+        date.setHours(12, 0, 0, 0);
+        timestamps.push(date.getTime());
+      }
+      break;
+    case '6M':
+      // Last 6 months, weekly points (every Monday at noon)
+      for (let i = 25; i >= 0; i--) {
+        const date = new Date(now - (i * 7 * 24 * 60 * 60 * 1000));
+        // Set to Monday of that week
+        const dayOfWeek = date.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        date.setDate(date.getDate() - daysToMonday);
+        date.setHours(12, 0, 0, 0);
+        timestamps.push(date.getTime());
+      }
+      break;
+  }
+  
+  // Remove duplicates and sort
+  const uniqueTimestamps = [...new Set(timestamps)].sort((a, b) => a - b);
+  return uniqueTimestamps;
+}
+
+export function filterDataByPeriod(
+  data: { [key: string]: QueryResult[] },
+  period: '7d' | '30d' | '3M' | '6M'
+): { [key: string]: QueryResult[] } {
+  const now = Date.now();
+  const periodMs = {
+    '7d': 7 * 24 * 60 * 60 * 1000,
+    '30d': 30 * 24 * 60 * 60 * 1000,
+    '3M': 90 * 24 * 60 * 60 * 1000,
+    '6M': 180 * 24 * 60 * 60 * 1000
+  };
+  
+  const cutoffTime = now - periodMs[period];
+  const filteredData: { [key: string]: QueryResult[] } = {};
+  
+  // Always generate period-specific timestamps for consistent time axis
+  const periodTimestamps = generateDefaultDataPoints(period);
+  
+  Object.entries(data).forEach(([key, results]) => {
+    // Create data points for each period timestamp
+    const mappedData = periodTimestamps.map(timestamp => {
+      // Find the closest actual data point within a reasonable time window
+      const timeWindow = period === '7d' ? 18 * 60 * 60 * 1000 : // 18 hours for 7d (morning to evening)
+                         period === '30d' ? 36 * 60 * 60 * 1000 : // 36 hours for 30d (1.5 days)
+                         period === '3M' ? 4 * 24 * 60 * 60 * 1000 : // 4 days for 3M (around each Monday)
+                         4 * 24 * 60 * 60 * 1000; // 4 days for 6M (around each Monday)
+      
+      // Find all actual data points within the time window and sum them
+      const relevantData = results.filter(result => 
+        Math.abs(result.timestamp - timestamp) <= timeWindow && 
+        result.timestamp >= cutoffTime
+      );
+      
+      // Sum all counts within the time window for aggregated view
+      const totalCount = relevantData.reduce((sum, item) => sum + item.count, 0);
+      
+      return {
+        timestamp,
+        count: totalCount
+      };
+    });
+    
+    filteredData[key] = mappedData;
+  });
+  
+  // If no projects exist in data, create empty datasets
+  if (Object.keys(data).length === 0) {
+    // This shouldn't happen normally, but just in case
+    filteredData['placeholder'] = periodTimestamps.map(timestamp => ({
+      timestamp,
+      count: 0
+    }));
+  }
+  
+  return filteredData;
+}
+
+export function generateChartData(
+  data: { [key: string]: QueryResult[] },
+  queries: AppPreset[] | CustomQuery[],
+  chartType: ChartType = 'line'
+): ChartData {
+  // Get all unique timestamps and sort them
+  const allTimestamps = new Set<number>();
+  Object.values(data).forEach(results => {
+    results.forEach(result => allTimestamps.add(result.timestamp));
+  });
+  
+  const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+  
+  // If no timestamps, create a minimal dataset to show empty chart
+  if (timestamps.length === 0) {
+    const now = Date.now();
+    const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now]; // Yesterday and today
+    const emptyLabels = emptyTimestamps.map(formatDate);
+    
+    const emptyDatasets = queries.map(preset => ({
+      label: preset.name,
+      data: [0, 0],
+      backgroundColor: 'transparent',
+      borderColor: preset.color,
+      borderWidth: 2,
+      fill: false,
+      tension: 0.1,
+      yAxisID: chartType === 'stacked' ? 'cumulative' : 'absolute'
+    }));
+    
+    return { labels: emptyLabels, datasets: emptyDatasets };
+  }
+  
+  const labels = timestamps.map(formatDate);
+
+  // Check if multiple datasets
+  const isMultipleDatasets = queries.length > 1;
+
+  // Helper function to calculate color brightness and determine text color
+  function getContrastTextColor(backgroundColor: string): string {
+    // Convert hex color to RGB
+    let r, g, b;
+    
+    if (backgroundColor.startsWith('#')) {
+      const hex = backgroundColor.slice(1);
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    } else if (backgroundColor.startsWith('rgb')) {
+      const matches = backgroundColor.match(/\d+/g);
+      if (matches && matches.length >= 3) {
+        r = parseInt(matches[0]);
+        g = parseInt(matches[1]);
+        b = parseInt(matches[2]);
+      } else {
+        return 'white'; // fallback
+      }
+    } else {
+      // Handle named colors or fallback
+      return 'white';
+    }
+    
+    // Calculate brightness using luminance formula
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    
+    // Return white text for dark backgrounds, black text for light backgrounds
+    return brightness > 128 ? 'black' : 'white';
+  }
+
+  // Check if we need to generate treemap data
+  if (chartType === 'treemap') {
+    // Get all unique timestamps and sort them (same as regular charts)
+    const allTimestamps = new Set<number>();
+    Object.values(data).forEach(results => {
+      results.forEach(result => allTimestamps.add(result.timestamp));
+    });
+    const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+    
+    // Generate treemap data for each project using SAME method as regular charts
+    const treeValues: number[] = [];
+    const projectNames: string[] = [];
+    const projectColors: string[] = [];
+    let totalTransactions = 0;
+    
+    queries.forEach(query => {
+      const queryResults = data[query.id] || [];
+      
+      // Use SAME calculation method as regular charts
+      const dataPoints = timestamps.map(timestamp => {
+        const result = queryResults.find(r => r.timestamp === timestamp);
+        return result ? result.count : 0;
+      });
+      
+      const totalCount = dataPoints.reduce((sum, count) => sum + count, 0);
+      totalTransactions += totalCount;
+      
+      if (totalCount > 0) {
+        treeValues.push(totalCount);
+        projectNames.push(query.name);
+        projectColors.push(query.color);
+      }
+    });
+    
+    // Sort by value descending to ensure larger values appear larger
+    const sortedData = treeValues.map((value, index) => ({
+      name: projectNames[index],
+      value: value,
+      color: projectColors[index]
+    })).sort((a, b) => b.value - a.value); // Sort descending by value
+
+    // If no data, return empty chart structure for normal charts
+    if (treeValues.length === 0 || totalTransactions === 0) {
+      const now = Date.now();
+      const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now];
+      const emptyLabels = emptyTimestamps.map(formatDate);
+      
+      return {
+        labels: emptyLabels,
+        datasets: [{
+          label: 'No Data',
+          data: [0, 0],
+          backgroundColor: '#e2e8f0',
+          borderColor: '#cbd5e1'
+        }]
+      };
+    }
+
+    // Treemap structure using tree/key/groups format
+    return {
+      labels: [],
+      datasets: [{
+        label: 'Projects Activity',
+        data: [], // Not used for treemap
+        tree: sortedData.map(item => item.value), // Simple number array
+        backgroundColor: (ctx: any) => {
+          const index = ctx.dataIndex;
+          if (typeof index === 'number' && index < sortedData.length) {
+            const color = sortedData[index].color;
+            return color;
+          }
+          return '#0ea5e9';
+        },
+        borderColor: 'rgba(255, 255, 255, 0.8)',
+        borderWidth: 2,
+        spacing: 1,
+        labels: {
+          display: true,
+          align: 'center',
+          position: 'middle',
+          color: (ctx: any) => {
+            const index = ctx.dataIndex;
+            if (typeof index === 'number' && index < sortedData.length) {
+              const backgroundColor = sortedData[index].color;
+              const textColor = getContrastTextColor(backgroundColor);
+              return textColor;
+            }
+            return 'white';
+          },
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          // Add text outline for better visibility
+          backgroundColor: (ctx: any) => {
+            // Add semi-transparent background behind text
+            const index = ctx.dataIndex;
+            if (typeof index === 'number' && index < sortedData.length) {
+              const bgColor = sortedData[index].color;
+              const textColor = getContrastTextColor(bgColor);
+              // Return opposite color with transparency for outline effect
+              return textColor === 'white' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+            }
+            return 'rgba(0, 0, 0, 0.5)';
+          },
+          padding: 4,
+          formatter: (ctx: any) => {
+            const index = ctx.dataIndex;
+            if (typeof index === 'number' && index < sortedData.length) {
+              const item = sortedData[index];
+              return [item.name, item.value.toLocaleString()];
+            }
+            return '';
+          }
+        }
+      }]
+    };
+  }
+
+  // Calculate data for each preset
+  const rawDatasets = queries.map(preset => {
+    const results = data[preset.id] || [];
+    
+    const dataPoints = timestamps.map(timestamp => {
+      const result = results.find(r => r.timestamp === timestamp);
+      return result ? result.count : 0;
+    });
+    
+    return { preset, dataPoints };
+  });
+
+  if (chartType === 'stacked') {
+    // Cumulative chart: values accumulate over time
+    const datasets = rawDatasets.map(({ preset, dataPoints }) => {
+      // Calculate cumulative values
+      const cumulativeData = dataPoints.reduce((acc, value, index) => {
+        if (index === 0) {
+          acc.push(value);
+        } else {
+          acc.push(acc[index - 1] + value);
+        }
+        return acc;
+      }, [] as number[]);
+
+      return {
+        label: preset.name,
+        data: cumulativeData,
+        backgroundColor: 'transparent',
+        borderColor: preset.color,
+        borderWidth: 2,
+        fill: false,
+        tension: 0.1,
+        yAxisID: 'cumulative'
+      };
+    });
+
+    return { labels, datasets };
+  } else {
+    // Line chart: daily values (not cumulative)
+    if (isMultipleDatasets) {
+      // Multiple datasets - convert to relative values
+      const globalMax = Math.max(...rawDatasets.flatMap(d => d.dataPoints));
+      const chartMinHeight = Math.max(10, globalMax * 0.1);
+
+      const datasets = rawDatasets.map(({ preset, dataPoints }) => {
+        const maxValue = Math.max(...dataPoints);
+        
+        const scaledDataPoints = dataPoints.map(value => {
+          if (maxValue === 0) return 0;
+          const relativeValue = (value / maxValue) * 100;
+          const scaledValue = Math.max(relativeValue, value > 0 ? chartMinHeight : 0);
+          return scaledValue;
+        });
+
+        return {
+          label: `${preset.name} (Relative)`,
+          data: scaledDataPoints,
+          backgroundColor: 'transparent',
+          borderColor: preset.color,
+          fill: false,
+          tension: 0.1,
+          yAxisID: 'relative'
+        };
+      });
+
+      return { labels, datasets };
+    } else {
+      // Single dataset - absolute values
+      const { preset, dataPoints } = rawDatasets[0];
+      
+      const datasets = [{
+        label: `${preset.name} (Daily)`,
+        data: dataPoints,
+        backgroundColor: 'transparent',
+        borderColor: preset.color,
+        fill: false,
+        tension: 0.1,
+        yAxisID: 'absolute'
+      }];
+
+      return { labels, datasets };
+    }
+  }
+}
+
+export function generateWholeEcosystemData(
+  data: { [key: string]: QueryResult[] },
+  chartType: ChartType = 'stacked'
+): ChartData {
+  // Get all unique timestamps and sort them
+  const allTimestamps = new Set<number>();
+  Object.values(data).forEach(results => {
+    results.forEach(result => allTimestamps.add(result.timestamp));
+  });
+  
+  const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+  
+  // If no timestamps, create a minimal dataset to show empty chart
+  if (timestamps.length === 0) {
+    const now = Date.now();
+    const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now]; // Yesterday and today
+    const emptyLabels = emptyTimestamps.map(formatDate);
+    
+    const emptyDataset = [{
+      label: 'Total Ecosystem Activity',
+      data: [0, 0],
+      backgroundColor: 'transparent',
+      borderColor: '#0ea5e9',
+      borderWidth: 3,
+      fill: false,
+      tension: 0.1,
+      yAxisID: chartType === 'stacked' ? 'cumulative' : 'absolute'
+    }];
+    
+    return { labels: emptyLabels, datasets: emptyDataset };
+  }
+  
+  const labels = timestamps.map(formatDate);
+
+  // Check if we need to generate treemap data
+  if (chartType === 'treemap') {
+    // For ecosystem treemap, group by project
+    const projectTotals: { [key: string]: { count: number, color: string } } = {};
+    
+    Object.entries(data).forEach(([projectId, results]) => {
+      const preset = APP_PRESETS.find(p => p.id === projectId);
+      const totalCount = results.reduce((sum, result) => sum + result.count, 0);
+      
+      if (preset && totalCount > 0) {
+        projectTotals[preset.name] = {
+          count: totalCount,
+          color: preset.color
+        };
+      }
+    });
+
+    const treeMapData = Object.entries(projectTotals).map(([name, info]) => ({
+      label: name,
+      data: info.count,
+      backgroundColor: info.color,
+      key: name,
+      groups: ['root'],
+      value: info.count
+    }));
+
+    return {
+      labels: [],
+      datasets: [{
+        label: 'Ecosystem Projects',
+        data: treeMapData,
+        backgroundColor: (ctx: any) => {
+          const dataItem = ctx.raw;
+          return dataItem.backgroundColor || '#0ea5e9';
+        },
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderWidth: 2,
+        spacing: 1,
+        key: 'value',
+        groups: ['groups'],
+        captions: {
+          align: 'center',
+          display: true,
+          color: 'white',
+          font: {
+            size: 14,
+            weight: 'bold'
+          },
+          formatter: (ctx: any) => {
+            return ctx.raw.label;
+          }
+        }
+      }]
+    };
+  }
+
+  // Sum all counts for each timestamp
+  const totalCounts = timestamps.map(timestamp => {
+    let total = 0;
+    Object.values(data).forEach(results => {
+      const result = results.find(r => r.timestamp === timestamp);
+      if (result) total += result.count;
+    });
+    return total;
+  });
+
+  if (chartType === 'stacked') {
+    // Cumulative total
+    const cumulativeData = totalCounts.reduce((acc, value, index) => {
+      if (index === 0) {
+        acc.push(value);
+      } else {
+        acc.push(acc[index - 1] + value);
+      }
+      return acc;
+    }, [] as number[]);
+
+    const datasets = [{
+      label: 'Total Ecosystem Activity (Cumulative)',
+      data: cumulativeData,
+      backgroundColor: 'transparent',
+      borderColor: '#0ea5e9',
+      borderWidth: 3,
+      fill: false,
+      tension: 0.1,
+      yAxisID: 'cumulative'
+    }];
+
+    return { labels, datasets };
+  } else {
+    // Daily totals
+    const datasets = [{
+      label: 'Total Ecosystem Activity (Daily)',
+      data: totalCounts,
+      backgroundColor: 'transparent',
+      borderColor: '#0ea5e9',
+      borderWidth: 3,
+      fill: false,
+      tension: 0.1,
+      yAxisID: 'absolute'
+    }];
+
+    return { labels, datasets };
+  }
+}
+
+export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartType) {
+  const isCumulative = chartType === 'stacked';
+  
+  const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        labels: {
+          font: {
+            family: 'Inter',
+            size: 12
+          },
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1e293b',
+        bodyColor: '#475569',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        cornerRadius: 8,
+        padding: 12,
+        titleFont: {
+          family: 'Inter',
+          size: 14,
+          weight: 'bold' as const
+        },
+        bodyFont: {
+          family: 'Inter',
+          size: 12
+        },
+        callbacks: {
+          label: function(context: any) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.y !== null) {
+              label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+            }
+            return label;
+          }
+        }
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: true,
+          text: 'Date',
+          font: {
+            family: 'Inter',
+            size: 12,
+            weight: 'bold' as const
+          },
+          color: '#64748b'
+        },
+        grid: {
+          color: 'rgba(148, 163, 184, 0.1)',
+          drawBorder: false
+        },
+        ticks: {
+          font: {
+            family: 'Inter',
+            size: 10
+          },
+          color: '#64748b'
+        }
+      },
+      ...(isCumulative ? {
+        cumulative: {
+          type: 'linear' as const,
+          display: true,
+          position: 'left' as const,
+          title: {
+            display: true,
+            text: 'Cumulative Transactions',
+            font: {
+              family: 'Inter',
+              size: 12,
+              weight: 'bold' as const
+            },
+            color: '#64748b'
+          },
+          beginAtZero: true,
+          min: 0,
+          suggestedMax: 10, // Minimum suggested max for better visualization when data is zero
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              family: 'Inter',
+              size: 10
+            },
+            color: '#64748b',
+            callback: function(value: any) {
+              return new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                maximumFractionDigits: 1
+              }).format(value);
+            }
+          }
+        }
+      } : (isMultipleDatasets ? {
+        relative: {
+          type: 'linear' as const,
+          display: true,
+          position: 'left' as const,
+          title: {
+            display: true,
+            text: 'Relative Activity (%)',
+            font: {
+              family: 'Inter',
+              size: 12,
+              weight: 'bold' as const
+            },
+            color: '#64748b'
+          },
+          beginAtZero: true,
+          min: 0,
+          suggestedMax: 100, // Set max to 100% for relative charts
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              family: 'Inter',
+              size: 10
+            },
+            color: '#64748b',
+            callback: function(value: any) {
+              return value + '%';
+            }
+          }
+        }
+      } : {
+        absolute: {
+          type: 'linear' as const,
+          display: true,
+          position: 'left' as const,
+          title: {
+            display: true,
+            text: 'Daily Transactions',
+            font: {
+              family: 'Inter',
+              size: 12,
+              weight: 'bold' as const
+            },
+            color: '#64748b'
+          },
+          beginAtZero: true,
+          min: 0,
+          suggestedMax: 10, // Minimum suggested max for better visualization when data is zero
+          grid: {
+            color: 'rgba(148, 163, 184, 0.1)',
+            drawBorder: false
+          },
+          ticks: {
+            font: {
+              family: 'Inter',
+              size: 10
+            },
+            color: '#64748b',
+            callback: function(value: any) {
+              return new Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                maximumFractionDigits: 1
+              }).format(value);
+            }
+          }
+        }
+      }))
+    },
+    interaction: {
+      mode: 'nearest' as const,
+      axis: 'x' as const,
+      intersect: false,
+    },
+    elements: {
+      line: {
+        tension: 0.2,
+        borderWidth: 2
+      },
+      point: {
+        radius: 3,
+        hoverRadius: 6,
+        borderWidth: 2,
+        hoverBorderWidth: 2,
+        backgroundColor: 'white'
+      },
+    },
+  };
+
+  return baseOptions;
+}
+
+export function downloadChart(canvasElement: HTMLCanvasElement, filename: string) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvasElement.toDataURL();
+  link.click();
+}
+
+export function generateShareText(
+  presets: (AppPreset | CustomQuery)[],
+  chartType: ChartType
+): string {
+  const appNames = presets.map(p => p.name).join(', ');
+  const typeText = chartType === 'stacked' ? 'Cumulative' : 'Daily';
+  
+  return `Irys Ecosystem Activity Analysis 📊\n\nApps: ${appNames}\nChart Type: ${typeText}\n\n#Irys #Web3 #Analytics #IrysDune`;
+}
+
+export function calculateTotalActivity(data: { [key: string]: QueryResult[] }): number {
+  let total = 0;
+  Object.values(data).forEach(results => {
+    results.forEach(result => {
+      total += result.count;
+    });
+  });
+  return total;
+}
+
+export function calculateGrowthRate(data: QueryResult[]): number {
+  if (data.length < 2) return 0;
+  
+  const recent = data.slice(-7); // Last 7 days
+  const previous = data.slice(-14, -7); // Previous 7 days
+  
+  const recentTotal = recent.reduce((sum, r) => sum + r.count, 0);
+  const previousTotal = previous.reduce((sum, r) => sum + r.count, 0);
+  
+  if (previousTotal === 0) return recentTotal > 0 ? 100 : 0;
+  
+  return ((recentTotal - previousTotal) / previousTotal) * 100;
+} 
