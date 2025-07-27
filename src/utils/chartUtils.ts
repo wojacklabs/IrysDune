@@ -89,20 +89,8 @@ export function filterDataByPeriod(
     console.log(`[FilterData] Processing ${key}: ${results.length} data points`);
     
     if (isForCumulative) {
-      // For cumulative charts, use actual data timestamps but filter to display period
-      // This ensures we accumulate ALL historical data correctly
-      
-      // Get all unique timestamps from actual data
-      const dataTimestamps = [...new Set(results.map(r => r.timestamp))].sort((a, b) => a - b);
-      
-      // Filter timestamps to only include those within the display period
-      const displayTimestamps = dataTimestamps.filter(ts => ts >= cutoffTime);
-      
-      // If no data in period, use period timestamps to show empty chart
-      const timestampsToUse = displayTimestamps.length > 0 ? displayTimestamps : periodTimestamps;
-      
-      const mappedData = timestampsToUse.map(timestamp => {
-        // For cumulative, include ALL data up to this point (not just within period)
+      // For cumulative charts, accumulate all data up to each timestamp
+      const mappedData = periodTimestamps.map(timestamp => {
         const relevantData = results.filter(result => 
           result.timestamp <= timestamp
         );
@@ -119,17 +107,6 @@ export function filterDataByPeriod(
         console.log(`[FilterData] ${key} cumulative values:`, mappedData.map(d => d.count));
         const finalTotal = mappedData[mappedData.length - 1]?.count || 0;
         console.log(`[FilterData] ${key} final cumulative total: ${finalTotal}`);
-      }
-      
-      // Additional debug info
-      if (isForCumulative) {
-        const oldestData = results.length > 0 ? new Date(Math.min(...results.map(r => r.timestamp))) : null;
-        const newestData = results.length > 0 ? new Date(Math.max(...results.map(r => r.timestamp))) : null;
-        const cutoffDate = new Date(cutoffTime);
-        
-        console.log(`[FilterData] ${key} data range: ${oldestData?.toISOString().split('T')[0]} to ${newestData?.toISOString().split('T')[0]}`);
-        console.log(`[FilterData] ${key} display cutoff: ${cutoffDate.toISOString().split('T')[0]} (${period})`);
-        console.log(`[FilterData] ${key} timestamps used: ${timestampsToUse.length} out of ${dataTimestamps.length} total`);
       }
       
       filteredData[key] = mappedData;
