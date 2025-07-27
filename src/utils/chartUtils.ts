@@ -95,8 +95,9 @@ export function filterDataByPeriod(
       let relevantData;
       if (isForCumulative) {
         // Include ALL data up to this timestamp for accurate cumulative totals
+        // Do NOT add timeWindow here - that causes data to be counted multiple times
         relevantData = results.filter(result => 
-          result.timestamp <= timestamp + timeWindow
+          result.timestamp <= timestamp
         );
       } else {
         // Only include data within the time window and after cutoff for period view
