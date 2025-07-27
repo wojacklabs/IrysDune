@@ -3,12 +3,12 @@ import { executeQuery, getCacheKey, getFromCache, setCache } from '../utils/quer
 
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES = {
-  'cm-note': '9zzErGmkLFaXEHUfvUEAk3WZByfZrR86Zx7ggXXppvpW',
-  'githirys': '5Pd4oSVFXnCQZa6wHAw1JLMSGYuDo9Y6vnrXBvVH7U8L',
-  'irys-names': '6SR3vewN54C9wPMdVYG9aeKm1RXRZ7FHCX7t44QcGgCL',
-  'lofty-drive': 'K7JyZW2N8tRv3UoUPKWmjEeCNpRt6nku4Ac441m19TS',
-  'bridgebox': '3smWzDhVndSpWX9EfnbiM3X1Hx2qmV3ptcyG8jbpsEJw',
-  'irysdune': '3j9eAxcn3Mgf6i1zxePub5BNptG5PEPUY6M15mGqJC4L',
+  'cm-note': 'Ei8WyiVnVwKivD5tugJbfDPMvwiUW4Bm4tR7rpxKVy7v',
+  'githirys': 'EE89vm1KE6TJ13sUtXbGsP1VQXGzzYdcwc5JhuNdEcmj',
+  'irys-names': '9rEumMZWLFWAEwvhphkcpeoTd1cNJ1oxwvQUmodFChfE',
+  'lofty-drive': 'HwgjAu2Kxakg4ZXSfw3cbMkJBdDPvDpDodw4AdKrDTDq',
+  'bridgebox': '3GksRnMj7kJvsDHQb7Ps53xbErwxim1L3PCJfd39pqfr',
+  'irysdune': '4DSCHwgPoQpifPt2TzApacD7XWvDx6sTBBRPFzTNNmPp',
 };
 
 // Data structure from the actual server data
