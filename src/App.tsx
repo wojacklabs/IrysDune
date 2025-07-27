@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, Grid3x3 } from 'lucide-react';
 import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
 import { ConnectWallet } from './components/ConnectWallet';
 import { initializeIrysUploader } from './services/irysUploadService';
 import { fetchIrysName } from './services/irysService';
+import { getCachedData, saveCacheData, isCacheValid } from './services/storageService';
+import { APP_PRESETS } from './constants/appPresets';
+import { queryTagCounts } from './services/irysService';
 import type { QueryResult } from './types';
 
 function App() {
@@ -12,6 +15,52 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [trendData, setTrendData] = useState<{ [key: string]: QueryResult[] }>({});
+
+  // Background data loading on app mount
+  useEffect(() => {
+    const loadBackgroundData = async () => {
+      console.log('[App] Checking for background data update...');
+      
+      // Check if cache exists and is valid
+      const cachedData = getCachedData();
+      const cacheValid = isCacheValid();
+      
+      if (cachedData) {
+        // Use cached data immediately
+        setTrendData(cachedData);
+        console.log('[App] Using cached data for immediate display');
+      }
+      
+      // If cache is invalid or doesn't exist, fetch in background
+      if (!cacheValid) {
+        console.log('[App] Cache is invalid or missing, fetching fresh data in background...');
+        
+        try {
+          // Fetch data for all presets
+          const allProjectIds = APP_PRESETS.map(preset => preset.id);
+          const results: { [key: string]: QueryResult[] } = {};
+          
+          for (const projectId of allProjectIds) {
+            const preset = APP_PRESETS.find(p => p.id === projectId);
+            if (preset) {
+              console.log(`[App] Fetching background data for ${preset.name}...`);
+              const projectResults = await queryTagCounts(preset.tags, undefined, { months: 6 });
+              results[projectId] = projectResults;
+            }
+          }
+          
+          // Save to cache
+          saveCacheData(results);
+          setTrendData(results);
+          console.log('[App] Background data update completed');
+        } catch (error) {
+          console.error('[App] Error loading background data:', error);
+        }
+      }
+    };
+    
+    loadBackgroundData();
+  }, []);
 
   const handleWalletConnect = async (address: string) => {
     console.log('[App] Wallet connected:', address);
