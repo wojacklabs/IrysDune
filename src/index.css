@@ -1062,7 +1062,6 @@ body::before {
 .chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: var(--space-xl);
   flex-wrap: wrap;
   gap: var(--space-md);
@@ -1186,17 +1185,12 @@ body::before {
     display: none; /* Hide tagline on mobile */
   }
   
-  .nav {
-    padding: 0.5rem 0;
-  }
-  
   .nav-content {
     padding: 0 1rem;
     gap: 0.5rem;
   }
   
   .nav-button {
-    padding: 0.5rem 1rem;
     font-size: 0.875rem;
   }
   
@@ -2003,7 +1997,7 @@ body::before {
 }
 
 .chart-header {
-  padding: 1.5rem;
+  padding: 1.5rem 0;
   border-bottom: 1px solid #e5e7eb;
 }
 
