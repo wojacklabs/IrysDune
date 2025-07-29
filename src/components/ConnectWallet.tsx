@@ -58,9 +58,14 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
   };
 
   const connectWallet = async () => {
+    // Give MetaMask time to inject ethereum object
     if (typeof window.ethereum === 'undefined') {
-      alert('Please install MetaMask or another Ethereum wallet');
-      return;
+      // Wait a bit and check again
+      await new Promise(resolve => setTimeout(resolve, 100));
+      if (typeof window.ethereum === 'undefined') {
+        alert('Please install MetaMask or another Ethereum wallet');
+        return;
+      }
     }
 
     setIsConnecting(true);
