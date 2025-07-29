@@ -2,7 +2,6 @@ import type { AppPreset } from '../types';
 import cmNoteIcon from '../assets/cmnote.png';
 import githirysIcon from '../assets/githirys.png';
 import irysNamesIcon from '../assets/irysnameservice.png';
-import loftyIcon from '../assets/lofty.png';
 import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
 
