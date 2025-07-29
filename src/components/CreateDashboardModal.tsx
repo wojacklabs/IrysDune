@@ -398,8 +398,12 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         setError(result.error || 'Failed to create dashboard');
       }
     } catch (err) {
-      setError('An error occurred while creating the dashboard');
-      console.error('Error creating dashboard:', err);
+      console.error('[CreateDashboard] Error creating dashboard:', err);
+      if (err instanceof Error && err.message.includes('Ethereum provider')) {
+        setError('Wallet connection error. Please make sure your wallet is connected and try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred while creating the dashboard');
+      }
     } finally {
       setIsCreating(false);
     }

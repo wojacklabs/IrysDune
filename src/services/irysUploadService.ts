@@ -10,27 +10,68 @@ import {
 } from './storageService';
 
 let irysUploader: IrysUploader | null = null;
+let lastInitTime: number = 0;
+const REINIT_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export async function initializeIrysUploader(): Promise<IrysUploader | null> {
   console.log('[IrysUpload] Initializing Irys uploader...');
   
-  if (!window.ethereum) {
-    console.error('[IrysUpload] No Ethereum provider found. Please install MetaMask or another wallet.');
+  // Check if we need to reinitialize (after 5 minutes)
+  const now = Date.now();
+  if (irysUploader && (now - lastInitTime) < REINIT_INTERVAL) {
+    console.log('[IrysUpload] Using existing Irys uploader');
+    
+    // Verify the connection is still valid
+    try {
+      if (irysUploader.address) {
+        console.log('[IrysUpload] Existing uploader is valid, address:', irysUploader.address);
+        return irysUploader;
+      }
+    } catch (error) {
+      console.log('[IrysUpload] Existing uploader invalid, reinitializing...');
+      irysUploader = null;
+    }
+  }
+  
+  // Check for various wallet providers
+  const ethereum = window.ethereum || window.okxwallet || (window.web3 && window.web3.currentProvider);
+  
+  if (!ethereum) {
+    console.error('[IrysUpload] No Ethereum provider found. Please install MetaMask, OKX Wallet, or another Ethereum wallet.');
     return null;
   }
 
   try {
     console.log('[IrysUpload] Creating Ethereum provider...');
-    const provider = new ethers.BrowserProvider(window.ethereum);
+    const provider = new ethers.BrowserProvider(ethereum);
     
     // 지갑이 연결되어 있는지 확인
     const accounts = await provider.listAccounts();
+    console.log('[IrysUpload] Accounts found:', accounts.length);
+    
     if (accounts.length === 0) {
       console.error('[IrysUpload] No accounts connected. Please connect your wallet first.');
-      return null;
+      // Try to request accounts
+      try {
+        console.log('[IrysUpload] Requesting wallet connection...');
+        if (ethereum.request) {
+          await ethereum.request({ method: 'eth_requestAccounts' });
+        } else {
+          await provider.send("eth_requestAccounts", []);
+        }
+        const newAccounts = await provider.listAccounts();
+        if (newAccounts.length === 0) {
+          console.error('[IrysUpload] Still no accounts after request');
+          return null;
+        }
+        console.log('[IrysUpload] Connected account after request:', newAccounts[0].address);
+      } catch (requestError) {
+        console.error('[IrysUpload] Error requesting accounts:', requestError);
+        return null;
+      }
+    } else {
+      console.log('[IrysUpload] Connected account:', accounts[0].address);
     }
-    
-    console.log('[IrysUpload] Connected account:', accounts[0].address);
     
     // Signer 가져오기
     const signer = await provider.getSigner();
@@ -41,6 +82,7 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     const uploader = await WebUploader(WebEthereum).withAdapter(EthersV6Adapter(provider));
     
     irysUploader = uploader as unknown as IrysUploader;
+    lastInitTime = now;
     console.log('[IrysUpload] Irys uploader initialized successfully with address:', irysUploader.address);
     
     return irysUploader;
@@ -48,15 +90,36 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     console.error('[IrysUpload] Error initializing Irys uploader:', error);
     
     if (error instanceof Error) {
-      if (error.message.includes('user rejected')) {
+      if (error.message.includes('User rejected') || error.message.includes('denied')) {
         console.error('[IrysUpload] User rejected wallet connection');
-      } else if (error.message.includes('network')) {
-        console.error('[IrysUpload] Network error during initialization');
+      } else if (error.message.includes('wallet_requestPermissions')) {
+        console.error('[IrysUpload] Wallet permissions issue');
       }
     }
     
+    irysUploader = null;
     return null;
   }
+}
+
+// Helper function to ensure uploader is ready
+async function ensureUploaderReady(): Promise<IrysUploader | null> {
+  if (!irysUploader || Date.now() - lastInitTime > REINIT_INTERVAL) {
+    console.log('[IrysUpload] Uploader not ready or expired, reinitializing...');
+    return await initializeIrysUploader();
+  }
+  
+  // Verify the uploader is still valid
+  try {
+    if (irysUploader.address) {
+      return irysUploader;
+    }
+  } catch (error) {
+    console.log('[IrysUpload] Uploader validation failed, reinitializing...');
+    return await initializeIrysUploader();
+  }
+  
+  return irysUploader;
 }
 
 // Test function that returns mock data for testing UI
@@ -88,11 +151,9 @@ export async function uploadDashboardStats(
 ): Promise<{ success: boolean; transactionId?: string; error?: string }> {
   console.log('[IrysUpload] Uploading dashboard stats...');
   
-  if (!irysUploader) {
-    const uploader = await initializeIrysUploader();
-    if (!uploader) {
-      return { success: false, error: 'Failed to initialize Irys uploader' };
-    }
+  const uploader = await ensureUploaderReady();
+  if (!uploader) {
+    return { success: false, error: 'Failed to initialize Irys uploader' };
   }
 
   try {
@@ -119,7 +180,7 @@ export async function uploadDashboardStats(
     }
 
     console.log('[IrysUpload] Uploading stats with tags:', tags);
-    const result = await irysUploader!.upload(data, { tags });
+    const result = await uploader!.upload(data, { tags });
     console.log('[IrysUpload] Stats upload successful! Transaction ID:', result.id);
 
     // Update root reference if first upload
@@ -325,14 +386,10 @@ const statsRootRefs: { [dashboardId: string]: string } = {};
 export async function uploadDashboard(dashboard: any): Promise<{ success: boolean; transactionId?: string; mutableAddress?: string; rootTxId?: string; error?: string }> {
   console.log('[IrysUpload] Starting dashboard upload...');
   
-  if (!irysUploader) {
-    console.log('[IrysUpload] Irys uploader not initialized, initializing...');
-    const uploader = await initializeIrysUploader();
-    if (!uploader) {
-      console.error('[IrysUpload] Failed to initialize Irys uploader');
-      return { success: false, error: 'Failed to initialize Irys uploader. Please check your wallet connection.' };
-    }
-    console.log('[IrysUpload] Irys uploader initialized successfully');
+  const uploader = await ensureUploaderReady();
+  if (!uploader) {
+    console.error('[IrysUpload] Failed to initialize Irys uploader for dashboard upload');
+    return { success: false, error: 'Failed to initialize Irys uploader. Please check your wallet connection.' };
   }
 
   try {
@@ -375,7 +432,7 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     });
 
     console.log('[IrysUpload] Calling upload with options:', { tags });
-    const result = await irysUploader!.upload(data, { tags });
+    const result = await uploader!.upload(data, { tags });
     console.log('[IrysUpload] Upload successful! Transaction ID:', result.id);
     console.log('[IrysUpload] Full upload result:', result);
     

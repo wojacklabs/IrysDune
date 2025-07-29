@@ -260,4 +260,14 @@ const Chart: React.FC<ChartProps> = ({
   );
 };
 
-export default Chart; 
+export default React.memo(Chart, (prevProps, nextProps) => {
+  // Custom comparison to prevent re-renders unless data or chartType changes
+  return (
+    prevProps.chartType === nextProps.chartType &&
+    prevProps.title === nextProps.title &&
+    prevProps.shareText === nextProps.shareText &&
+    prevProps.hideTypeButtons === nextProps.hideTypeButtons &&
+    prevProps.hideActions === nextProps.hideActions &&
+    JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
+  );
+}); 

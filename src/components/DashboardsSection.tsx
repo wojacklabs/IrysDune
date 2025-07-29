@@ -439,20 +439,23 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
   const handleShareDashboard = async () => {
     if (!dashboardContentRef.current || !selectedDashboard) return;
     
-    setIsCapturing(true);
     try {
       const shareText = `Check out "${selectedDashboard.name}" on IrysDune - Decentralized Analytics Dashboard powered by @irys_xyz\n\n${selectedDashboard.description || ''}\n\nmade by @wojacklabs`;
       
+      // Don't set isCapturing before capture to avoid re-renders
+      // Just capture the current state
       await captureAndShare(
         dashboardContentRef.current, 
         shareText, 
         `irys-dashboard-${selectedDashboard.id}.png`
       );
+      
+      // Optionally show success feedback
+      setIsCapturing(true);
+      setTimeout(() => setIsCapturing(false), 1000);
     } catch (error) {
       console.error('Error capturing dashboard:', error);
       alert('Error occurred while capturing dashboard.');
-    } finally {
-      setIsCapturing(false);
     }
   };
 
@@ -504,10 +507,9 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   <button 
                     className="action-btn share-btn"
                     onClick={handleShareDashboard}
-                    disabled={isCapturing}
                   >
                     <Share2 size={16} />
-                    {isCapturing ? 'Capturing...' : 'Share'}
+                    {isCapturing ? 'Shared!' : 'Share'}
                   </button>
                   <button 
                     className="action-btn download-btn"
