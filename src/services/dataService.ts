@@ -6,7 +6,6 @@ const PROJECT_MUTABLE_ADDRESSES = {
   'cm-note': 'Ei8WyiVnVwKivD5tugJbfDPMvwiUW4Bm4tR7rpxKVy7v',
   'githirys': 'EE89vm1KE6TJ13sUtXbGsP1VQXGzzYdcwc5JhuNdEcmj',
   'irys-names': '9rEumMZWLFWAEwvhphkcpeoTd1cNJ1oxwvQUmodFChfE',
-  'lofty-drive': 'HwgjAu2Kxakg4ZXSfw3cbMkJBdDPvDpDodw4AdKrDTDq',
   'bridgebox': '3GksRnMj7kJvsDHQb7Ps53xbErwxim1L3PCJfd39pqfr',
   'irysdune': '4DSCHwgPoQpifPt2TzApacD7XWvDx6sTBBRPFzTNNmPp',
 };

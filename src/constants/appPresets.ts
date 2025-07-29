@@ -35,15 +35,6 @@ export const APP_PRESETS: AppPreset[] = [
     icon: irysNamesIcon
   },
   {
-    id: 'lofty-drive',
-    name: 'Lofty Drive',
-    tags: [
-      { name: 'App-Name', value: 'Lofty-Drive' }
-    ],
-    color: '#97E5DC',
-    icon: loftyIcon
-  },
-  {
     id: 'bridgebox',
     name: 'BridgeBox',
     tags: [
