@@ -300,9 +300,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
                   )}
                   <div className="app-info">
                     <div className="app-name">{app.name}</div>
-                    <div className="app-tags">
-                      {app.tags.map(tag => `${tag.name}:${tag.value}`).join(', ')}
-                    </div>
                   </div>
                 </div>
               </button>

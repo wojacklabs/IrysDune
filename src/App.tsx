@@ -155,7 +155,6 @@ function App() {
               </div>
               <h1>IrysDune</h1>
             </div>
-            <p className="tagline">Irys Ecosystem Analytics Dashboard</p>
           </div>
           <div className="header-right">
             <ConnectWallet 
