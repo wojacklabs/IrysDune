@@ -1093,6 +1093,7 @@ body::before {
 /* Chart wrapper styling */
 .chart-wrapper canvas {
   max-height: 100% !important;
+  height: auto !important;
 }
 
 .chart-description {
@@ -1178,7 +1179,6 @@ body::before {
   }
   
   .logo {
-    flex-direction: column;
     gap: 0.25rem;
   }
   
