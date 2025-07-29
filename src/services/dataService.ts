@@ -3,11 +3,11 @@ import { executeQuery, getCacheKey, getFromCache, setCache } from '../utils/quer
 
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES = {
-  'cm-note': '8rbFRHqeyJm7RpmWZd9oXc6Hzx9AGKh8DQhQJutzi7w9',
-  'githirys': '3V1UeKAa59NysrrQgpUiTj5GV8kbtutV7Qd78My2APxr',
-  'irys-names': 'D2ax61rb2n6H4esFT2RCeSmaUaEe3T6Zoe4ZESyFvWx1',
-  'bridgebox': 'AhpZULC8TK2TEGDXP5uZ7yFQ3mh96Usw5fKdGKo3WY6a',
-  'irysdune': '4DSCHwgPoQpifPt2TzApacD7XWvDx6sTBBRPFzTNNmPp',
+  'cm-note': 'EiLYQRLMDwxngnSQ3AkUACHKj5BdrL3CJPrLk2P6uhn6',
+  'githirys': 'Gw4TFdDLrREqo5C5f6fCdSoZzBkBEw32t2jik9uNMP4f',
+  'irys-names': '2Swe3xvD2fQ85o24cRwkt5QSUTtBmNzTnr4py6KHYJVS',
+  'bridgebox': 'HoxLcEgQgAuStevTPHzGGcASPUMCwE3ay6kN1UvKmASs',
+  'irysdune': 'CnmMhxnHpDxpJmsQB5ZgawRjKJUW9gcis8pCmYuLFABU',
 };
 
 // Data structure from the actual server data
