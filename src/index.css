@@ -1162,442 +1162,6 @@ body::before {
   color: var(--text-secondary);
 }
 
-/* === Responsive Design === */
-@media (max-width: 768px) {
-  /* Reduce excessive padding on mobile */
-  .header-content {
-    padding: 0 1rem;
-    gap: 0.5rem;
-  }
-  
-  .header-left {
-    gap: 0.5rem;
-  }
-  
-  .logo {
-    gap: 0.25rem;
-  }
-  
-  .logo h1 {
-    font-size: 1.5rem;
-  }
-  
-  .tagline {
-    display: none; /* Hide tagline on mobile */
-  }
-  
-  .nav-content {
-    padding: 0 1rem;
-    gap: 0.5rem;
-  }
-  
-  .nav-button {
-    font-size: 0.875rem;
-  }
-  
-  .main {
-    padding: 1rem;
-  }
-  
-  .container {
-    padding: 0;
-  }
-  
-  /* Compact card designs */
-  .card {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  .ecosystem-card,
-  .individual-card {
-    padding: 1rem;
-  }
-  
-  /* Section headers */
-  .section-header,
-  .ecosystem-header {
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-  }
-  
-  .ecosystem-title {
-    font-size: 1.25rem;
-    gap: 0.5rem;
-  }
-  
-  .ecosystem-title h3 {
-    font-size: 1.25rem;
-  }
-  
-  .cache-indicator {
-    font-size: 0.75rem;
-  }
-  
-  /* Time period selector - make more compact */
-  .time-period-selector {
-    gap: 0.25rem;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .period-button {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
-    white-space: nowrap;
-  }
-  
-  /* Header actions */
-  .header-actions {
-    flex-direction: row;
-    gap: 0.5rem;
-    width: 100%;
-  }
-  
-  .button-sm {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
-  }
-  
-  /* Chart container - maximize height */
-  .chart-container {
-    position: relative;
-    margin: 0.5rem 0;
-  }
-  
-  /* Chart controls */
-  .chart-controls {
-    margin-top: 0.5rem;
-  }
-  
-  .chart-header {
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .chart-title {
-    font-size: 1rem;
-  }
-  
-  .chart-types,
-  .chart-actions {
-    gap: 0.25rem;
-  }
-  
-  .chart-type-btn,
-  .action-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
-  }
-  
-  /* App selection grid - more compact */
-  .app-selection {
-    margin: 1rem 0;
-  }
-  
-  .app-grid {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  .app-card {
-    min-height: auto;
-  }
-  
-  .app-card-content {
-    gap: 0.5rem;
-  }
-  
-  .app-icon-img {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .app-info {
-    gap: 0.25rem;
-  }
-  
-  .app-name {
-    font-size: 0.875rem;
-  }
-  
-  .app-tags {
-    font-size: 0.75rem;
-    line-height: 1.2;
-  }
-  
-  /* Dashboard cards - more compact */
-  .dashboards-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .dashboard-card {
-    padding: 0.75rem;
-  }
-  
-  .dashboard-name {
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .dashboard-description {
-    font-size: 0.8125rem;
-    line-height: 1.4;
-    -webkit-line-clamp: 2;
-  }
-  
-  .dashboard-stats {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-  }
-  
-  .dashboard-author {
-    font-size: 0.75rem;
-  }
-  
-  /* Empty state */
-  .empty-state {
-    padding: 2rem 1rem;
-  }
-  
-  .empty-state h3 {
-    font-size: 1.25rem;
-  }
-  
-  .empty-state p {
-    font-size: 0.875rem;
-  }
-  
-  /* Modal adjustments */
-  .modal-content,
-  .large-modal .modal-content {
-    width: 95%;
-    max-width: none;
-    margin: 1rem;
-    padding: 1rem;
-    max-height: 90vh;
-  }
-  
-  .modal-header h2 {
-    font-size: 1.25rem;
-  }
-  
-  /* Dashboard view */
-  .dashboard-view {
-    padding: 1rem;
-  }
-  
-  .dashboard-info {
-    margin-bottom: 1rem;
-  }
-  
-  .dashboard-info h2 {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .dashboard-info > p {
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .dashboard-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  .meta-info {
-    font-size: 0.8125rem;
-    gap: 0.5rem;
-  }
-  
-  .dashboard-actions {
-    gap: 0.5rem;
-  }
-  
-  /* Dashboard charts grid */
-  .dashboard-charts-container {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .dashboard-chart-wrapper {
-    margin-bottom: 1rem;
-  }
-  
-  .dashboard-chart-wrapper .chart-header {
-    margin-bottom: 0.5rem;
-  }
-  
-  .dashboard-chart-wrapper h3 {
-    font-size: 1.125rem;
-  }
-  
-  .chart-description,
-  .preview-description {
-    font-size: 0.8125rem;
-    line-height: 1.4;
-  }
-  
-  /* Form elements */
-  .form-group label {
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    padding: 0.5rem;
-    font-size: 0.875rem;
-  }
-  
-  /* Query section */
-  .tag-inputs {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .tag-input {
-    min-width: 100%;
-  }
-  
-  .saved-queries {
-    margin-top: 1rem;
-  }
-  
-  .saved-queries-header {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-  
-  .saved-queries h3 {
-    font-size: 1rem;
-  }
-  
-  .query-item {
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .query-name {
-    font-size: 0.875rem;
-  }
-  
-  .query-tags {
-    font-size: 0.75rem;
-  }
-  
-  /* Footer */
-  .footer {
-    padding: 1rem 0;
-  }
-  
-  .footer-content {
-    padding: 0 1rem;
-    font-size: 0.8125rem;
-  }
-  
-  /* Wallet connect */
-  .connect-wallet {
-    font-size: 0.875rem;
-  }
-  
-  .wallet-info {
-    gap: 0.5rem;
-  }
-  
-  .wallet-address {
-    font-size: 0.8125rem;
-  }
-  
-  .disconnect-btn,
-  .connect-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.8125rem;
-  }
-  
-  /* Loading progress */
-  .loading-progress {
-    padding: 1rem;
-  }
-  
-  .progress-info {
-    font-size: 0.875rem;
-  }
-  
-  /* Charts list in modal */
-  .charts-list {
-    gap: 0.75rem;
-  }
-  
-  .chart-card {
-    padding: 0.75rem;
-  }
-  
-  .chart-number {
-    font-size: 0.875rem;
-    width: 1.75rem;
-    height: 1.75rem;
-  }
-  
-  .chart-meta {
-    font-size: 0.75rem;
-  }
-  
-  /* Hide cloud background on mobile to save performance */
-  .cloud-background {
-    display: none;
-  }
-  
-  /* Utility classes for mobile */
-  .hide-mobile {
-    display: none !important;
-  }
-  
-  .mobile-only {
-    display: block !important;
-  }
-  
-  /* Additional mobile optimizations */
-  .chart-wrapper {
-    padding: 0.5rem;
-    height: 300px !important;
-  }
-  
-  .chart-section {
-    padding: 0.75rem;
-  }
-  
-  .chart-wrapper h4 {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  /* Full width charts on mobile */
-  .chart-wrapper {
-    margin: 0 -0.5rem;
-  }
-  
-  /* Chart content area */
-  .chart-content {
-    padding: 0.5rem;
-  }
-  
-  /* Simplify chart legend on mobile */
-  .chart-container canvas {
-    max-height: 300px !important;
-  }
-}
-
 /* === Empty State === */
 .empty-state {
   text-align: center;
@@ -2191,4 +1755,439 @@ body::before {
   color: #6b7280;
   margin-top: 0.25rem;
   font-style: italic;
+}
+/* === Responsive Design === */
+@media (max-width: 768px) {
+  /* Reduce excessive padding on mobile */
+  .header-content {
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
+  
+  .header-left {
+    gap: 0.5rem;
+  }
+  
+  .logo {
+    gap: 0.25rem;
+  }
+  
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+  
+  .tagline {
+    display: none; /* Hide tagline on mobile */
+  }
+  
+  .nav-content {
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
+  
+  .nav-button {
+    font-size: 0.875rem;
+  }
+  
+  .main {
+    padding: 1rem;
+  }
+  
+  .container {
+    padding: 0;
+  }
+  
+  /* Compact card designs */
+  .card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .ecosystem-card,
+  .individual-card {
+    padding: 1rem;
+  }
+  
+  /* Section headers */
+  .section-header,
+  .ecosystem-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .ecosystem-title {
+    font-size: 1.25rem;
+    gap: 0.5rem;
+  }
+  
+  .ecosystem-title h3 {
+    font-size: 1.25rem;
+  }
+  
+  .cache-indicator {
+    font-size: 0.75rem;
+  }
+  
+  /* Time period selector - make more compact */
+  .time-period-selector {
+    gap: 0.25rem;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .period-button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+  
+  /* Header actions */
+  .header-actions {
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  
+  .button-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  
+  /* Chart container - maximize height */
+  .chart-container {
+    position: relative;
+    margin: 0.5rem 0;
+  }
+  
+  /* Chart controls */
+  .chart-controls {
+    margin-top: 0.5rem;
+  }
+  
+  .chart-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chart-title {
+    font-size: 1rem;
+  }
+  
+  .chart-types,
+  .chart-actions {
+    gap: 0.25rem;
+  }
+  
+  .chart-type-btn,
+  .action-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  
+  /* App selection grid - more compact */
+  .app-selection {
+    margin: 1rem 0;
+  }
+  
+  .app-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .app-card {
+    min-height: auto;
+  }
+  
+  .app-card-content {
+    gap: 0.5rem;
+  }
+  
+  .app-icon-img {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .app-info {
+    gap: 0.25rem;
+  }
+  
+  .app-name {
+    font-size: 0.875rem;
+  }
+  
+  .app-tags {
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+  
+  /* Dashboard cards - more compact */
+  .dashboards-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .dashboard-card {
+    padding: 0.75rem;
+  }
+  
+  .dashboard-name {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .dashboard-description {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    -webkit-line-clamp: 2;
+  }
+  
+  .dashboard-stats {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .dashboard-author {
+    font-size: 0.75rem;
+  }
+  
+  /* Empty state */
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .empty-state h3 {
+    font-size: 1.25rem;
+  }
+  
+  .empty-state p {
+    font-size: 0.875rem;
+  }
+  
+  /* Modal adjustments */
+  .modal-content,
+  .large-modal .modal-content {
+    width: 95%;
+    max-width: none;
+    margin: 1rem;
+    padding: 1rem;
+    max-height: 90vh;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  /* Dashboard view */
+  .dashboard-view {
+    padding: 1rem;
+  }
+  
+  .dashboard-info {
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .dashboard-info > p {
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .dashboard-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .meta-info {
+    font-size: 0.8125rem;
+    gap: 0.5rem;
+  }
+  
+  .dashboard-actions {
+    gap: 0.5rem;
+  }
+  
+  /* Dashboard charts grid */
+  .dashboard-charts-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .dashboard-chart-wrapper {
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-chart-wrapper .chart-header {
+    margin-bottom: 0.5rem;
+  }
+  
+  .dashboard-chart-wrapper h3 {
+    font-size: 1.125rem;
+  }
+  
+  .chart-description,
+  .preview-description {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+  
+  /* Form elements */
+  .form-group label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Query section */
+  .tag-inputs {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .tag-input {
+    min-width: 100%;
+  }
+  
+  .saved-queries {
+    margin-top: 1rem;
+  }
+  
+  .saved-queries-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  
+  .saved-queries h3 {
+    font-size: 1rem;
+  }
+  
+  .query-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .query-name {
+    font-size: 0.875rem;
+  }
+  
+  .query-tags {
+    font-size: 0.75rem;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 1rem 0;
+  }
+  
+  .footer-content {
+    padding: 0 1rem;
+    font-size: 0.8125rem;
+  }
+  
+  /* Wallet connect */
+  .connect-wallet {
+    font-size: 0.875rem;
+  }
+  
+  .wallet-info {
+    gap: 0.5rem;
+  }
+  
+  .wallet-address {
+    font-size: 0.8125rem;
+  }
+  
+  .disconnect-btn,
+  .connect-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+  
+  /* Loading progress */
+  .loading-progress {
+    padding: 1rem;
+  }
+  
+  .progress-info {
+    font-size: 0.875rem;
+  }
+  
+  /* Charts list in modal */
+  .charts-list {
+    gap: 0.75rem;
+  }
+  
+  .chart-card {
+    padding: 0.75rem;
+  }
+  
+  .chart-number {
+    font-size: 0.875rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .chart-meta {
+    font-size: 0.75rem;
+  }
+  
+  /* Hide cloud background on mobile to save performance */
+  .cloud-background {
+    display: none;
+  }
+  
+  /* Utility classes for mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+  
+  /* Additional mobile optimizations */
+  .chart-wrapper {
+    padding: 0.5rem;
+    height: 300px !important;
+  }
+  
+  .chart-section {
+    padding: 0.75rem;
+  }
+  
+  .chart-wrapper h4 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Full width charts on mobile */
+  .chart-wrapper {
+    margin: 0 -0.5rem;
+  }
+  
+  /* Chart content area */
+  .chart-content {
+    padding: 0.5rem;
+  }
+  
+  /* Simplify chart legend on mobile */
+  .chart-container canvas {
+    max-height: 300px !important;
+  }
 }

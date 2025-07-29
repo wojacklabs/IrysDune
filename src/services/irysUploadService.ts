@@ -459,6 +459,68 @@ export async function fetchDashboards(): Promise<any[]> {
         if (response.ok) {
           const dashboardData = await response.json();
           
+          // If dashboard doesn't have dateRange, we need to fetch timestamp from transaction
+          if (!dashboardData.charts?.some((chart: any) => chart.dateRange)) {
+            // Query for the root transaction to get timestamp
+            const txQuery = `
+              query {
+                transaction(id: "${addressInfo.rootTxId}") {
+                  id
+                  timestamp
+                }
+              }
+            `;
+            
+            try {
+              const txResponse = await fetch('https://uploader.irys.xyz/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: txQuery }),
+              });
+              
+              const txResult = await txResponse.json();
+              const timestamp = txResult.data?.transaction?.timestamp;
+              
+              if (timestamp) {
+                // Calculate dateRange for each chart
+                dashboardData.charts = dashboardData.charts?.map((chart: any) => {
+                  if (!chart.dateRange) {
+                    const uploadDate = timestamp;
+                    let startDate: number;
+                    
+                    switch (chart.timePeriod) {
+                      case 'week':
+                        startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
+                        break;
+                      case 'month':
+                        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+                        break;
+                      case 'quarter':
+                        startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
+                        break;
+                      case 'year':
+                        startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
+                        break;
+                      default:
+                        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+                    }
+                    
+                    return {
+                      ...chart,
+                      dateRange: {
+                        startDate,
+                        endDate: uploadDate
+                      }
+                    };
+                  }
+                  return chart;
+                }) || [];
+              }
+            } catch (error) {
+              console.error(`[IrysUpload] Error fetching timestamp for dashboard ${dashboardId}:`, error);
+            }
+          }
+          
           // Fetch stats for this dashboard
           const stats = await fetchDashboardStats(dashboardId);
           
@@ -496,6 +558,7 @@ export async function fetchDashboards(): Promise<any[]> {
           edges {
             node {
               id
+              timestamp
               tags {
                 name
                 value
@@ -530,7 +593,7 @@ export async function fetchDashboards(): Promise<any[]> {
     console.log('[IrysUpload] Found', allTransactions.length, 'transactions');
 
     // Group by dashboard ID and find root transactions
-    const dashboardRootTxMap = new Map<string, { rootTxId: string, latestTxId: string }>();
+    const dashboardRootTxMap = new Map<string, { rootTxId: string; latestTxId: string; timestamp?: number }>();
     
     for (const edge of allTransactions) {
       const tags = edge.node.tags || [];
@@ -543,14 +606,22 @@ export async function fetchDashboards(): Promise<any[]> {
         if (!rootTxTag) {
           // This is a root transaction
           if (!dashboardRootTxMap.has(dashboardId)) {
-            dashboardRootTxMap.set(dashboardId, { rootTxId: edge.node.id, latestTxId: edge.node.id });
-            console.log(`[IrysUpload] Found root tx for dashboard ${dashboardId}: ${edge.node.id}`);
+            dashboardRootTxMap.set(dashboardId, { 
+              rootTxId: edge.node.id, 
+              latestTxId: edge.node.id,
+              timestamp: edge.node.timestamp
+            });
+            console.log(`[IrysUpload] Found root tx for dashboard ${dashboardId}: ${edge.node.id} at ${new Date(edge.node.timestamp).toISOString()}`);
           }
         } else {
           // This is an update - only store if it's newer than what we have
           const existing = dashboardRootTxMap.get(dashboardId);
           if (!existing || existing.rootTxId === rootTxTag.value) {
-            dashboardRootTxMap.set(dashboardId, { rootTxId: rootTxTag.value, latestTxId: edge.node.id });
+            dashboardRootTxMap.set(dashboardId, { 
+              rootTxId: rootTxTag.value, 
+              latestTxId: edge.node.id,
+              timestamp: existing?.timestamp || edge.node.timestamp
+            });
             console.log(`[IrysUpload] Found update for dashboard ${dashboardId}: root=${rootTxTag.value}, latest=${edge.node.id}`);
           }
         }
@@ -563,7 +634,7 @@ export async function fetchDashboards(): Promise<any[]> {
     const loadedDashboardIds = new Set(dashboards.map(d => d.id));
     
     // Fetch latest data from mutable addresses for remaining dashboards
-    for (const [dashboardId, { rootTxId }] of dashboardRootTxMap) {
+    for (const [dashboardId, { rootTxId, timestamp }] of dashboardRootTxMap) {
       // Skip if already loaded from cache
       if (loadedDashboardIds.has(dashboardId)) {
         console.log(`[IrysUpload] Skipping dashboard ${dashboardId} - already loaded from cache`);
@@ -578,6 +649,43 @@ export async function fetchDashboards(): Promise<any[]> {
         
         if (dataResponse.ok) {
           const dashboardData = await dataResponse.json();
+          
+          // Calculate dateRange based on upload timestamp if not already set
+          if (!dashboardData.charts?.some((chart: any) => chart.dateRange) && timestamp) {
+            // For each chart, calculate dateRange based on the upload timestamp
+            dashboardData.charts = dashboardData.charts?.map((chart: any) => {
+              if (!chart.dateRange) {
+                const uploadDate = timestamp;
+                let startDate: number;
+                
+                switch (chart.timePeriod) {
+                  case 'week':
+                    startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
+                    break;
+                  case 'month':
+                    startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+                    break;
+                  case 'quarter':
+                    startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
+                    break;
+                  case 'year':
+                    startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
+                    break;
+                  default:
+                    startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+                }
+                
+                return {
+                  ...chart,
+                  dateRange: {
+                    startDate,
+                    endDate: uploadDate
+                  }
+                };
+              }
+              return chart;
+            }) || [];
+          }
           
           // Fetch stats for this dashboard
           const stats = await fetchDashboardStats(dashboardId);
