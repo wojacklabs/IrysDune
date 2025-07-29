@@ -553,16 +553,6 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
       <div className="section-header">
         <h2>Community Dashboards</h2>
         <div className="header-buttons">
-          <button 
-            className="test-btn"
-            onClick={async () => {
-              console.log('[DashboardsSection] Loading mock data for testing...');
-              const mockData = await fetchMockDashboards();
-              setDashboards(mockData);
-            }}
-          >
-            Test UI
-          </button>
           {walletAddress && (
             <button 
               className="create-btn"
