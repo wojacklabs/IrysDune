@@ -125,7 +125,7 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
 
   const getDisplayName = () => {
     if (username) {
-      return username;
+      return username + ".irys"
     }
     return formatAddress(address);
   };
