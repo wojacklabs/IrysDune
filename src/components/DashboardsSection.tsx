@@ -44,6 +44,45 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
   });
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Helper function to calculate dateRange for dashboard charts
+  const processDashboardDateRanges = (dashboard: Dashboard): Dashboard => {
+    return {
+      ...dashboard,
+      charts: dashboard.charts.map(chart => {
+        if (!chart.dateRange && dashboard.createdAt) {
+          const uploadDate = dashboard.createdAt;
+          let startDate: number;
+          
+          switch (chart.timePeriod) {
+            case 'week':
+              startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
+              break;
+            case 'month':
+              startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+              break;
+            case 'quarter':
+              startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
+              break;
+            case 'year':
+              startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
+              break;
+            default:
+              startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+          }
+          
+          return {
+            ...chart,
+            dateRange: {
+              startDate,
+              endDate: uploadDate
+            }
+          };
+        }
+        return chart;
+      })
+    };
+  };
+
   useEffect(() => {
     loadDashboards();
   }, []);
@@ -75,8 +114,11 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     if (cachedDashboards && cachedDashboards.length > 0) {
       console.log('[DashboardsSection] Using cached dashboards');
       
+      // Process dateRanges for cached dashboards
+      const dashboardsWithDateRanges = cachedDashboards.map(processDashboardDateRanges);
+      
       // Process liked status for cached dashboards
-      const dashboardsWithStats = cachedDashboards;
+      const dashboardsWithStats = dashboardsWithDateRanges;
       setDashboards(dashboardsWithStats);
       
       // Fetch Irys Names for all authors
@@ -138,7 +180,10 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
         index === self.findIndex((d) => d.id === dashboard.id)
       );
       
-      setDashboards(uniqueDashboards);
+      // Process dateRanges for all dashboards
+      const dashboardsWithDateRanges = uniqueDashboards.map(processDashboardDateRanges);
+      
+      setDashboards(dashboardsWithDateRanges);
       
       // Fetch Irys Names for all authors
       fetchIrysNamesForDashboards(uniqueDashboards);
@@ -322,8 +367,18 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
   };
 
   const handleDashboardClick = async (dashboard: Dashboard) => {
-    setSelectedDashboard(dashboard);
-    loadDashboardData(dashboard);
+    // Calculate dateRange for charts if not already set
+    const dashboardWithDateRange = processDashboardDateRanges(dashboard);
+    
+    console.log(`[DashboardSection] Selected dashboard with dateRanges:`, 
+      dashboardWithDateRange.charts.map(c => ({
+        title: c.title,
+        dateRange: c.dateRange
+      }))
+    );
+    
+    setSelectedDashboard(dashboardWithDateRange);
+    loadDashboardData(dashboardWithDateRange);
   };
 
   const handleCreateSuccess = (dashboard: Dashboard) => {
