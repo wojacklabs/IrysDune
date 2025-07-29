@@ -7,7 +7,6 @@ import {
   fetchDashboards, 
   toggleDashboardLike,
   debugFetchAllTransactions,
-  fetchMockDashboards 
 } from '../services/irysUploadService';
 import { 
   getCachedData, 
