@@ -580,14 +580,8 @@ body::before {
   margin-bottom: var(--space-xl);
 }
 
-.app-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--space-lg);
-}
-
 .app-card {
-  padding: 10px;
+  padding: 6px;
   background: var(--cloud-soft);
   border: 1px solid var(--cloud-whisper);
   border-radius: 25px;
@@ -599,7 +593,7 @@ body::before {
 }
 
 .app-card + .app-card {
-  margin-right: 6px;
+  margin-left: 6px;
 }
 
 .app-card:hover {
