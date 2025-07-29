@@ -1080,6 +1080,7 @@ body::before {
   display: flex;
   flex-direction: column;
   height: 300px; /* Fixed height for chart */
+  overflow: hidden; /* Prevent content from overflowing */
 }
 
 /* Chart.js canvas container */
@@ -1088,12 +1089,19 @@ body::before {
   flex: 1;
   min-height: 0;
   height: 100%; /* Ensure container takes full height */
+  overflow: hidden; /* Prevent chart overflow */
 }
 
 /* Chart wrapper styling */
 .chart-wrapper canvas {
   max-height: 100% !important;
   height: auto !important;
+}
+
+/* Treemap specific styling */
+.chart-wrapper .chartjs-treemap {
+  height: 100% !important;
+  max-height: 300px !important;
 }
 
 .chart-description {
@@ -2165,6 +2173,7 @@ body::before {
   .chart-wrapper {
     padding: 0.5rem;
     height: 300px !important;
+    overflow: hidden !important;
   }
   
   .chart-section {

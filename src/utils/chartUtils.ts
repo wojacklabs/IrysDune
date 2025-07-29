@@ -143,6 +143,11 @@ export function filterDataByPeriod(
     console.log(`[FilterData] Using absolute date range: ${new Date(absoluteDateRange.startDate).toISOString()} to ${new Date(absoluteDateRange.endDate).toISOString()}`);
   }
   
+  // Log actual timestamp range
+  if (periodTimestamps.length > 0) {
+    console.log(`[FilterData] Actual timestamp range: ${new Date(periodTimestamps[0]).toISOString()} to ${new Date(periodTimestamps[periodTimestamps.length - 1]).toISOString()}`);
+  }
+  
   Object.entries(data).forEach(([key, results]) => {
     console.log(`[FilterData] Processing ${key}: ${results.length} data points`);
     

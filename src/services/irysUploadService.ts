@@ -481,12 +481,16 @@ export async function fetchDashboards(): Promise<any[]> {
               const txResult = await txResponse.json();
               const timestamp = txResult.data?.transaction?.timestamp;
               
+              console.log(`[IrysUpload] Fetched timestamp for dashboard ${dashboardId}: ${timestamp} (${timestamp ? new Date(timestamp).toISOString() : 'null'})`);
+              
               if (timestamp) {
                 // Calculate dateRange for each chart
                 dashboardData.charts = dashboardData.charts?.map((chart: any) => {
                   if (!chart.dateRange) {
                     const uploadDate = timestamp;
                     let startDate: number;
+                    
+                    console.log(`[IrysUpload] Setting dateRange for chart "${chart.title}" with uploadDate: ${new Date(uploadDate).toISOString()}`);
                     
                     switch (chart.timePeriod) {
                       case 'week':
@@ -515,6 +519,15 @@ export async function fetchDashboards(): Promise<any[]> {
                   }
                   return chart;
                 }) || [];
+                
+                // Debug log to verify dateRange was set
+                console.log(`[IrysUpload] Dashboard ${dashboardId} charts with dateRange:`, 
+                  dashboardData.charts?.map((c: any) => ({
+                    title: c.title,
+                    dateRange: c.dateRange,
+                    timePeriod: c.timePeriod
+                  }))
+                );
               }
             } catch (error) {
               console.error(`[IrysUpload] Error fetching timestamp for dashboard ${dashboardId}:`, error);
@@ -609,9 +622,10 @@ export async function fetchDashboards(): Promise<any[]> {
             dashboardRootTxMap.set(dashboardId, { 
               rootTxId: edge.node.id, 
               latestTxId: edge.node.id,
-              timestamp: edge.node.timestamp
+              timestamp: edge.node.timestamp // Irys timestamp is already in milliseconds
             });
-            console.log(`[IrysUpload] Found root tx for dashboard ${dashboardId}: ${edge.node.id} at ${new Date(edge.node.timestamp).toISOString()}`);
+            console.log(`[IrysUpload] Found root tx for dashboard ${dashboardId}: ${edge.node.id}`);
+            console.log(`[IrysUpload] Timestamp: ${edge.node.timestamp} (${new Date(edge.node.timestamp).toISOString()})`);
           }
         } else {
           // This is an update - only store if it's newer than what we have
@@ -620,7 +634,7 @@ export async function fetchDashboards(): Promise<any[]> {
             dashboardRootTxMap.set(dashboardId, { 
               rootTxId: rootTxTag.value, 
               latestTxId: edge.node.id,
-              timestamp: existing?.timestamp || edge.node.timestamp
+              timestamp: existing?.timestamp || edge.node.timestamp // Preserve original timestamp
             });
             console.log(`[IrysUpload] Found update for dashboard ${dashboardId}: root=${rootTxTag.value}, latest=${edge.node.id}`);
           }

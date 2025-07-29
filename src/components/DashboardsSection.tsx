@@ -510,6 +510,10 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 };
                 const mappedPeriod = timePeriodMap[chart.timePeriod] || '30d';
                 
+                // Debug log to check dateRange
+                console.log(`[DashboardSection] Chart "${chart.title}" dateRange:`, chart.dateRange);
+                console.log(`[DashboardSection] Chart timePeriod: ${chart.timePeriod}, mappedPeriod: ${mappedPeriod}`);
+                
                 const filteredData = filterDataByPeriod(
                   chartDataForDisplay, 
                   mappedPeriod, 

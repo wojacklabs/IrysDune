@@ -169,7 +169,7 @@ const Chart: React.FC<ChartProps> = ({
       )}
       
       <div ref={chartRef} className="chart-wrapper">
-        <div style={{ position: 'relative', height: '300px', minHeight: '300px' }}>
+        <div style={{ position: 'relative', height: '250px', minHeight: '250px', maxHeight: '250px', overflow: 'hidden' }}>
           {chartType === 'treemap' ? (
             <ChartReact
               key={`treemap-${renderKey}`}
