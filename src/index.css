@@ -249,64 +249,39 @@ body::before {
 
 /* === Navigation === */
 .nav {
-  background: var(--cloud-soft);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--cloud-whisper);
+  padding-top: 15px;
   position: sticky;
   top: 72px;
   z-index: 90;
 }
 
 .nav-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--space-xl);
-  display: flex;
-  gap: var(--space-xs);
+  display: inline-block;
+  background-color: white;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
 }
 
 .nav-button {
-  padding: var(--space-md) var(--space-xl) calc(1rem - 3px);
+  padding: 8px 12px;
   background: transparent;
   border: none;
-  border-bottom: 3px solid transparent;
+  border-radius: 25px;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-normal);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
   position: relative;
   overflow: hidden;
 }
 
-.nav-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, transparent, var(--sky-100));
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-}
-
-.nav-button:hover {
-  color: var(--sky-700);
-}
-
-.nav-button:hover::before {
-  opacity: 0.5;
-}
-
 .nav-button.active {
-  color: var(--sky-600);
-  border-bottom-color: var(--sky-500);
-  background: linear-gradient(180deg, transparent, var(--sky-50));
+  background: #0ea5e9;
+  color: #fff;
 }
 
 /* === Main Content === */
@@ -314,7 +289,7 @@ body::before {
   flex: 1;
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl);
+  padding: 1rem;
   width: 100%;
 }
 
@@ -2155,19 +2130,6 @@ body::before {
   
   .tagline {
     display: none; /* Hide tagline on mobile */
-  }
-  
-  .nav-content {
-    padding: 0 1rem;
-    gap: 0.5rem;
-  }
-  
-  .nav-button {
-    font-size: 0.875rem;
-  }
-  
-  .main {
-    padding: 1rem;
   }
   
   .container {
