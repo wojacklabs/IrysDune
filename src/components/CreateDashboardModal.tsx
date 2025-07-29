@@ -189,25 +189,26 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       return;
     }
 
-    // Calculate absolute date range based on timePeriod
+    // Calculate absolute date range based on current time
     const now = Date.now();
     let startDate: number;
+    let endDate = now;
     
     switch (timePeriod) {
       case 'week':
-        startDate = now - (7 * 24 * 60 * 60 * 1000);
+        startDate = now - 7 * 24 * 60 * 60 * 1000;
         break;
       case 'month':
-        startDate = now - (30 * 24 * 60 * 60 * 1000);
+        startDate = now - 30 * 24 * 60 * 60 * 1000;
         break;
       case 'quarter':
-        startDate = now - (90 * 24 * 60 * 60 * 1000);
+        startDate = now - 90 * 24 * 60 * 60 * 1000;
         break;
       case 'year':
-        startDate = now - (365 * 24 * 60 * 60 * 1000);
+        startDate = now - 365 * 24 * 60 * 60 * 1000;
         break;
       default:
-        startDate = now - (30 * 24 * 60 * 60 * 1000);
+        startDate = now - 30 * 24 * 60 * 60 * 1000;
     }
 
     const newChart: ChartConfig = {
@@ -220,13 +221,17 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       timePeriod,
       dateRange: {
         startDate,
-        endDate: now
+        endDate
       },
       color: '#3b82f6', // default color for compatibility
       tags: [] // legacy support
     };
 
     if (editingChart) {
+      // Preserve existing date range when editing
+      if (editingChart.dateRange) {
+        newChart.dateRange = editingChart.dateRange;
+      }
       setCharts(charts.map(c => c.id === editingChart.id ? newChart : c));
       setEditingChart(null);
     } else {

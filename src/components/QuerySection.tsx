@@ -117,7 +117,7 @@ const QuerySection: React.FC = () => {
   };
 
   // Filter data based on selected time period
-  const filteredData = filterDataByPeriod(data, timePeriod, chartType === 'stacked');
+  const filteredData = filterDataByPeriod(data, timePeriod, chartType === 'stacked', undefined);
   const chartData = generateChartData(filteredData, queries, chartType);
   const shareText = generateShareText(queries, chartType);
 

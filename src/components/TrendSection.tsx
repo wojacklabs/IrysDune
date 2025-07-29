@@ -184,8 +184,8 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   }, [selectedApps]);
 
   const selectedPresets = getPresetsByIds(selectedApps);
-  const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod, chartType === 'stacked');
-  const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod, ecosystemChartType === 'stacked');
+  const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod, chartType === 'stacked', undefined);
+  const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod, ecosystemChartType === 'stacked', undefined);
   const chartData = generateChartData(individualFilteredData, selectedPresets, chartType);
   const wholeEcosystemData = generateWholeEcosystemData(ecosystemFilteredData, ecosystemChartType);
   const shareText = generateShareText(selectedPresets, chartType);
@@ -242,7 +242,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             data={wholeEcosystemData}
             chartType={ecosystemChartType}
             title=""
-            shareText={`Irys Whole Ecosystem Activity 📊\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune`}
+            shareText={`Irys Whole Ecosystem Activity\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
             onTypeChange={setEcosystemChartType}
           />
         ) : (

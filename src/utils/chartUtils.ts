@@ -62,10 +62,61 @@ function generateDefaultDataPoints(period: '7d' | '30d' | '3M' | '6M'): number[]
   return uniqueTimestamps;
 }
 
+// Generate data points for a specific date range
+function generateDefaultDataPointsForRange(startDate: number, endDate: number, period: '7d' | '30d' | '3M' | '6M'): number[] {
+  const timestamps: number[] = [];
+  
+  switch (period) {
+    case '7d':
+      // Daily points at noon
+      const days = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000));
+      for (let i = 0; i <= days; i++) {
+        const date = new Date(startDate + (i * 24 * 60 * 60 * 1000));
+        date.setHours(12, 0, 0, 0);
+        if (date.getTime() <= endDate) {
+          timestamps.push(date.getTime());
+        }
+      }
+      break;
+    case '30d':
+      // Every 2 days at noon
+      const thirtyDays = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000));
+      for (let i = 0; i <= thirtyDays; i += 2) {
+        const date = new Date(startDate + (i * 24 * 60 * 60 * 1000));
+        date.setHours(12, 0, 0, 0);
+        if (date.getTime() <= endDate) {
+          timestamps.push(date.getTime());
+        }
+      }
+      break;
+    case '3M':
+    case '6M':
+      // Weekly points (every Monday at noon)
+      const weeks = Math.ceil((endDate - startDate) / (7 * 24 * 60 * 60 * 1000));
+      for (let i = 0; i <= weeks; i++) {
+        const date = new Date(startDate + (i * 7 * 24 * 60 * 60 * 1000));
+        // Set to Monday of that week
+        const dayOfWeek = date.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        date.setDate(date.getDate() - daysToMonday);
+        date.setHours(12, 0, 0, 0);
+        if (date.getTime() <= endDate && date.getTime() >= startDate) {
+          timestamps.push(date.getTime());
+        }
+      }
+      break;
+  }
+  
+  // Remove duplicates and sort
+  const uniqueTimestamps = [...new Set(timestamps)].sort((a, b) => a - b);
+  return uniqueTimestamps;
+}
+
 export function filterDataByPeriod(
   data: { [key: string]: QueryResult[] },
   period: '7d' | '30d' | '3M' | '6M',
-  isForCumulative: boolean = false
+  isForCumulative: boolean = false,
+  absoluteDateRange?: { startDate: number; endDate: number }
 ): { [key: string]: QueryResult[] } {
   const now = Date.now();
   const periodMs = {
@@ -75,15 +126,22 @@ export function filterDataByPeriod(
     '6M': 180 * 24 * 60 * 60 * 1000
   };
   
-  const cutoffTime = now - periodMs[period];
+  // Use absolute date range if provided, otherwise calculate from period
+  const cutoffTime = absoluteDateRange ? absoluteDateRange.startDate : now - periodMs[period];
+  
   const filteredData: { [key: string]: QueryResult[] } = {};
   
   // Always generate period-specific timestamps for consistent time axis
-  const periodTimestamps = generateDefaultDataPoints(period);
+  const periodTimestamps = absoluteDateRange 
+    ? generateDefaultDataPointsForRange(absoluteDateRange.startDate, absoluteDateRange.endDate, period)
+    : generateDefaultDataPoints(period);
   
   // Debug logging
   console.log(`[FilterData] Period: ${period}, isForCumulative: ${isForCumulative}`);
   console.log(`[FilterData] Generated ${periodTimestamps.length} timestamps`);
+  if (absoluteDateRange) {
+    console.log(`[FilterData] Using absolute date range: ${new Date(absoluteDateRange.startDate).toISOString()} to ${new Date(absoluteDateRange.endDate).toISOString()}`);
+  }
   
   Object.entries(data).forEach(([key, results]) => {
     console.log(`[FilterData] Processing ${key}: ${results.length} data points`);
@@ -804,7 +862,7 @@ export function generateShareText(
   const appNames = presets.map(p => p.name).join(', ');
   const typeText = chartType === 'stacked' ? 'Cumulative' : 'Daily';
   
-  return `Irys Ecosystem Activity Analysis 📊\n\nApps: ${appNames}\nChart Type: ${typeText}\n\n#Irys #Web3 #Analytics #IrysDune`;
+  return `Irys Ecosystem Activity Analysis\n\nApps: ${appNames}\nChart Type: ${typeText}\n\n#Irys #Web3 #Analytics #IrysDune \n made by @wojacklabs`;
 }
 
 export function calculateTotalActivity(data: { [key: string]: QueryResult[] }): number {

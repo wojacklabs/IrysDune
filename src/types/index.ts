@@ -56,8 +56,6 @@ export interface ChartConfig {
     name: string;
     tags: Tag[];
     color: string;
-    isGroup?: boolean;
-    groupName?: string;
   }>;
   chartType: ChartType;
   timePeriod: 'week' | 'month' | 'quarter' | 'year';

@@ -182,7 +182,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     if (name === dashboard.authorAddress) {
       return formatAddress(dashboard.authorAddress);
     }
-    return name + ".irys";
+    return name;
   };
 
   const filterDashboards = () => {
@@ -386,7 +386,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     
     setIsCapturing(true);
     try {
-      const shareText = `Check out "${selectedDashboard.name}" on IrysDune - Decentralized Analytics Dashboard powered by @irys_xyz\n\n${selectedDashboard.description || ''}`;
+      const shareText = `Check out "${selectedDashboard.name}" on IrysDune - Decentralized Analytics Dashboard powered by @irys_xyz\n\n${selectedDashboard.description || ''}\n\nmade by @wojacklabs`;
       
       await captureAndShare(
         dashboardContentRef.current, 
@@ -435,7 +435,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               <div className="dashboard-meta">
                 <div className="meta-info">
                   <span>By {getFormattedAuthor(selectedDashboard)}</span>
-                  <span> • </span>
+                  <span>•</span>
                   <span>{selectedDashboard.likes} likes</span>
                   <button 
                     className={`like-btn ${likedDashboards.has(selectedDashboard.id) ? 'liked' : ''}`}
@@ -510,34 +510,23 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 };
                 const mappedPeriod = timePeriodMap[chart.timePeriod] || '30d';
                 
-                let filteredData;
-                
-                // If chart has dateRange, filter by absolute date range
-                if (chart.dateRange) {
-                  const { startDate, endDate } = chart.dateRange;
-                  const absoluteFilteredData: { [key: string]: QueryResult[] } = {};
-                  
-                  Object.entries(chartDataForDisplay).forEach(([key, results]) => {
-                    absoluteFilteredData[key] = results.filter(result => 
-                      result.timestamp >= startDate && result.timestamp <= endDate
-                    );
-                  });
-                  
-                  filteredData = absoluteFilteredData;
-                } else {
-                  // Fallback to relative period filtering for legacy dashboards
-                  filteredData = filterDataByPeriod(
-                    chartDataForDisplay, 
-                    mappedPeriod, 
-                    chart.chartType === 'stacked'
-                  );
-                }
+                const filteredData = filterDataByPeriod(
+                  chartDataForDisplay, 
+                  mappedPeriod, 
+                  chart.chartType === 'stacked',
+                  chart.dateRange // Pass absolute date range if available
+                );
                 
                 return (
                   <div key={chart.id} className="dashboard-chart-wrapper">
                     <div className="chart-header">
                       <h3>{chart.title}</h3>
                       {chart.description && <p className="chart-description">{chart.description}</p>}
+                      {chart.dateRange && (
+                        <p className="chart-date-range">
+                          {new Date(chart.dateRange.startDate).toLocaleDateString()} - {new Date(chart.dateRange.endDate).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                     <Chart 
                       data={generateChartData(filteredData, queriesForDisplay, chart.chartType)}
