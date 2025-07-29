@@ -56,9 +56,16 @@ export interface ChartConfig {
     name: string;
     tags: Tag[];
     color: string;
+    isGroup?: boolean;
+    groupName?: string;
   }>;
   chartType: ChartType;
   timePeriod: 'week' | 'month' | 'quarter' | 'year';
+  // Absolute date range - fixed at creation time
+  dateRange?: {
+    startDate: number; // timestamp
+    endDate: number; // timestamp
+  };
   // Legacy support
   tags?: Tag[];
   color: string; // made required for compatibility

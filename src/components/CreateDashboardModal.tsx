@@ -189,6 +189,27 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       return;
     }
 
+    // Calculate absolute date range based on timePeriod
+    const now = Date.now();
+    let startDate: number;
+    
+    switch (timePeriod) {
+      case 'week':
+        startDate = now - (7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        startDate = now - (30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'quarter':
+        startDate = now - (90 * 24 * 60 * 60 * 1000);
+        break;
+      case 'year':
+        startDate = now - (365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = now - (30 * 24 * 60 * 60 * 1000);
+    }
+
     const newChart: ChartConfig = {
       id: `chart-${Date.now()}`,
       name: chartTitle.trim(), // for compatibility
@@ -197,6 +218,10 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       queries: selectedQueries,
       chartType,
       timePeriod,
+      dateRange: {
+        startDate,
+        endDate: now
+      },
       color: '#3b82f6', // default color for compatibility
       tags: [] // legacy support
     };

@@ -510,11 +510,28 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 };
                 const mappedPeriod = timePeriodMap[chart.timePeriod] || '30d';
                 
-                const filteredData = filterDataByPeriod(
-                  chartDataForDisplay, 
-                  mappedPeriod, 
-                  chart.chartType === 'stacked'
-                );
+                let filteredData;
+                
+                // If chart has dateRange, filter by absolute date range
+                if (chart.dateRange) {
+                  const { startDate, endDate } = chart.dateRange;
+                  const absoluteFilteredData: { [key: string]: QueryResult[] } = {};
+                  
+                  Object.entries(chartDataForDisplay).forEach(([key, results]) => {
+                    absoluteFilteredData[key] = results.filter(result => 
+                      result.timestamp >= startDate && result.timestamp <= endDate
+                    );
+                  });
+                  
+                  filteredData = absoluteFilteredData;
+                } else {
+                  // Fallback to relative period filtering for legacy dashboards
+                  filteredData = filterDataByPeriod(
+                    chartDataForDisplay, 
+                    mappedPeriod, 
+                    chart.chartType === 'stacked'
+                  );
+                }
                 
                 return (
                   <div key={chart.id} className="dashboard-chart-wrapper">
