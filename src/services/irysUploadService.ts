@@ -440,6 +440,41 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
   }
 }
 
+// Helper function to calculate dateRange based on upload timestamp
+function calculateDateRangeForCharts(charts: any[], uploadTimestamp: number): any[] {
+  return charts?.map((chart: any) => {
+    const uploadDate = uploadTimestamp;
+    let startDate: number;
+    
+    console.log(`[IrysUpload] Setting dateRange for chart "${chart.title}" with uploadDate: ${new Date(uploadDate).toISOString()}`);
+    
+    switch (chart.timePeriod) {
+      case 'week':
+        startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
+        break;
+      case 'month':
+        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+        break;
+      case 'quarter':
+        startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
+        break;
+      case 'year':
+        startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
+        break;
+      default:
+        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
+    }
+    
+    return {
+      ...chart,
+      dateRange: {
+        startDate,
+        endDate: uploadDate
+      }
+    };
+  }) || [];
+}
+
 export async function fetchDashboards(): Promise<any[]> {
   console.log('[IrysUpload] Starting dashboard fetch...');
 
@@ -459,8 +494,8 @@ export async function fetchDashboards(): Promise<any[]> {
         if (response.ok) {
           const dashboardData = await response.json();
           
-          // If dashboard doesn't have dateRange, we need to fetch timestamp from transaction
-          if (!dashboardData.charts?.some((chart: any) => chart.dateRange)) {
+                      // Always fetch timestamp from transaction to calculate dateRange
+            if (true) {
             // Query for the root transaction to get timestamp
             const txQuery = `
               query {
@@ -485,40 +520,7 @@ export async function fetchDashboards(): Promise<any[]> {
               
               if (timestamp) {
                 // Calculate dateRange for each chart
-                dashboardData.charts = dashboardData.charts?.map((chart: any) => {
-                  if (!chart.dateRange) {
-                    const uploadDate = timestamp;
-                    let startDate: number;
-                    
-                    console.log(`[IrysUpload] Setting dateRange for chart "${chart.title}" with uploadDate: ${new Date(uploadDate).toISOString()}`);
-                    
-                    switch (chart.timePeriod) {
-                      case 'week':
-                        startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
-                        break;
-                      case 'month':
-                        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
-                        break;
-                      case 'quarter':
-                        startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
-                        break;
-                      case 'year':
-                        startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
-                        break;
-                      default:
-                        startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
-                    }
-                    
-                    return {
-                      ...chart,
-                      dateRange: {
-                        startDate,
-                        endDate: uploadDate
-                      }
-                    };
-                  }
-                  return chart;
-                }) || [];
+                dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, timestamp);
                 
                 // Debug log to verify dateRange was set
                 console.log(`[IrysUpload] Dashboard ${dashboardId} charts with dateRange:`, 
@@ -537,7 +539,7 @@ export async function fetchDashboards(): Promise<any[]> {
           // Fetch stats for this dashboard
           const stats = await fetchDashboardStats(dashboardId);
           
-          dashboards.push({
+          const finalDashboard = {
             ...dashboardData,
             transactionId: addressInfo.rootTxId,
             mutableAddress: mutableUrl,
@@ -545,7 +547,18 @@ export async function fetchDashboards(): Promise<any[]> {
             views: stats?.views || 0,
             likes: stats?.likes || 0,
             likedBy: stats?.likedBy || [] // Include likedBy for frontend use
-          });
+          };
+          
+          // Log final dashboard dateRange status
+          console.log(`[IrysUpload] Final dashboard "${finalDashboard.name}" charts:`, 
+            finalDashboard.charts?.map((c: any) => ({
+              title: c.title,
+              hasDateRange: !!c.dateRange,
+              dateRange: c.dateRange
+            }))
+          );
+          
+          dashboards.push(finalDashboard);
           
           console.log(`[IrysUpload] Successfully loaded dashboard from cache: ${dashboardData.name}`);
         } else {
@@ -664,47 +677,16 @@ export async function fetchDashboards(): Promise<any[]> {
         if (dataResponse.ok) {
           const dashboardData = await dataResponse.json();
           
-          // Calculate dateRange based on upload timestamp if not already set
-          if (!dashboardData.charts?.some((chart: any) => chart.dateRange) && timestamp) {
+                      // Always calculate dateRange based on upload timestamp
+            if (timestamp) {
             // For each chart, calculate dateRange based on the upload timestamp
-            dashboardData.charts = dashboardData.charts?.map((chart: any) => {
-              if (!chart.dateRange) {
-                const uploadDate = timestamp;
-                let startDate: number;
-                
-                switch (chart.timePeriod) {
-                  case 'week':
-                    startDate = uploadDate - 7 * 24 * 60 * 60 * 1000;
-                    break;
-                  case 'month':
-                    startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
-                    break;
-                  case 'quarter':
-                    startDate = uploadDate - 90 * 24 * 60 * 60 * 1000;
-                    break;
-                  case 'year':
-                    startDate = uploadDate - 365 * 24 * 60 * 60 * 1000;
-                    break;
-                  default:
-                    startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
-                }
-                
-                return {
-                  ...chart,
-                  dateRange: {
-                    startDate,
-                    endDate: uploadDate
-                  }
-                };
-              }
-              return chart;
-            }) || [];
+            dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, timestamp);
           }
           
           // Fetch stats for this dashboard
           const stats = await fetchDashboardStats(dashboardId);
           
-          dashboards.push({
+          const finalDashboard = {
             ...dashboardData,
             transactionId: rootTxId,
             mutableAddress: mutableAddress,
@@ -712,7 +694,18 @@ export async function fetchDashboards(): Promise<any[]> {
             views: stats?.views || 0,
             likes: stats?.likes || 0,
             likedBy: stats?.likedBy || [] // Include likedBy for frontend use
-          });
+          };
+          
+          // Log final dashboard dateRange status
+          console.log(`[IrysUpload] Final dashboard "${finalDashboard.name}" charts:`, 
+            finalDashboard.charts?.map((c: any) => ({
+              title: c.title,
+              hasDateRange: !!c.dateRange,
+              dateRange: c.dateRange
+            }))
+          );
+          
+          dashboards.push(finalDashboard);
           
           // Save mutable address to cache
           saveMutableAddress(dashboardId, rootTxId, mutableAddress);
