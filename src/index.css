@@ -1625,17 +1625,22 @@ body::before {
 
 /* Wallet Connection */
 .connect-wallet {
+  overflow: hidden;
   display: flex;
   align-items: center;
 }
 
 .wallet-info {
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
 .wallet-address {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: monospace;
   font-size: 0.875rem;
   color: #6b7280;
@@ -1690,6 +1695,7 @@ body::before {
 }
 
 .header-right {
+  overflow: hidden;
   display: flex;
   align-items: center;
 }
