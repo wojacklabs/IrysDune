@@ -3,10 +3,10 @@ import { executeQuery, getCacheKey, getFromCache, setCache } from '../utils/quer
 
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES = {
-  'cm-note': 'Ei8WyiVnVwKivD5tugJbfDPMvwiUW4Bm4tR7rpxKVy7v',
-  'githirys': 'EE89vm1KE6TJ13sUtXbGsP1VQXGzzYdcwc5JhuNdEcmj',
-  'irys-names': '9rEumMZWLFWAEwvhphkcpeoTd1cNJ1oxwvQUmodFChfE',
-  'bridgebox': '3GksRnMj7kJvsDHQb7Ps53xbErwxim1L3PCJfd39pqfr',
+  'cm-note': '8rbFRHqeyJm7RpmWZd9oXc6Hzx9AGKh8DQhQJutzi7w9',
+  'githirys': '3V1UeKAa59NysrrQgpUiTj5GV8kbtutV7Qd78My2APxr',
+  'irys-names': 'D2ax61rb2n6H4esFT2RCeSmaUaEe3T6Zoe4ZESyFvWx1',
+  'bridgebox': 'AhpZULC8TK2TEGDXP5uZ7yFQ3mh96Usw5fKdGKo3WY6a',
   'irysdune': '4DSCHwgPoQpifPt2TzApacD7XWvDx6sTBBRPFzTNNmPp',
 };
 
