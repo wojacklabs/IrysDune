@@ -253,6 +253,7 @@ body::before {
   position: sticky;
   top: 72px;
   z-index: 90;
+  text-align: center;
 }
 
 .nav-content {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Grid3x3 } from 'lucide-react';
 import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
 import { ConnectWallet } from './components/ConnectWallet';
@@ -174,14 +173,12 @@ function App() {
             onClick={() => setActiveTab('trends')}
             className={`nav-button ${activeTab === 'trends' ? 'active' : ''}`}
           >
-            <TrendingUp size={20} />
             Trends
           </button>
           <button
             onClick={() => setActiveTab('dashboards')}
             className={`nav-button ${activeTab === 'dashboards' ? 'active' : ''}`}
           >
-            <Grid3x3 size={20} />
             Dashboards
           </button>
         </div>
