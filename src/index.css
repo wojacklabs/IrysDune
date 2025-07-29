@@ -1428,10 +1428,17 @@ body::before {
 }
 
 /* Dashboard actions */
+.dashboard-clickable + .dashboard-actions {
+  margin-top: 10px;
+}
+
+.chart-date-range {
+  margin-top: 10px;
+}
+
 .dashboard-actions {
   display: flex;
   gap: 0.75rem;
-  margin-top: 10px;
 }
 
 .action-btn {
