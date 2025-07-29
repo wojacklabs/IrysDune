@@ -586,7 +586,7 @@ body::before {
 }
 
 .app-card {
-  padding: 10px;
+  padding: var(--space-lg);
   background: var(--cloud-soft);
   border: 2px solid var(--cloud-whisper);
   border-radius: var(--radius-xl);
@@ -629,7 +629,7 @@ body::before {
 
 .app-card-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
   position: relative;
   z-index: 1;
@@ -650,6 +650,7 @@ body::before {
 .app-tags {
   font-size: 0.75rem;
   color: var(--text-tertiary);
+  margin-bottom: var(--space-sm);
 }
 
 .app-color-indicator {
@@ -1079,6 +1080,7 @@ body::before {
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 300px; /* Fixed height for chart */
 }
 
 /* Chart.js canvas container */
@@ -1086,6 +1088,7 @@ body::before {
   position: relative;
   flex: 1;
   min-height: 0;
+  height: 100%; /* Ensure container takes full height */
 }
 
 /* Chart wrapper styling */
@@ -1302,6 +1305,7 @@ body::before {
   }
   
   .app-card {
+    padding: 0.75rem;
     min-height: auto;
   }
   
@@ -1567,6 +1571,7 @@ body::before {
   /* Additional mobile optimizations */
   .chart-wrapper {
     padding: 0.5rem;
+    height: 300px !important;
   }
   
   .chart-section {

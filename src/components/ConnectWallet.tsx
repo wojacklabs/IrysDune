@@ -40,13 +40,23 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
   }, [walletAddress]);
 
   const checkConnection = async () => {
+    // Check for various wallet providers
+    let provider = null;
+    
     if (typeof window.ethereum !== 'undefined') {
+      provider = window.ethereum;
+    } else if (typeof (window as any).okxwallet !== 'undefined') {
+      provider = (window as any).okxwallet;
+    } else if (typeof (window as any).web3 !== 'undefined' && (window as any).web3.currentProvider) {
+      provider = (window as any).web3.currentProvider;
+    }
+    
+    if (provider) {
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.listAccounts();
+        const ethersProvider = new ethers.BrowserProvider(provider);
+        const accounts = await ethersProvider.listAccounts();
         if (accounts.length > 0) {
-          const signer = await provider.getSigner();
-          const addr = await signer.getAddress();
+          const addr = accounts[0].address;
           setAddress(addr);
           setIsConnected(true);
           onConnect(addr);
@@ -58,21 +68,38 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
   };
 
   const connectWallet = async () => {
-    // Give MetaMask time to inject ethereum object
-    if (typeof window.ethereum === 'undefined') {
-      // Wait a bit and check again
-      await new Promise(resolve => setTimeout(resolve, 100));
-      if (typeof window.ethereum === 'undefined') {
-        alert('Please install MetaMask or another Ethereum wallet');
-        return;
-      }
+    // Check for various wallet providers
+    let provider = null;
+    
+    // Give wallets time to inject their providers
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Check for different wallet providers in order of preference
+    if (typeof window.ethereum !== 'undefined') {
+      provider = window.ethereum;
+    } else if (typeof (window as any).okxwallet !== 'undefined') {
+      provider = (window as any).okxwallet;
+    } else if (typeof (window as any).web3 !== 'undefined' && (window as any).web3.currentProvider) {
+      provider = (window as any).web3.currentProvider;
+    }
+    
+    if (!provider) {
+      alert('Please install MetaMask, OKX Wallet, or another Ethereum wallet');
+      return;
     }
 
     setIsConnecting(true);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      
+      // Request account access
+      if (provider.request) {
+        await provider.request({ method: 'eth_requestAccounts' });
+      } else {
+        await ethersProvider.send("eth_requestAccounts", []);
+      }
+      
+      const signer = await ethersProvider.getSigner();
       const addr = await signer.getAddress();
       
       setAddress(addr);
