@@ -480,7 +480,7 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-xl);
+  margin-bottom: 15px;
   flex-wrap: wrap;
   gap: var(--space-lg);
 }
