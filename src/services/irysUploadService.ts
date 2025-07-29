@@ -441,9 +441,16 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
 }
 
 // Helper function to calculate dateRange based on upload timestamp
-function calculateDateRangeForCharts(charts: any[], uploadTimestamp: number): any[] {
+function calculateDateRangeForCharts(charts: any[], uploadTimestamp: number | string): any[] {
+  const timestamp = typeof uploadTimestamp === 'string' ? parseInt(uploadTimestamp) : uploadTimestamp;
+  
+  if (!timestamp || isNaN(timestamp)) {
+    console.log(`[IrysUpload] Invalid timestamp: ${uploadTimestamp}`);
+    return charts || [];
+  }
+  
   return charts?.map((chart: any) => {
-    const uploadDate = uploadTimestamp;
+    const uploadDate = timestamp;
     let startDate: number;
     
     console.log(`[IrysUpload] Setting dateRange for chart "${chart.title}" with uploadDate: ${new Date(uploadDate).toISOString()}`);
@@ -464,6 +471,8 @@ function calculateDateRangeForCharts(charts: any[], uploadTimestamp: number): an
       default:
         startDate = uploadDate - 30 * 24 * 60 * 60 * 1000;
     }
+    
+    console.log(`[IrysUpload] Chart "${chart.title}" dateRange: ${new Date(startDate).toISOString()} to ${new Date(uploadDate).toISOString()}`);
     
     return {
       ...chart,
@@ -502,6 +511,9 @@ export async function fetchDashboards(): Promise<any[]> {
                 transaction(id: "${addressInfo.rootTxId}") {
                   id
                   timestamp
+                  receipt {
+                    timestamp
+                  }
                 }
               }
             `;
@@ -514,13 +526,14 @@ export async function fetchDashboards(): Promise<any[]> {
               });
               
               const txResult = await txResponse.json();
-              const timestamp = txResult.data?.transaction?.timestamp;
+              const timestamp = txResult.data?.transaction?.receipt?.timestamp || 
+                               txResult.data?.transaction?.timestamp;
               
-              console.log(`[IrysUpload] Fetched timestamp for dashboard ${dashboardId}: ${timestamp} (${timestamp ? new Date(timestamp).toISOString() : 'null'})`);
+              console.log(`[IrysUpload] Fetched timestamp for dashboard ${dashboardId}: ${timestamp} (${timestamp ? new Date(parseInt(timestamp)).toISOString() : 'null'})`);
               
               if (timestamp) {
                 // Calculate dateRange for each chart
-                dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, timestamp);
+                dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, parseInt(timestamp));
                 
                 // Debug log to verify dateRange was set
                 console.log(`[IrysUpload] Dashboard ${dashboardId} charts with dateRange:`, 
@@ -585,6 +598,9 @@ export async function fetchDashboards(): Promise<any[]> {
             node {
               id
               timestamp
+              receipt {
+                timestamp
+              }
               tags {
                 name
                 value
@@ -632,22 +648,24 @@ export async function fetchDashboards(): Promise<any[]> {
         if (!rootTxTag) {
           // This is a root transaction
           if (!dashboardRootTxMap.has(dashboardId)) {
+            const timestamp = edge.node.receipt?.timestamp || edge.node.timestamp;
             dashboardRootTxMap.set(dashboardId, { 
               rootTxId: edge.node.id, 
               latestTxId: edge.node.id,
-              timestamp: edge.node.timestamp // Irys timestamp is already in milliseconds
+              timestamp: timestamp ? parseInt(timestamp) : undefined // Irys timestamp is already in milliseconds
             });
             console.log(`[IrysUpload] Found root tx for dashboard ${dashboardId}: ${edge.node.id}`);
-            console.log(`[IrysUpload] Timestamp: ${edge.node.timestamp} (${new Date(edge.node.timestamp).toISOString()})`);
+            console.log(`[IrysUpload] Timestamp: ${timestamp} (${timestamp ? new Date(parseInt(timestamp)).toISOString() : 'null'})`);
           }
         } else {
           // This is an update - only store if it's newer than what we have
           const existing = dashboardRootTxMap.get(dashboardId);
           if (!existing || existing.rootTxId === rootTxTag.value) {
+            const timestamp = existing?.timestamp || (edge.node.receipt?.timestamp ? parseInt(edge.node.receipt.timestamp) : (edge.node.timestamp ? parseInt(edge.node.timestamp) : undefined));
             dashboardRootTxMap.set(dashboardId, { 
               rootTxId: rootTxTag.value, 
               latestTxId: edge.node.id,
-              timestamp: existing?.timestamp || edge.node.timestamp // Preserve original timestamp
+              timestamp: timestamp // Preserve original timestamp
             });
             console.log(`[IrysUpload] Found update for dashboard ${dashboardId}: root=${rootTxTag.value}, latest=${edge.node.id}`);
           }
@@ -679,9 +697,12 @@ export async function fetchDashboards(): Promise<any[]> {
           
                       // Always calculate dateRange based on upload timestamp
             if (timestamp) {
-            // For each chart, calculate dateRange based on the upload timestamp
-            dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, timestamp);
-          }
+              console.log(`[IrysUpload] Processing dashboard ${dashboardId} with timestamp ${timestamp}`);
+              // For each chart, calculate dateRange based on the upload timestamp
+              dashboardData.charts = calculateDateRangeForCharts(dashboardData.charts, timestamp);
+            } else {
+              console.log(`[IrysUpload] No timestamp found for dashboard ${dashboardId}`);
+            }
           
           // Fetch stats for this dashboard
           const stats = await fetchDashboardStats(dashboardId);
