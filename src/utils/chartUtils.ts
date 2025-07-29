@@ -588,7 +588,8 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           padding: isMobile ? 8 : 16,
           usePointStyle: true,
           pointStyle: 'circle',
-          boxWidth: isMobile ? 12 : 20
+          boxWidth: isMobile ? 8 : 12, // Reduced from 12/20 to 8/12
+          boxHeight: isMobile ? 8 : 12 // Added to maintain circular shape
         }
       },
       tooltip: {

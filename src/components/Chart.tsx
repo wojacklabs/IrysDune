@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap';
 import { Line, Chart as ChartReact } from 'react-chartjs-2';
-import { Download, Share2, Camera } from 'lucide-react';
+import { Download, Share2 } from 'lucide-react';
 import type { ChartData, ChartType } from '../types';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
 import { getChartOptions } from '../utils/chartUtils';
@@ -248,13 +248,6 @@ const Chart: React.FC<ChartProps> = ({
               options={options} 
             />
           )}
-        </div>
-        
-        <div className="chart-description">
-          <span className="chart-description-badge">
-            <Camera size={12} />
-            Data visualized with Irys Dune
-          </span>
         </div>
       </div>
       
