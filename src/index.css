@@ -589,18 +589,21 @@ body::before {
 .app-card {
   padding: 10px;
   background: var(--cloud-soft);
-  border: 2px solid var(--cloud-whisper);
-  border-radius: var(--radius-xl);
+  border: 1px solid var(--cloud-whisper);
+  border-radius: 25px;
   cursor: pointer;
   transition: all var(--transition-normal);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   position: relative;
   overflow: hidden;
 }
 
+.app-card + .app-card {
+  margin-right: 6px;
+}
+
 .app-card:hover {
-  border-color: var(--sky-300);
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(14, 165, 233, 0.15);
 }
 
 .app-card:hover::before {
@@ -617,7 +620,6 @@ body::before {
 
 .app-card-content {
   display: flex;
-  flex-direction: column;
   align-items: center;
   position: relative;
   z-index: 1;
@@ -629,12 +631,12 @@ body::before {
   height: 24px;
   border-radius: 50%;
   object-fit: contain;
+  margin-right: 6px;
 }
 
 /* Remove old app-icon style as we're using images now */
 
 .app-info {
-  margin-top: 8px;
   flex: 1;
 }
 
