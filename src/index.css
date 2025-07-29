@@ -1407,6 +1407,7 @@ body::before {
   
   .dashboard-meta {
     flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
   }
@@ -1942,7 +1943,7 @@ body::before {
 
 .dashboard-meta {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   font-size: 0.875rem;
   color: #6b7280;
