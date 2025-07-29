@@ -182,7 +182,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     if (name === dashboard.authorAddress) {
       return formatAddress(dashboard.authorAddress);
     }
-    return name;
+    return name + ".irys";
   };
 
   const filterDashboards = () => {
