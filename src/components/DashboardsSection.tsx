@@ -278,7 +278,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
             } else {
               // Query new data if not in trendData
               const data = await queryTagCounts(query.tags, (progress) => {
-                const chartProgress = i + (j + progress.percentage / 100) / chart.queries.length;
+                const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
                 const overallProgress = {
                   current: chartProgress,
                   total: dashboard.charts.length,

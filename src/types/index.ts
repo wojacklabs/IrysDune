@@ -51,7 +51,7 @@ export interface ChartConfig {
   name: string; // for compatibility with AppPreset/CustomQuery
   title: string;
   description?: string;
-  queries: Array<{
+  queries?: Array<{
     id: string;
     name: string;
     tags: Tag[];
@@ -67,6 +67,7 @@ export interface ChartConfig {
   // Legacy support
   tags?: Tag[];
   color: string; // made required for compatibility
+  queryLimit?: number; // Legacy support
 }
 
 // Dashboard stats stored separately
