@@ -577,17 +577,18 @@ body::before {
 
 /* === App Selection Grid === */
 .app-selection {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 15px
 }
 
 .app-card {
   padding: 6px;
+  margin: 6px 0;
   background: var(--cloud-soft);
   border: 1px solid var(--cloud-whisper);
   border-radius: 25px;
   cursor: pointer;
   transition: all var(--transition-normal);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
   position: relative;
   overflow: hidden;
 }
@@ -607,9 +608,7 @@ body::before {
 .app-card.selected {
   background: linear-gradient(135deg, var(--sky-100), var(--sky-50));
   border-color: var(--sky-500);
-  box-shadow: 
-    0 12px 24px rgba(14, 165, 233, 0.2),
-    0 0 0 1px var(--sky-400) inset;
+  box-shadow: 0 2px 4px rgb(var(--sky-400) / 20%);
 }
 
 .app-card-content {
