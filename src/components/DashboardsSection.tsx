@@ -435,7 +435,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               <div className="dashboard-meta">
                 <div className="meta-info">
                   <span>By {getFormattedAuthor(selectedDashboard)}</span>
-                  <span>•</span>
+                  <span> • </span>
                   <span>{selectedDashboard.likes} likes</span>
                   <button 
                     className={`like-btn ${likedDashboards.has(selectedDashboard.id) ? 'liked' : ''}`}
