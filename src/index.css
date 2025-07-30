@@ -1242,7 +1242,7 @@ body::before {
 
 /* Dashboards Section */
 .dashboards-section {
-  padding: 2rem 0;
+  padding-bottom: 2rem;
 }
 
 .section-header {
@@ -1454,7 +1454,7 @@ body::before {
 
 /* Dashboard View */
 .dashboard-view {
-  padding: 2rem 0;
+  padding-bottom: 2rem;
 }
 
 .dashboard-header {
