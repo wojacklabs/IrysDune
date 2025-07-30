@@ -5,7 +5,6 @@ import irysNamesIcon from '../assets/irysnameservice.png';
 import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
 import irysProofBoardIcon from '../assets/irysproofboard.png';
-import loftyIcon from '../assets/lofty.png';
 import irysflipIcon from '../assets/irysflip.png';
 
 export const APP_PRESETS: AppPreset[] = [
