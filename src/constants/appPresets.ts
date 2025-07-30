@@ -4,7 +4,7 @@ import githirysIcon from '../assets/githirys.png';
 import irysNamesIcon from '../assets/irysnameservice.png';
 import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
-import irysProofBoardIcon from '../assets/irys-proof-board.png';
+import irysProofBoardIcon from '../assets/irysproofboard.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
