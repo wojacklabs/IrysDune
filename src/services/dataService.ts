@@ -8,6 +8,7 @@ const PROJECT_MUTABLE_ADDRESSES = {
   'irys-names': '2Swe3xvD2fQ85o24cRwkt5QSUTtBmNzTnr4py6KHYJVS',
   'bridgebox': 'HoxLcEgQgAuStevTPHzGGcASPUMCwE3ay6kN1UvKmASs',
   'irysdune': 'CnmMhxnHpDxpJmsQB5ZgawRjKJUW9gcis8pCmYuLFABU',
+  'irys-proof-board': 'G6WrdfF7mhP6CEypJybB3aK6cLHroXczRFwJn1wLkrY8',
 };
 
 // Data structure from the actual server data

@@ -4,6 +4,7 @@ import githirysIcon from '../assets/githirys.png';
 import irysNamesIcon from '../assets/irysnameservice.png';
 import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
+import irysProofBoardIcon from '../assets/irys-proof-board.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -50,6 +51,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#0284c7',
     icon: irysduneIcon
+  },
+  {
+    id: 'irys-proof-board',
+    name: 'Irys ProofBoard',
+    tags: [
+      { name: 'App', value: 'IRYS Proofboard' }
+    ],
+    color: '#1affe8',
+    icon: irysProofBoardIcon
   },
 ];
 
