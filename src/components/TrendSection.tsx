@@ -37,6 +37,10 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Add refs for ecosystem cards
+  const wholeEcosystemCardRef = useRef<HTMLDivElement>(null);
+  const appsEcosystemCardRef = useRef<HTMLDivElement>(null);
+
   const toggleApp = (appId: string) => {
     setSelectedApps(prev => 
       prev.includes(appId) 
@@ -197,7 +201,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   return (
     <div className="trend-section">
       {/* Whole Ecosystem Section - Always visible */}
-      <div className="card ecosystem-card">
+      <div className="card ecosystem-card" ref={wholeEcosystemCardRef}>
         <div className="ecosystem-header">
           <div className="ecosystem-title">
             <Globe className="ecosystem-icon" size={20} />
@@ -244,6 +248,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             title=""
             shareText={`Irys Whole Ecosystem Activity\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
             onTypeChange={setEcosystemChartType}
+            captureContainerRef={wholeEcosystemCardRef}
           />
         ) : (
           <div className="empty-state">
@@ -257,7 +262,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
       </div>
 
       {/* Individual Apps Section */}
-      <div className="card ecosystem-card">
+      <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
         <div className="ecosystem-header">
           <div className="ecosystem-title">
             <TrendingUp className="ecosystem-icon" size={20} />
@@ -330,6 +335,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               title=""
               shareText={shareText}
               onTypeChange={setChartType}
+              captureContainerRef={appsEcosystemCardRef}
             />
           ) : null
         )}

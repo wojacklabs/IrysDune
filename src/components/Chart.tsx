@@ -38,6 +38,7 @@ interface ChartProps {
   onTypeChange: (type: ChartType) => void;
   hideTypeButtons?: boolean;
   hideActions?: boolean;
+  captureContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
 const Chart: React.FC<ChartProps> = ({ 
@@ -47,7 +48,8 @@ const Chart: React.FC<ChartProps> = ({
   shareText, 
   onTypeChange,
   hideTypeButtons = false,
-  hideActions = false
+  hideActions = false,
+  captureContainerRef
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -89,12 +91,14 @@ const Chart: React.FC<ChartProps> = ({
         : ['line', 'treemap'] as ChartType[];
 
   const handleCapture = async () => {
-    if (!chartRef.current) return;
+    // Use captureContainerRef if provided, otherwise use chartRef
+    const captureTarget = captureContainerRef?.current || chartRef.current;
+    if (!captureTarget) return;
     
     setIsCapturing(true);
     try {
       const filename = `irys-dune-chart-${Date.now()}.png`;
-      const result = await captureAndShare(chartRef.current, shareText, filename);
+      const result = await captureAndShare(captureTarget, shareText, filename);
       
       if (result.success) {
         console.log('Chart captured and shared successfully');
@@ -110,10 +114,12 @@ const Chart: React.FC<ChartProps> = ({
   };
 
   const handleDownload = async () => {
-    if (!chartRef.current) return;
+    // Use captureContainerRef if provided, otherwise use chartRef
+    const captureTarget = captureContainerRef?.current || chartRef.current;
+    if (!captureTarget) return;
     
     try {
-      const blob = await captureElement(chartRef.current);
+      const blob = await captureElement(captureTarget);
       const filename = `irys-dune-chart-${Date.now()}.png`;
       downloadImage(blob, filename);
     } catch (error) {
