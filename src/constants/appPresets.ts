@@ -64,15 +64,6 @@ export const APP_PRESETS: AppPreset[] = [
     icon: irysProofBoardIcon
   },
   {
-    id: 'lofty',
-    name: 'Lofty',
-    tags: [
-      { name: 'App-Name', value: 'Lofty' }
-    ],
-    color: '#8B5CF6',
-    icon: loftyIcon
-  },
-  {
     id: 'irysflip',
     name: 'IrysFlip',
     tags: [
