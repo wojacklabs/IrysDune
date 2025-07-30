@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
+import MyHistorySection from './components/MyHistorySection';
 import { ConnectWallet } from './components/ConnectWallet';
 import { initializeIrysUploader } from './services/irysUploadService';
 import { fetchIrysName } from './services/irysService';
@@ -181,6 +182,12 @@ function App() {
           >
             Dashboards
           </button>
+          <button
+            onClick={() => setActiveTab('my-history')}
+            className={`nav-button ${activeTab === 'my-history' ? 'active' : ''}`}
+          >
+            My History
+          </button>
         </div>
       </nav>
 
@@ -189,6 +196,7 @@ function App() {
         <div className="container">
           {activeTab === 'trends' && <TrendSection onDataUpdate={setTrendData} />}
           {activeTab === 'dashboards' && <DashboardsSection walletAddress={walletAddress} username={username} trendData={trendData} />}
+          {activeTab === 'my-history' && <MyHistorySection walletAddress={walletAddress} username={username} />}
         </div>
       </main>
 

@@ -66,6 +66,7 @@ body {
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(to bottom, #e0f2fe, #f0f9ff);
 }
 
 /* === Sky Background === */
@@ -249,7 +250,7 @@ body::before {
 
 /* === Navigation === */
 .nav {
-  padding-top: 15px;
+  padding-top: 25px;
   position: sticky;
   top: 72px;
   z-index: 90;
@@ -260,6 +261,7 @@ body::before {
   display: inline-block;
   background-color: white;
   border-radius: 25px;
+  padding: 4px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgb(0 0 0 / 20%);
 }
@@ -987,6 +989,8 @@ body::before {
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .action-button:hover {
@@ -2721,3 +2725,333 @@ body::before {
 }
 
 /* Data sources selection - Grid Layout */
+
+/* My History Section */
+.my-history-section {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Chart Container */
+.my-history-section .chart-container {
+  /* Remove background as it's now in the card */
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  min-height: 300px;
+}
+
+/* Loading State */
+.my-history-section .loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem;
+}
+
+.my-history-section .skeleton-loader {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.my-history-section .skeleton-circle {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.my-history-section .skeleton-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.my-history-section .skeleton-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.my-history-section .skeleton-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 0.25rem;
+  background: #e0e0e0;
+}
+
+.my-history-section .skeleton-text {
+  width: 120px;
+  height: 20px;
+  border-radius: 0.25rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Empty State */
+.my-history-section .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.my-history-section .empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.my-history-section .empty-state p {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Chart Content */
+.my-history-section .chart-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.my-history-section .pie-chart-wrapper {
+  position: relative;
+}
+
+.my-history-section .pie-chart {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.my-history-section .pie-slice {
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.my-history-section .pie-slice:hover {
+  opacity: 0.8;
+}
+
+.my-history-section .center-text {
+  pointer-events: none;
+  fill: #1e293b !important;
+}
+
+/* Legend */
+.my-history-section .legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.my-history-section .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.my-history-section .legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 0.25rem;
+  flex-shrink: 0;
+}
+
+.my-history-section .legend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.my-history-section .legend-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.my-history-section .legend-stats {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* User Info */
+.my-history-section .user-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.my-history-section .username {
+  font-weight: 600;
+  color: #374151;
+}
+
+.my-history-section .wallet {
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+
+
+/* Transaction Table */
+.my-history-section .transaction-table-container {
+  /* Now using card class, so just add margin */
+  margin-top: 0;
+}
+
+.my-history-section .transaction-table-container h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+.my-history-section .table-wrapper {
+  overflow-x: auto;
+}
+
+.my-history-section .transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.my-history-section .transaction-table th {
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.my-history-section .transaction-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #4b5563;
+  text-align: center;
+}
+
+.my-history-section .transaction-table tr:hover {
+  background: #f9fafb;
+}
+
+.my-history-section .activity-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.my-history-section .tx-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.my-history-section .external-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  color: #3b82f6;
+  transition: color 0.2s;
+}
+
+.my-history-section .external-link:hover {
+  color: #2563eb;
+}
+
+/* Project Icon */
+.my-history-section .project-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-history-section .project-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.my-history-section .project-icon-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .my-history-section {
+    padding: 1rem;
+  }
+  
+  .my-history-section .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .my-history-section .header-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .my-history-section .period-selector {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .my-history-section .period-button {
+    flex: 1;
+  }
+  
+  .my-history-section .action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .my-history-section .chart-content {
+    flex-direction: column;
+  }
+  
+  .my-history-section .pie-chart {
+    width: 250px;
+    height: 250px;
+  }
+  
+  .my-history-section .transaction-table {
+    font-size: 0.75rem;
+  }
+  
+  .my-history-section .transaction-table th,
+  .my-history-section .transaction-table td {
+    padding: 0.5rem;
+  }
+}

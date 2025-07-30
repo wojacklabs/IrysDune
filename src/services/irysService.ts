@@ -323,3 +323,191 @@ export async function fetchIrysNames(walletAddresses: string[]): Promise<Map<str
   console.log(`[IrysService] Found ${nameMap.size} Irys Names out of ${walletAddresses.length} addresses`);
   return nameMap;
 } 
+
+// Endpoint configurations
+const IRYS_ENDPOINTS = [
+  { 
+    graphql: 'https://uploader.irys.xyz/graphql',
+    base: 'https://uploader.irys.xyz',
+    name: 'Mainnet Uploader'
+  },
+  { 
+    graphql: 'https://node1.irys.xyz/graphql',
+    base: 'https://node1.irys.xyz',
+    name: 'Mainnet Node1'
+  },
+  { 
+    graphql: 'https://devnet.irys.xyz/graphql',
+    base: 'https://devnet.irys.xyz',
+    name: 'DevNet'
+  },
+  { 
+    graphql: 'https://node1.testnet.irys.xyz/graphql',
+    base: 'https://node1.testnet.irys.xyz',
+    name: 'TestNet Node1'
+  }
+];
+
+// Get user transactions from all endpoints
+export async function getUserTransactions(
+  walletAddress: string,
+  timePeriod: '24h' | '3d' | '7d',
+  progressCallback?: (progress: LoadingProgress) => void
+): Promise<Array<{
+  id: string;
+  timestamp: number;
+  tags: Array<{ name: string; value: string }>;
+  endpoint: string;
+  url: string;
+}>> {
+  console.log(`[IrysService] Fetching transactions for wallet: ${walletAddress}, period: ${timePeriod}`);
+  
+  // Calculate date range
+  const endDate = new Date();
+  const startDate = new Date();
+  
+  switch (timePeriod) {
+    case '24h':
+      startDate.setHours(startDate.getHours() - 24);
+      break;
+    case '3d':
+      startDate.setDate(startDate.getDate() - 3);
+      break;
+    case '7d':
+      startDate.setDate(startDate.getDate() - 7);
+      break;
+  }
+  
+  console.log(`[IrysService] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  
+  const allTransactions: Array<{
+    id: string;
+    timestamp: number;
+    tags: Array<{ name: string; value: string }>;
+    endpoint: string;
+    url: string;
+  }> = [];
+  
+  let totalProgress = 0;
+  const progressPerEndpoint = 100 / IRYS_ENDPOINTS.length;
+  
+  // Query each endpoint
+  for (const endpoint of IRYS_ENDPOINTS) {
+    console.log(`[IrysService] Querying endpoint: ${endpoint.name}`);
+    
+    let after = "";
+    let hasMore = true;
+    const pageSize = 10;
+    let pageCount = 0;
+    
+    while (hasMore) {
+      const query = `
+        query {
+          transactions(
+            owners: ["${walletAddress}"],
+            first: ${pageSize},
+            after: "${after}",
+            order: DESC
+          ) {
+            edges {
+              node {
+                id
+                timestamp
+                tags {
+                  name
+                  value
+                }
+              }
+              cursor
+            }
+            pageInfo {
+              hasNextPage
+            }
+          }
+        }
+      `;
+      
+      try {
+        console.log(`[IrysService] [${endpoint.name}] Fetching page ${pageCount + 1}`);
+        
+        const result = await executeQuery(`getUserTx-${endpoint.name}-${walletAddress}-${after}`, async () => {
+          const response = await axios.post(endpoint.graphql, { 
+            query,
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          return response.data;
+        });
+        
+        if (!result?.data?.transactions) {
+          console.error(`[IrysService] [${endpoint.name}] Invalid response structure:`, result);
+          break;
+        }
+        
+        const edges = result.data.transactions.edges || [];
+        const pageInfo = result.data.transactions.pageInfo || { hasNextPage: false };
+        
+        console.log(`[IrysService] [${endpoint.name}] Fetched ${edges.length} transactions`);
+        
+        let stopFetching = false;
+        
+        for (const edge of edges) {
+          if (!edge.node) continue;
+          
+          // Handle timestamp
+          let timestamp = parseInt(edge.node.timestamp);
+          if (timestamp < 10000000000) {
+            timestamp = timestamp * 1000;
+          }
+          
+          const txDate = new Date(timestamp);
+          
+          // Check date range
+          if (txDate < startDate) {
+            console.log(`[IrysService] [${endpoint.name}] Transaction ${edge.node.id} is before start date, stopping`);
+            stopFetching = true;
+            break;
+          }
+          
+          if (txDate <= endDate) {
+            allTransactions.push({
+              id: edge.node.id,
+              timestamp,
+              tags: edge.node.tags || [],
+              endpoint: endpoint.name,
+              url: `${endpoint.base}/${edge.node.id}`
+            });
+          }
+        }
+        
+        pageCount++;
+        
+        if (stopFetching || !pageInfo.hasNextPage || edges.length === 0) {
+          hasMore = false;
+        } else {
+          after = edges[edges.length - 1].cursor;
+        }
+        
+      } catch (error) {
+        console.error(`[IrysService] [${endpoint.name}] Error fetching transactions:`, error);
+        hasMore = false;
+      }
+    }
+    
+    totalProgress += progressPerEndpoint;
+    if (progressCallback) {
+      progressCallback({
+        current: Math.round(totalProgress),
+        total: 100,
+        percentage: Math.round(totalProgress)
+      });
+    }
+  }
+  
+  // Sort all transactions by timestamp (newest first)
+  allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+  
+  console.log(`[IrysService] Total transactions fetched from all endpoints: ${allTransactions.length}`);
+  return allTransactions;
+} 

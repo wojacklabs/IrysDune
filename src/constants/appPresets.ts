@@ -5,6 +5,8 @@ import irysNamesIcon from '../assets/irysnameservice.png';
 import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
 import irysProofBoardIcon from '../assets/irysproofboard.png';
+import loftyIcon from '../assets/lofty.png';
+import irysflipIcon from '../assets/irysflip.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -60,6 +62,24 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#1affe8',
     icon: irysProofBoardIcon
+  },
+  {
+    id: 'lofty',
+    name: 'Lofty',
+    tags: [
+      { name: 'App-Name', value: 'Lofty' }
+    ],
+    color: '#8B5CF6',
+    icon: loftyIcon
+  },
+  {
+    id: 'irysflip',
+    name: 'IrysFlip',
+    tags: [
+      { name: 'App-Name', value: 'IrysFlip' }
+    ],
+    color: '#EF4444',
+    icon: irysflipIcon
   },
 ];
 
