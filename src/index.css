@@ -2795,6 +2795,50 @@ body::before {
   animation: shimmer 1.5s infinite;
 }
 
+/* Legend detail for combined sources */
+.my-history-section .legend-detail {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.125rem;
+}
+
+.my-history-section .source-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Source badges in table */
+.my-history-section .source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.my-history-section .storage-badge {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.my-history-section .onchain-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Network badge */
+.my-history-section .network-badge {
+  margin-left: 0.25rem;
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+  background: #e5e7eb;
+  color: #6b7280;
+  border-radius: 0.25rem;
+}
+
 /* Empty State */
 .my-history-section .empty-state {
   display: flex;
@@ -2948,6 +2992,27 @@ body::before {
   border-bottom: 1px solid #f3f4f6;
   color: #4b5563;
   text-align: center;
+}
+
+/* Contract name in table */
+.my-history-section .contract-name {
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Activity cell styling */
+.my-history-section .activity-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.my-history-section .activity-icon {
+  font-size: 1rem;
+}
+
+.my-history-section .activity-name {
+  font-weight: 500;
 }
 
 .my-history-section .transaction-table tr:hover {
