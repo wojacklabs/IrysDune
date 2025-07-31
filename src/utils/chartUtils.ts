@@ -152,25 +152,48 @@ export function filterDataByPeriod(
     console.log(`[FilterData] Processing ${key}: ${results.length} data points`);
     
     if (isForCumulative) {
-      // For cumulative charts, accumulate all data up to each timestamp
+      // For cumulative charts, accumulate all data from the first available data point
+      // Sort results by timestamp first
+      const sortedResults = [...results].sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Create a map for faster lookup
+      const dailyData = new Map<number, number>();
+      sortedResults.forEach(result => {
+        // Normalize to day start
+        const dayStart = new Date(result.timestamp);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayTimestamp = dayStart.getTime();
+        
+        // Accumulate counts for the same day
+        const existing = dailyData.get(dayTimestamp) || 0;
+        dailyData.set(dayTimestamp, existing + result.count);
+      });
+      
+      // Generate cumulative data
+      let runningTotal = 0;
       const mappedData = periodTimestamps.map(timestamp => {
-        const relevantData = results.filter(result => 
-          result.timestamp <= timestamp
-        );
-        const totalCount = relevantData.reduce((sum, item) => sum + item.count, 0);
+        // Calculate cumulative total up to this point
+        runningTotal = 0;
+        sortedResults.forEach(result => {
+          if (result.timestamp <= timestamp) {
+            runningTotal += result.count;
+          }
+        });
         
         return {
           timestamp,
-          count: totalCount
+          count: runningTotal
         };
       });
       
       // Debug: log the final counts for cumulative charts
-      if (key.includes('lofty')) {
-        console.log(`[FilterData] ${key} cumulative values:`, mappedData.map(d => d.count));
-        const finalTotal = mappedData[mappedData.length - 1]?.count || 0;
-        console.log(`[FilterData] ${key} final cumulative total: ${finalTotal}`);
-      }
+      console.log(`[FilterData] ${key} cumulative chart data:`, {
+        firstDataPoint: sortedResults[0]?.timestamp ? new Date(sortedResults[0].timestamp).toISOString() : 'none',
+        lastDataPoint: sortedResults[sortedResults.length - 1]?.timestamp ? new Date(sortedResults[sortedResults.length - 1].timestamp).toISOString() : 'none',
+        totalRecords: sortedResults.length,
+        cumulativeValues: mappedData.map(d => ({ date: new Date(d.timestamp).toISOString().split('T')[0], count: d.count })),
+        finalTotal: mappedData[mappedData.length - 1]?.count || 0
+      });
       
       filteredData[key] = mappedData;
     } else {
@@ -437,6 +460,13 @@ export function generateChartData(
     // Cumulative chart: values are already cumulative from filterDataByPeriod
     // No need to accumulate again
     const datasets = rawDatasets.map(({ preset, dataPoints }) => {
+      // Check if this dataset has any non-zero values
+      const hasData = dataPoints.some(value => value > 0);
+      
+      if (!hasData) {
+        console.log(`[GenerateChartData] Warning: ${preset.name} has no data for stacked chart, all values are 0`);
+      }
+      
       return {
         label: preset.name,
         data: dataPoints,
@@ -599,8 +629,14 @@ export function generateWholeEcosystemData(
   });
 
   if (chartType === 'stacked') {
-    // Values are already cumulative from filterDataByPeriod
-    // No need to accumulate again
+    // For cumulative chart, totalCounts already contains cumulative values from filterDataByPeriod
+    // Just make sure we have cumulative totals
+    console.log('[GenerateWholeEcosystemData] Stacked chart total counts:', {
+      timestamps: timestamps.map(t => new Date(t).toISOString().split('T')[0]),
+      counts: totalCounts,
+      hasNonZeroValues: totalCounts.some(v => v > 0)
+    });
+    
     const datasets = [{
       label: 'Total Ecosystem Activity (Cumulative)',
       data: totalCounts,
