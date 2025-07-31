@@ -5,6 +5,7 @@ export interface ActivityCategory {
   id: string;
   name: string;
   color: string;
+  icon: string;
   description: string;
 }
 
@@ -18,68 +19,100 @@ export interface TagActivityMapping {
 export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
   'note': {
     id: 'note',
-    name: 'Note Taking',
+    name: 'Notes',
     color: '#d4a574',
-    description: 'Note taking and documentation'
+    icon: '📝',
+    description: 'Note-taking and documentation'
   },
   'code': {
     id: 'code',
-    name: 'Code Storage',
+    name: 'Code',
     color: '#333333',
-    description: 'Code repository and version control'
+    icon: '💻',
+    description: 'Code repositories and development'
   },
   'identity': {
     id: 'identity',
     name: 'Identity',
     color: '#4dfff0',
-    description: 'Identity and name service'
+    icon: '🆔',
+    description: 'Identity and naming services'
   },
   'email': {
     id: 'email',
     name: 'Email',
     color: '#ff3142',
-    description: 'Email and messaging services'
+    icon: '📧',
+    description: 'Email and messaging'
   },
   'analytics': {
     id: 'analytics',
     name: 'Analytics',
     color: '#0284c7',
+    icon: '📊',
     description: 'Data analytics and visualization'
   },
   'proof': {
     id: 'proof',
     name: 'Proof',
     color: '#1affe8',
-    description: 'Proof and verification services'
+    icon: '✅',
+    description: 'Proof and verification'
   },
   'nft': {
     id: 'nft',
     name: 'NFT',
-    color: '#8B5CF6',
-    description: 'NFT creation and management'
-  },
-  'defi': {
-    id: 'defi',
-    name: 'DeFi',
-    color: '#10B981',
-    description: 'DeFi protocol interactions'
+    color: '#8b5cf6',
+    icon: '🖼️',
+    description: 'NFT and digital collectibles'
   },
   'gaming': {
     id: 'gaming',
     name: 'Gaming',
-    color: '#EF4444',
-    description: 'Gaming related activities'
+    color: '#ef4444',
+    icon: '🎮',
+    description: 'Gaming and entertainment'
+  },
+  'gaming-bet': {
+    id: 'gaming-bet',
+    name: 'Betting',
+    color: '#f59e0b',
+    icon: '🎰',
+    description: 'Betting and gambling activities'
+  },
+  'gaming-room': {
+    id: 'gaming-room',
+    name: 'Game Room',
+    color: '#10b981',
+    icon: '🏠',
+    description: 'Game room management'
+  },
+  'gaming-score': {
+    id: 'gaming-score',
+    name: 'Score',
+    color: '#3b82f6',
+    icon: '🏆',
+    description: 'Score and leaderboard updates'
   },
   'storage': {
     id: 'storage',
-    name: 'File Storage',
-    color: '#3B82F6',
-    description: 'General file and data storage'
+    name: 'Storage',
+    color: '#10b981',
+    icon: '💾',
+    description: 'File storage and management'
+  },
+  'defi': {
+    id: 'defi',
+    name: 'DeFi',
+    color: '#f59e0b',
+    icon: '🏦',
+    description: 'Decentralized finance'
   },
   'other': {
     id: 'other',
     name: 'Other',
-    color: '#94A3B8',
+    color: '#6b7280',
+    icon: '📦',
     description: 'Uncategorized activities'
   }
 };
@@ -175,6 +208,34 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'defi'
   }
 ];
+
+// 온체인 이벤트를 activity로 매핑
+export const EVENT_ACTIVITY_MAPPINGS: { [eventName: string]: string } = {
+  // IrysFlip
+  'BetPlaced': 'gaming-bet',
+  // IrysCrush
+  'PlayerRegistered': 'identity',
+  'ScoreUpdated': 'gaming-score',
+  'RoomCreated': 'gaming-room',
+  'PlayerJoinedRoom': 'gaming-room',
+  'GameStarted': 'gaming',
+  'GameFinished': 'gaming',
+  'PvPGameFinished': 'gaming',
+  // Uniswap
+  'PoolCreated': 'defi',
+  // Aave
+  'Supply': 'defi',
+  'Borrow': 'defi',
+  // Lens
+  'ProfileCreated': 'identity',
+  // Default
+  'Transfer': 'storage'
+};
+
+// 온체인 이벤트로부터 activity 가져오기
+export function getActivityFromEvent(eventName: string): string {
+  return EVENT_ACTIVITY_MAPPINGS[eventName] || 'other';
+}
 
 // Get activity from transaction tags
 export function getActivityFromTags(tags: Array<{ name: string; value: string }>): string {

@@ -45,6 +45,46 @@ export interface LoadingProgress {
   percentage: number;
 }
 
+// 온체인 쿼리 관련 타입
+export interface OnChainQuery {
+  contractAddress: string;
+  abis?: AbiFunction[];
+  network?: string; // 'mainnet' | 'polygon' 등
+  rpcUrl?: string;
+}
+
+export interface AbiFunction {
+  name: string;
+  inputs: Array<{
+    name: string;
+    type: string;
+  }>;
+  outputs?: Array<{
+    name: string;
+    type: string;
+  }>;
+  stateMutability?: string;
+  type: 'function' | 'event';
+}
+
+// 온체인 프리셋 타입
+export interface OnChainPreset {
+  id: string;
+  name: string;
+  contractAddress: string;
+  network: string;
+  rpcUrl: string;
+  description: string;
+  abis?: AbiFunction[];
+}
+
+// 온체인 쿼리 결과
+export interface OnChainQueryResult {
+  date: string;
+  count: number;
+  functionName?: string; // ABI가 있을 때 함수별 구분
+}
+
 // Chart configuration for dashboard
 export interface ChartConfig {
   id: string;
@@ -68,6 +108,9 @@ export interface ChartConfig {
   tags?: Tag[];
   color: string; // made required for compatibility
   queryLimit?: number; // Legacy support
+  // 온체인 쿼리 지원
+  onChainQuery?: OnChainQuery;
+  displayMode?: 'combined' | 'separated'; // 온체인 쿼리 표시 모드
 }
 
 // Dashboard stats stored separately

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, TrendingUp, Globe } from 'lucide-react';
 import type { ChartType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
 import { APP_PRESETS, getPresetsByIds } from '../constants/appPresets';
-import { fetchMultipleProjectsData } from '../services/dataService';
+import { fetchAllProjectsData } from '../services/dataService';
 import { 
   generateChartData, 
   generateShareText, 
@@ -53,29 +53,29 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const loadEcosystemData = async (forceRefresh: boolean = false) => {
     setEcosystemLoading(true);
     
-    // Check cache first if not forcing refresh
+    // Use cached data if available and not forcing refresh (for ecosystem only)
     if (!forceRefresh) {
       const cachedData = getCachedData();
       if (cachedData) {
-        console.log('[TrendSection] Using cached data');
         setEcosystemData(cachedData);
         setIndividualData(cachedData);
-        setCacheAge(getCacheAge());
+        setEcosystemLoading(false);
         
-        // Share cached data with parent
+        // Set cache age based on stored timestamp
+        const age = getCacheAge();
+        setCacheAge(age);
+        console.log('[TrendSection] Using cached data:', Object.keys(cachedData).length, 'projects, age:', age, 'seconds');
+        
+        // Share ecosystem data with parent
         if (onDataUpdate) {
           onDataUpdate(cachedData);
         }
-        setEcosystemLoading(false);
         return;
       }
     }
-    
-    // Use all preset apps
-    const allProjectIds = APP_PRESETS.map(preset => preset.id);
 
     try {
-      const results = await fetchMultipleProjectsData(allProjectIds, setProgress);
+      const results = await fetchAllProjectsData(setProgress);
       setEcosystemData(results);
       setIndividualData(results);
       
@@ -119,18 +119,20 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     setIndividualData({});
 
     try {
-      const results = await fetchMultipleProjectsData(selectedApps, setProgress);
-      setIndividualData(results);
+      const results = await fetchAllProjectsData(setProgress);
+      // Filter to only selected apps
+      const filteredResults: { [key: string]: QueryResult[] } = {};
+      selectedApps.forEach(appId => {
+        if (results[appId]) {
+          filteredResults[appId] = results[appId];
+        }
+      });
+      setIndividualData(filteredResults);
       
       // If force refresh, update the cache with new data
       if (forceRefresh) {
-        // Merge new data with existing ecosystem data
-        const updatedData = { ...ecosystemData };
-        Object.keys(results).forEach(key => {
-          updatedData[key] = results[key];
-        });
-        saveCacheData(updatedData);
-        setEcosystemData(updatedData);
+        saveCacheData(results);
+        setEcosystemData(results);
         setCacheAge(0);
       }
       

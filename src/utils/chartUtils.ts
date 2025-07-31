@@ -262,14 +262,100 @@ export function filterDataByPeriod(
 }
 
 export function generateChartData(
-  data: { [key: string]: QueryResult[] },
+  data: { [key: string]: QueryResult[] | any[] },
   queries: AppPreset[] | CustomQuery[],
-  chartType: ChartType = 'line'
+  chartType: ChartType = 'line',
+  cumulative: boolean = false,
+  isOnChainData: boolean = false,
+  displayMode?: 'combined' | 'separated'
 ): ChartData {
+  // 온체인 데이터 처리
+  if (isOnChainData && data) {
+    const results = Object.values(data)[0] as any[];
+    
+    if (!results || results.length === 0) {
+      return {
+        labels: [],
+        datasets: [{
+          label: 'No Data',
+          data: [],
+          backgroundColor: 'transparent',
+          borderColor: '#e2e8f0',
+          borderWidth: 2,
+          fill: false
+        }]
+      };
+    }
+
+    // 날짜별 데이터 그룹화
+    const dateMap: { [date: string]: { [functionName: string]: number } } = {};
+    const functionNames = new Set<string>();
+    
+    results.forEach(result => {
+      const date = result.date;
+      const functionName = result.functionName || 'Total Transactions';
+      
+      if (!dateMap[date]) {
+        dateMap[date] = {};
+      }
+      
+      dateMap[date][functionName] = (dateMap[date][functionName] || 0) + result.count;
+      functionNames.add(functionName);
+    });
+    
+    const labels = Object.keys(dateMap).sort();
+    
+    if (displayMode === 'combined' || functionNames.size === 1) {
+      // 합쳐서 표시
+      const combinedData = labels.map(date => {
+        return Object.values(dateMap[date]).reduce((sum, count) => sum + count, 0);
+      });
+      
+      return {
+        labels,
+        datasets: [{
+          label: 'Total Activity',
+          data: cumulative ? combinedData.reduce((acc: number[], val, idx) => {
+            acc.push((acc[idx - 1] || 0) + val);
+            return acc;
+          }, []) : combinedData,
+          backgroundColor: 'transparent',
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1
+        }]
+      };
+    } else {
+      // 함수별로 분리해서 표시
+      const datasets = Array.from(functionNames).map((functionName, index) => {
+        const functionData = labels.map(date => dateMap[date][functionName] || 0);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        const color = colors[index % colors.length];
+        
+        return {
+          label: functionName,
+          data: cumulative ? functionData.reduce((acc: number[], val, idx) => {
+            acc.push((acc[idx - 1] || 0) + val);
+            return acc;
+          }, []) : functionData,
+          backgroundColor: 'transparent',
+          borderColor: color,
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1
+        };
+      });
+      
+      return { labels, datasets };
+    }
+  }
+  
+  // 기존 스토리지 쿼리 로직
   // Get all unique timestamps and sort them
   const allTimestamps = new Set<number>();
   Object.values(data).forEach(results => {
-    results.forEach(result => allTimestamps.add(result.timestamp));
+    (results as QueryResult[]).forEach(result => allTimestamps.add(result.timestamp));
   });
   
   const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);

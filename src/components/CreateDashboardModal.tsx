@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult } from '../types';
+import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
 import { uploadDashboard } from '../services/irysUploadService';
 import { queryTagCounts } from '../services/irysService';
+import { queryOnChainData, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { generateChartData } from '../utils/chartUtils';
 import { getCachedData, waitForCache } from '../services/storageService';
 import Chart from './Chart';
@@ -51,6 +52,16 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     isGroup?: boolean;
     groupName?: string;
   }>>([]);
+
+  // 온체인 쿼리 관련 상태
+  const [queryMode, setQueryMode] = useState<'storage' | 'onchain'>('storage');
+  const [contractAddress, setContractAddress] = useState('');
+  const [selectedNetwork, setSelectedNetwork] = useState('mainnet');
+  const [rpcUrl, setRpcUrl] = useState('');
+  const [abiInputs, setAbiInputs] = useState<string[]>(['']);
+  const [parsedAbis, setParsedAbis] = useState<AbiFunction[]>([]);
+  const [onChainDisplayMode, setOnChainDisplayMode] = useState<'combined' | 'separated'>('separated');
+  const [selectedOnChainPreset, setSelectedOnChainPreset] = useState<string>('');
 
   // State for custom tag input
   const [newTagName, setNewTagName] = useState('');
@@ -184,8 +195,13 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       return;
     }
 
-    if (selectedQueries.length === 0) {
-      alert('Please select at least one data source');
+    if (queryMode === 'storage' && selectedQueries.length === 0 && customTags.length === 0) {
+      alert('Please select at least one data source or add custom tags');
+      return;
+    }
+
+    if (queryMode === 'onchain' && (!contractAddress.trim() || !rpcUrl.trim())) {
+      alert('Please enter a contract address and RPC URL');
       return;
     }
 
@@ -194,11 +210,20 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       name: chartTitle.trim(), // for compatibility
       title: chartTitle.trim(),
       description: chartDescription.trim(),
-      queries: selectedQueries,
+      queries: queryMode === 'storage' ? selectedQueries : [],
       chartType,
       timePeriod,
       color: '#3b82f6', // default color for compatibility
-      tags: [] // legacy support
+      tags: [], // legacy support
+      ...(queryMode === 'onchain' ? {
+        onChainQuery: {
+          contractAddress: contractAddress.trim(),
+          network: selectedNetwork,
+          rpcUrl: rpcUrl.trim(),
+          abis: parsedAbis.filter(abi => abi !== null)
+        },
+        displayMode: onChainDisplayMode
+      } : {})
     };
 
     if (editingChart) {
@@ -215,6 +240,14 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     setTimePeriod('month');
     setCustomTags([]);
     setSelectedQueries([]);
+    setQueryMode('storage');
+    setContractAddress('');
+    setSelectedNetwork('mainnet');
+    setRpcUrl('');
+    setAbiInputs(['']);
+    setParsedAbis([]);
+    setOnChainDisplayMode('separated');
+    setSelectedOnChainPreset('');
   };
 
   const editChart = (chart: ChartConfig) => {
@@ -223,13 +256,25 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     setChartDescription(chart.description || '');
     setChartType(chart.chartType);
     setTimePeriod(chart.timePeriod);
-    setSelectedQueries(chart.queries || []);
     
-    // Reconstruct custom tags from queries
-    const customFromQueries = chart.queries?.filter(q => q.id.startsWith('custom-')) || [];
-    const tags: Tag[] = [];
-    customFromQueries.forEach(q => tags.push(...q.tags));
-    setCustomTags(tags);
+    if (chart.onChainQuery) {
+      setQueryMode('onchain');
+      setContractAddress(chart.onChainQuery.contractAddress);
+      setSelectedNetwork(chart.onChainQuery.network || 'mainnet');
+      setRpcUrl(chart.onChainQuery.rpcUrl || '');
+      setAbiInputs(chart.onChainQuery.abis?.map(abi => JSON.stringify(abi, null, 2)) || ['']);
+      setParsedAbis(chart.onChainQuery.abis || []);
+      setOnChainDisplayMode(chart.displayMode || 'separated');
+    } else {
+      setQueryMode('storage');
+      setSelectedQueries(chart.queries || []);
+      
+      // Reconstruct custom tags from queries
+      const customFromQueries = chart.queries?.filter(q => q.id.startsWith('custom-')) || [];
+      const tags: Tag[] = [];
+      customFromQueries.forEach(q => tags.push(...q.tags));
+      setCustomTags(tags);
+    }
   };
 
   const removeChart = (chartId: string) => {
@@ -259,21 +304,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     setLoadingProgress({ current: 0, total: 1, percentage: 0 });
     
     try {
-      // First try to get cached data or wait for it if being loaded
-      let cachedData = getCachedData();
-      if (!cachedData && !trendData) {
-        console.log('[CreateDashboard] No cached data available, waiting for cache...');
-        cachedData = await waitForCache(5000); // Wait up to 5 seconds
-      }
-      
-      // Use either cached data or trendData
-      const availableData = cachedData || trendData || {};
-      
-      const allData: { [queryId: string]: QueryResult[] } = {};
-      const queries = chart.queries || [];
-      
-      // If no queries, try legacy tags
-      if (queries.length === 0 && chart.tags && chart.tags.length > 0) {
+      // 온체인 쿼리인 경우
+      if (chart.onChainQuery) {
         const monthsMap = {
           'week': 0.25,
           'month': 1,
@@ -282,60 +314,113 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         };
         const months = monthsMap[chart.timePeriod] || 6;
         
-        const data = await queryTagCounts(chart.tags, (progress) => {
-          setLoadingProgress(progress);
-        }, { months });
-        allData[chart.id] = data;
+        const data = await queryOnChainData(
+          {
+            ...chart.onChainQuery,
+            rpcUrl: chart.onChainQuery.rpcUrl || ''
+          },
+          (progress) => setLoadingProgress(progress),
+          { months }
+        );
+        
+        const processedData = generateChartData(
+          { [chart.id]: data },
+          [{
+            id: chart.id,
+            name: chart.title,
+            tags: [],
+            color: '#3b82f6'
+          }],
+          chart.chartType,
+          false,
+          true,
+          chart.displayMode
+        );
+        
+        setChartData(prev => ({
+          ...prev,
+          [chart.id]: processedData
+        }));
       } else {
-        // Load data for each query
-        for (let i = 0; i < queries.length; i++) {
-          const query = queries[i];
+        // 기존 스토리지 쿼리 로직
+        // First try to get cached data or wait for it if being loaded
+        let cachedData = getCachedData();
+        if (!cachedData && !trendData) {
+          console.log('[CreateDashboard] No cached data available, waiting for cache...');
+          cachedData = await waitForCache(5000); // Wait up to 5 seconds
+        }
+        
+        // Use either cached data or trendData
+        const availableData = cachedData || trendData || {};
+        
+        const allData: { [queryId: string]: QueryResult[] } = {};
+        const queries = chart.queries || [];
+        
+        // If no queries, try legacy tags
+        if (queries.length === 0 && chart.tags && chart.tags.length > 0) {
+          const monthsMap = {
+            'week': 0.25,
+            'month': 1,
+            'quarter': 3,
+            'year': 12
+          };
+          const months = monthsMap[chart.timePeriod] || 6;
           
-          // Check if data exists in availableData first
-          if (availableData[query.id]) {
-            console.log(`[CreateDashboard] Using cached data for ${query.name}`);
-            allData[query.id] = availableData[query.id];
-            
-            // Update progress
-            const progress = {
-              current: i + 1,
-              total: queries.length,
-              percentage: Math.round(((i + 1) / queries.length) * 100)
-            };
+          const data = await queryTagCounts(chart.tags, (progress) => {
             setLoadingProgress(progress);
-          } else {
-            // Query new data if not in trendData
-            const progress = {
-              current: i,
-              total: queries.length,
-              percentage: Math.round((i / queries.length) * 100)
-            };
-            setLoadingProgress(progress);
+          }, { months });
+          allData[chart.id] = data;
+        } else {
+          // Load data for each query
+          for (let i = 0; i < queries.length; i++) {
+            const query = queries[i];
             
-            // Get date range from chart time period
-            const monthsMap = {
-              'week': 0.25,
-              'month': 1,
-              'quarter': 3,
-              'year': 12
-            };
-            const months = monthsMap[chart.timePeriod] || 6;
-            
-            const data = await queryTagCounts(query.tags, (subProgress) => {
-              const overallProgress = {
-                current: i + (subProgress.percentage / 100),
+            // Check if data exists in availableData first
+            if (availableData[query.id]) {
+              console.log(`[CreateDashboard] Using cached data for ${query.name}`);
+              allData[query.id] = availableData[query.id];
+              
+              // Update progress
+              const progress = {
+                current: i + 1,
                 total: queries.length,
-                percentage: Math.round(((i + (subProgress.percentage / 100)) / queries.length) * 100)
+                percentage: Math.round(((i + 1) / queries.length) * 100)
               };
-              setLoadingProgress(overallProgress);
-            }, { months });
-            
-            allData[query.id] = data;
+              setLoadingProgress(progress);
+            } else {
+              // Query new data if not in trendData
+              const progress = {
+                current: i,
+                total: queries.length,
+                percentage: Math.round((i / queries.length) * 100)
+              };
+              setLoadingProgress(progress);
+              
+              // Get date range from chart time period
+              const monthsMap = {
+                'week': 0.25,
+                'month': 1,
+                'quarter': 3,
+                'year': 12
+              };
+              const months = monthsMap[chart.timePeriod] || 6;
+              
+              const data = await queryTagCounts(query.tags, (subProgress) => {
+                const overallProgress = {
+                  current: i + (subProgress.percentage / 100),
+                  total: queries.length,
+                  percentage: Math.round(((i + (subProgress.percentage / 100)) / queries.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
+              }, { months });
+              
+              allData[query.id] = data;
+            }
           }
         }
+        
+        setChartData(prev => ({ ...prev, [chart.id]: allData }));
       }
-      
-      setChartData(prev => ({ ...prev, [chart.id]: allData }));
     } catch (error) {
       console.error('Error loading chart data:', error);
     } finally {
@@ -474,28 +559,208 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 />
               </div>
 
+              {/* 쿼리 모드 선택 */}
               <div className="form-group">
-                <label>Select Data Sources</label>
-                <div className="data-sources-grid">
-                  {APP_PRESETS.map(preset => (
-                    <div 
-                      key={preset.id} 
-                      className={`data-source-card ${selectedQueries.some(q => q.id === preset.id) ? 'selected' : ''}`}
-                      onClick={() => togglePreset(preset.id)}
-                    >
-                      {preset.icon && (
-                        <img src={preset.icon} alt={preset.name} className="source-icon" />
-                      )}
-                      <div className="source-name">{preset.name}</div>
-                      <div className="source-check">
-                        {selectedQueries.some(q => q.id === preset.id) && '✓'}
-                      </div>
-                    </div>
-                  ))}
+                <label>Query Type</label>
+                <div className="query-mode-selector">
+                  <button
+                    type="button"
+                    className={`mode-btn ${queryMode === 'storage' ? 'active' : ''}`}
+                    onClick={() => setQueryMode('storage')}
+                  >
+                    📦 Storage Query
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-btn ${queryMode === 'onchain' ? 'active' : ''}`}
+                    onClick={() => setQueryMode('onchain')}
+                  >
+                    ⛓️ On-chain Query
+                  </button>
                 </div>
               </div>
 
-              {selectedQueries.length > 0 && (
+              {queryMode === 'storage' ? (
+                <>
+                  <div className="form-group">
+                    <label>Select Data Sources</label>
+                    <div className="data-sources-grid">
+                      {APP_PRESETS.map(preset => (
+                        <div 
+                          key={preset.id} 
+                          className={`data-source-card ${selectedQueries.some(q => q.id === preset.id) ? 'selected' : ''}`}
+                          onClick={() => togglePreset(preset.id)}
+                        >
+                          {preset.icon && (
+                            <img src={preset.icon} alt={preset.name} className="source-icon" />
+                          )}
+                          <div className="source-name">{preset.name}</div>
+                          <div className="source-check">
+                            {selectedQueries.some(q => q.id === preset.id) && '✓'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* 온체인 프리셋 선택 */}
+                  <div className="form-group">
+                    <label>On-chain Presets</label>
+                    <select 
+                      value={selectedOnChainPreset}
+                      onChange={(e) => {
+                        const preset = ON_CHAIN_PRESETS.find(p => p.id === e.target.value);
+                        if (preset) {
+                          setSelectedOnChainPreset(preset.id);
+                          setContractAddress(preset.contractAddress);
+                          setSelectedNetwork(preset.network || 'mainnet');
+                          setRpcUrl(preset.rpcUrl || '');
+                          // 프리셋의 ABI 설정
+                          if (preset.abis) {
+                            setAbiInputs(preset.abis.map(abi => JSON.stringify(abi, null, 2)));
+                            setParsedAbis(preset.abis);
+                          }
+                        } else {
+                          setSelectedOnChainPreset('');
+                          setAbiInputs(['']);
+                          setParsedAbis([]);
+                          setRpcUrl('');
+                        }
+                      }}
+                    >
+                      <option value="">Select a preset or enter custom</option>
+                      {ON_CHAIN_PRESETS.map(preset => (
+                        <option key={preset.id} value={preset.id}>
+                          {preset.name} - {preset.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 네트워크 선택 */}
+                  <div className="form-group">
+                    <label>Network</label>
+                    <select
+                      value={selectedNetwork}
+                      onChange={(e) => setSelectedNetwork(e.target.value)}
+                    >
+                      <option value="mainnet">Ethereum Mainnet</option>
+                      <option value="polygon">Polygon</option>
+                      <option value="arbitrum">Arbitrum</option>
+                      <option value="avalanche">Avalanche</option>
+                      <option value="base">Base</option>
+                      <option value="irys-testnet">Irys Testnet</option>
+                    </select>
+                  </div>
+
+                  {/* RPC URL 입력 */}
+                  <div className="form-group">
+                    <label>RPC URL *</label>
+                    <input
+                      type="text"
+                      value={rpcUrl}
+                      onChange={(e) => setRpcUrl(e.target.value)}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  {/* Contract Address 입력 */}
+                  <div className="form-group">
+                    <label>Contract Address *</label>
+                    <input
+                      type="text"
+                      value={contractAddress}
+                      onChange={(e) => setContractAddress(e.target.value)}
+                      placeholder="0x..."
+                    />
+                  </div>
+
+                  {/* ABI 입력 */}
+                  <div className="form-group">
+                    <label>
+                      ABI Functions/Events (Optional)
+                      <span className="field-hint"> - Leave empty to track all Transfer events</span>
+                    </label>
+                    {abiInputs.map((abi, index) => (
+                      <div key={index} className="abi-input-row">
+                        <textarea
+                          value={abi}
+                          onChange={(e) => {
+                            const newAbis = [...abiInputs];
+                            newAbis[index] = e.target.value;
+                            setAbiInputs(newAbis);
+                            
+                            // Try to parse ABI
+                            try {
+                              if (e.target.value.trim()) {
+                                const parsed = JSON.parse(e.target.value);
+                                // Validate ABI structure
+                                if (parsed.name && parsed.type && (parsed.type === 'event' || parsed.type === 'function')) {
+                                  const newParsedAbis = [...parsedAbis];
+                                  newParsedAbis[index] = parsed;
+                                  setParsedAbis(newParsedAbis);
+                                }
+                              }
+                            } catch (err) {
+                              // Invalid JSON, ignore
+                            }
+                          }}
+                          placeholder='{"name": "Transfer", "type": "event", "inputs": [{"name": "from", "type": "address"}, {"name": "to", "type": "address"}, {"name": "value", "type": "uint256"}]}'
+                          rows={3}
+                        />
+                        <button
+                          type="button"
+                          className="remove-abi-btn"
+                          onClick={() => {
+                            setAbiInputs(abiInputs.filter((_, i) => i !== index));
+                            setParsedAbis(parsedAbis.filter((_, i) => i !== index));
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      className="add-abi-btn"
+                      onClick={() => setAbiInputs([...abiInputs, ''])}
+                    >
+                      + Add Function/Event
+                    </button>
+                  </div>
+
+                  {/* 표시 모드 선택 (ABI가 있을 때만) */}
+                  {parsedAbis.length > 0 && (
+                    <div className="form-group">
+                      <label>Display Mode</label>
+                      <div className="display-mode-selector">
+                        <label>
+                          <input
+                            type="radio"
+                            value="combined"
+                            checked={onChainDisplayMode === 'combined'}
+                            onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
+                          />
+                          Combined (모든 함수 합계)
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            value="separated"
+                            checked={onChainDisplayMode === 'separated'}
+                            onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
+                          />
+                          Separated (함수별 구분)
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {queryMode === 'storage' && selectedQueries.length > 0 && (
                 <div className="form-group">
                   <label>Selected Data Sources</label>
                   <div className="selected-queries">

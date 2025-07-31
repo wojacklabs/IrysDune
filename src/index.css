@@ -3055,3 +3055,246 @@ body::before {
     padding: 0.5rem;
   }
 }
+
+/* 온체인 쿼리 스타일 */
+.query-mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--gray-300);
+  background: white;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mode-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--gray-50);
+}
+
+.mode-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.field-hint {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  font-weight: normal;
+}
+
+.abi-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: flex-start;
+}
+
+.abi-input-row textarea {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.remove-abi-btn {
+  padding: 0.25rem 0.5rem;
+  background: var(--danger-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: opacity 0.2s;
+}
+
+.remove-abi-btn:hover {
+  opacity: 0.8;
+}
+
+.add-abi-btn {
+  padding: 0.5rem 1rem;
+  background: var(--gray-200);
+  color: var(--gray-700);
+  border: 1px dashed var(--gray-400);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.add-abi-btn:hover {
+  background: var(--gray-300);
+  border-color: var(--gray-500);
+}
+
+.display-mode-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.display-mode-selector label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.display-mode-selector input[type="radio"] {
+  cursor: pointer;
+}
+
+/* 온체인 쿼리 관련 스타일 (MyHistorySection) */
+.query-mode-section {
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.onchain-preset-selector {
+  margin-top: 1rem;
+}
+
+.onchain-preset-selector label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.preset-select {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.preset-select:hover {
+  border-color: #9ca3af;
+}
+
+.preset-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 온체인 활동 요약 */
+.onchain-summary-container {
+  margin-top: 1.5rem;
+}
+
+.onchain-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 0.875rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* 트랜잭션 테이블 스타일 수정 */
+.endpoint-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: #f3f4f6;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #374151;
+}
+
+.tx-link {
+  color: var(--primary-color);
+  transition: opacity 0.2s;
+}
+
+.tx-link:hover {
+  opacity: 0.7;
+}
+
+/* 온체인 트랜잭션 테이블 스타일 */
+.contract-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contract-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.network-badge {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.activity-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activity-icon {
+  font-size: 1.25rem;
+}
+
+.activity-name {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.event-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  font-size: 0.813rem;
+  font-weight: 500;
+}
