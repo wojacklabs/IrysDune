@@ -454,7 +454,7 @@ export async function queryUserOnChainData(
   query: OnChainQuery,
   walletAddress: string,
   progressCallback?: (progress: LoadingProgress) => void,
-  dateRange?: { months: number }
+  dateRange?: { months?: number; days?: number }
 ): Promise<OnChainQueryResult[]> {
   // 캐시 체크
   const cacheKey = getCacheKey('user-onchain-query', {
@@ -487,10 +487,17 @@ export async function queryUserOnChainData(
     const provider = new JsonRpcProvider(rpcUrl);
     
     // 날짜 범위 설정
-    const months = dateRange?.months || 6;
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - months);
+    
+    if (dateRange?.days) {
+      startDate.setDate(startDate.getDate() - dateRange.days);
+    } else if (dateRange?.months) {
+      startDate.setMonth(startDate.getMonth() - dateRange.months);
+    } else {
+      // 기본값 6개월
+      startDate.setMonth(startDate.getMonth() - 6);
+    }
     
     // 블록 번호 가져오기
     const latestBlock = await provider.getBlockNumber();

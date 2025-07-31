@@ -3,18 +3,21 @@ import { PieChart, Clock, Download, Share2, AlertCircle, ExternalLink, Package }
 import { getUserTransactions } from '../services/irysService';
 import { queryUserOnChainData, queryOnChainEvents, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { ACTIVITY_CATEGORIES, getActivityFromTags, getProjectFromTags, getActivityFromEvent } from '../constants/tagActivityMapping';
+import { APP_PRESETS } from '../constants/appPresets';
 import type { LoadingProgress as LoadingProgressType } from '../types';
 import LoadingProgress from './LoadingProgress';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
 
-type TimePeriod = '1m' | '3m' | '6m';
+type TimePeriod = '24h' | '3d' | '7d';
 
 interface MyHistorySectionProps {
   walletAddress: string | null;
 }
 
-interface ActivityData {
-  activityId: string;
+interface ProjectData {
+  projectId: string;
+  projectName: string;
+  projectIcon?: string;
   count: number;
   percentage: number;
   source: 'storage' | 'onchain' | 'both'; // 소스 추가
@@ -36,8 +39,8 @@ interface UnifiedTransaction {
 }
 
 const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) => {
-  const [activityData, setActivityData] = useState<ActivityData[]>([]);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m');
+  const [projectData, setProjectData] = useState<ProjectData[]>([]);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('7d');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<LoadingProgressType | null>(null);
   const [totalTransactions, setTotalTransactions] = useState(0);
@@ -46,9 +49,9 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
   // Time period labels
   const periodLabels: Record<TimePeriod, string> = {
-    '1m': 'Last 1 Month',
-    '3m': 'Last 3 Months',
-    '6m': 'Last 6 Months'
+    '24h': 'Last 24 Hours',
+    '3d': 'Last 3 Days',
+    '7d': 'Last 7 Days'
   };
 
   // Load user transaction history
@@ -86,9 +89,9 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
     try {
       const periodMap = {
-        '1m': 1,
-        '3m': 3,
-        '6m': 6
+        '24h': 1,
+        '3d': 3,
+        '7d': 7
       };
 
       // 병렬로 storage와 on-chain 데이터 로드
@@ -104,15 +107,16 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
             });
           });
           
-          // Group by activity
-          const activityCounts: { [key: string]: number } = {};
+          // Group by project (not activity)
+          const projectCounts: { [key: string]: number } = {};
           
           fetchedTransactions.forEach(tx => {
-            const activityId = getActivityFromTags(tx.tags);
-            activityCounts[activityId] = (activityCounts[activityId] || 0) + 1;
+            const project = getProjectFromTags(tx.tags);
+            const projectId = project?.id || 'other';
+            projectCounts[projectId] = (projectCounts[projectId] || 0) + 1;
           });
           
-          return { transactions: fetchedTransactions, activityCounts };
+          return { transactions: fetchedTransactions, projectCounts };
         })(),
         
         // On-chain 데이터 로드
@@ -143,7 +147,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                 },
                 walletAddress,
                 undefined,
-                { months: periodMap[timePeriod] }
+                { days: periodMap[timePeriod] }
               );
 
               const totalCount = results.reduce((sum, r) => sum + r.count, 0);
@@ -226,50 +230,71 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           // 모든 preset 조회 완료 대기
           await Promise.all(presetPromises);
           
-          // Group on-chain by activity
-          const activityCounts: { [key: string]: number } = {};
+          // Group on-chain by project/contract
+          const projectCounts: { [key: string]: number } = {};
           
           allTransactions.forEach(tx => {
-            const activityId = getActivityFromEvent(tx.eventName);
-            activityCounts[activityId] = (activityCounts[activityId] || 0) + 1;
+            // Find if this contract is in our presets
+            const preset = ON_CHAIN_PRESETS.find(p => p.name === tx.contractName);
+            const projectId = preset?.id || 'other';
+            projectCounts[projectId] = (projectCounts[projectId] || 0) + 1;
           });
           
           return { 
             contracts: allOnChainData,
             transactions: allTransactions,
-            activityCounts 
+            projectCounts 
           };
         })()
       ]);
 
-      // Storage와 on-chain 활동 통합
-      const combinedActivityCounts: { [key: string]: { storage: number, onchain: number } } = {};
+      // Storage와 on-chain 프로젝트 통합
+      const combinedProjectCounts: { [key: string]: { storage: number, onchain: number } } = {};
       
-      // Storage 활동 추가
-      Object.entries(storageData.activityCounts).forEach(([activityId, count]) => {
-        if (!combinedActivityCounts[activityId]) {
-          combinedActivityCounts[activityId] = { storage: 0, onchain: 0 };
+      // Storage 프로젝트 추가
+      Object.entries(storageData.projectCounts).forEach(([projectId, count]) => {
+        if (!combinedProjectCounts[projectId]) {
+          combinedProjectCounts[projectId] = { storage: 0, onchain: 0 };
         }
-        combinedActivityCounts[activityId].storage = count;
+        combinedProjectCounts[projectId].storage = count;
       });
       
-      // On-chain 활동 추가
-      Object.entries(onchainData.activityCounts).forEach(([activityId, count]) => {
-        if (!combinedActivityCounts[activityId]) {
-          combinedActivityCounts[activityId] = { storage: 0, onchain: 0 };
+      // On-chain 프로젝트 추가
+      Object.entries(onchainData.projectCounts).forEach(([projectId, count]) => {
+        if (!combinedProjectCounts[projectId]) {
+          combinedProjectCounts[projectId] = { storage: 0, onchain: 0 };
         }
-        combinedActivityCounts[activityId].onchain = count;
+        combinedProjectCounts[projectId].onchain = count;
       });
       
-      // 통합된 activity data 생성
-      const activities: ActivityData[] = Object.entries(combinedActivityCounts)
-        .map(([activityId, counts]) => {
+      // APP_PRESETS와 ON_CHAIN_PRESETS에서 프로젝트 정보 가져오기
+      const getProjectInfo = (projectId: string) => {
+        if (projectId === 'other') {
+          return { name: 'Others', icon: undefined };
+        }
+        const appPreset = APP_PRESETS.find(p => p.id === projectId);
+        if (appPreset) {
+          return { name: appPreset.name, icon: appPreset.icon };
+        }
+        const onChainPreset = ON_CHAIN_PRESETS.find(p => p.id === projectId);
+        if (onChainPreset) {
+          return { name: onChainPreset.name, icon: undefined };
+        }
+        return { name: 'Others', icon: undefined };
+      };
+      
+      // 통합된 project data 생성
+      const projects: ProjectData[] = Object.entries(combinedProjectCounts)
+        .map(([projectId, counts]) => {
           const totalCount = counts.storage + counts.onchain;
           const source: 'storage' | 'onchain' | 'both' = counts.storage > 0 && counts.onchain > 0 ? 'both' : 
                         counts.storage > 0 ? 'storage' : 'onchain';
+          const projectInfo = getProjectInfo(projectId);
           
           return {
-            activityId,
+            projectId,
+            projectName: projectInfo.name,
+            projectIcon: projectInfo.icon,
             count: totalCount,
             percentage: 0, // 나중에 계산
             source,
@@ -280,17 +305,17 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         .sort((a, b) => b.count - a.count);
 
       // 퍼센티지 계산
-      const totalCount = activities.reduce((sum, a) => sum + a.count, 0);
-      if (activities.length > 0 && totalCount > 0) {
-        activities.forEach(activity => {
-          activity.percentage = (activity.count / totalCount) * 100;
+      const totalCount = projects.reduce((sum, a) => sum + a.count, 0);
+      if (projects.length > 0 && totalCount > 0) {
+        projects.forEach(project => {
+          project.percentage = (project.count / totalCount) * 100;
         });
         
         // 반올림 오차 조정
-        const percentageSum = activities.reduce((sum, a) => sum + a.percentage, 0);
+        const percentageSum = projects.reduce((sum, a) => sum + a.percentage, 0);
         if (percentageSum !== 100 && percentageSum > 0) {
           const adjustment = 100 - percentageSum;
-          activities[0].percentage += adjustment;
+          projects[0].percentage += adjustment;
         }
       }
 
@@ -307,7 +332,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           id: tx.id,
           timestamp: tx.timestamp,
           source: 'storage',
-          project: project?.name,
+          project: project?.name || 'Others',
           projectIcon: project?.icon,
           activity: category.name,
           activityIcon: category.icon,
@@ -320,12 +345,13 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       onchainData.transactions.forEach(tx => {
         const activityId = getActivityFromEvent(tx.eventName);
         const category = ACTIVITY_CATEGORIES[activityId];
+        const preset = ON_CHAIN_PRESETS.find(p => p.name === tx.contractName);
         
         allUnifiedTransactions.push({
           id: tx.id,
           timestamp: tx.timestamp,
           source: 'onchain',
-          project: tx.contractName,
+          project: preset?.name || 'Others',
           activity: category.name,
           activityIcon: category.icon,
           detail: tx.eventName,
@@ -343,12 +369,12 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       const limitedTransactions = allUnifiedTransactions.slice(0, 100);
 
       // 상태 업데이트
-      setActivityData(activities);
+      setProjectData(projects);
       setUnifiedTransactions(limitedTransactions);
       setTotalTransactions(totalCount);
       
       console.log('[MyHistory] All data loaded:', {
-        activities: activities.length,
+        projects: projects.length,
         storageTransactions: storageData.transactions.length,
         onchainTransactions: onchainData.transactions.length,
         unifiedTransactions: limitedTransactions.length
@@ -373,12 +399,11 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
     // setIsCapturing(true); // This state was removed, so this line is removed.
     try {
       const shareText = `My Irys Activity (${periodLabels[timePeriod]}):\n\n` +
-        activityData.map(activity => {
-          const category = ACTIVITY_CATEGORIES[activity.activityId];
-          let text = `${category.name}: ${activity.count} (${activity.percentage.toFixed(1)}%)`;
-          if (activity.source === 'both') {
-            text += ` [💾${activity.storageCount} | ⛓️${activity.onchainCount}]`;
-          } else if (activity.source === 'storage') {
+        projectData.map(project => {
+          let text = `${project.projectName}: ${project.count} (${project.percentage.toFixed(1)}%)`;
+          if (project.source === 'both') {
+            text += ` [💾${project.storageCount} | ⛓️${project.onchainCount}]`;
+          } else if (project.source === 'storage') {
             text += ' [💾 Storage]';
           } else {
             text += ' [⛓️ On-chain]';
@@ -419,35 +444,35 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
   const calculatePieSegments = () => {
     // 통합된 데이터를 사용하여 파이 차트 계산
-    if (activityData.length === 0) return [];
+    if (projectData.length === 0) return [];
     
     // 전체 카운트 계산
-    const totalCount = activityData.reduce((sum, d) => sum + d.count, 0);
+    const totalCount = projectData.reduce((sum, d) => sum + d.count, 0);
     if (totalCount === 0) return [];
     
+    // 색상 팔레트 정의
+    const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#6366f1', '#f97316', '#84cc16'];
+    
     // 단일 항목인 경우 전체 원을 그림
-    if (activityData.length === 1) {
-      const category = ACTIVITY_CATEGORIES[activityData[0].activityId];
+    if (projectData.length === 1) {
       return [{
         path: `M 50 50 L 50 10 A 40 40 0 0 1 50 90 A 40 40 0 0 1 50 10 Z`,
-        color: category.color,
-        activity: activityData[0]
+        color: projectData[0].projectId === 'other' ? '#6b7280' : colors[0],
+        project: projectData[0]
       }];
     }
     
     let cumulativePercentage = 0;
-    return activityData.map((activity) => {
+    return projectData.map((project, index) => {
       const startAngle = (cumulativePercentage * 360) / 100;
-      let endAngle = ((cumulativePercentage + activity.percentage) * 360) / 100;
+      let endAngle = ((cumulativePercentage + project.percentage) * 360) / 100;
       
       // Prevent exact 360 degrees (use 359.99 instead)
       if (endAngle - startAngle >= 360) {
         endAngle = startAngle + 359.99;
       }
       
-      cumulativePercentage += activity.percentage;
-
-      const category = ACTIVITY_CATEGORIES[activity.activityId];
+      cumulativePercentage += project.percentage;
       
       // Calculate SVG path
       const startAngleRad = (startAngle * Math.PI) / 180;
@@ -464,15 +489,15 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       if (endAngle - startAngle > 359) {
         return {
           path: `M 50 50 L 50 10 A 40 40 0 0 1 50 90 A 40 40 0 0 1 50 10 Z`,
-          color: category.color,
-          activity
+          color: project.projectId === 'other' ? '#6b7280' : colors[index % colors.length],
+          project
         };
       }
 
       return {
         path: `M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`,
-        color: category.color,
-        activity
+        color: project.projectId === 'other' ? '#6b7280' : colors[index % colors.length],
+        project
       };
     });
   };
@@ -518,7 +543,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           <div className="header-actions">
             {/* Time period selector */}
             <div className="time-period-selector">
-              {(['1m', '3m', '6m'] as TimePeriod[]).map(period => (
+              {(['24h', '3d', '7d'] as TimePeriod[]).map(period => (
                 <button
                   key={period}
                   onClick={() => setTimePeriod(period)}
@@ -534,7 +559,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
               <button
                 onClick={handleCapture}
                 className="action-button share-button"
-                disabled={loading || activityData.length === 0}
+                disabled={loading || projectData.length === 0}
               >
                 <Share2 size={16} />
                 {/* {isCapturing ? 'Capturing...' : 'Share'} */}
@@ -543,7 +568,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
               <button
                 onClick={handleDownload}
                 className="action-button download-button"
-                disabled={loading || activityData.length === 0}
+                disabled={loading || projectData.length === 0}
               >
                 <Download size={16} />
                 Download
@@ -571,13 +596,13 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
               </div>
               {progress && <LoadingProgress progress={progress} />}
             </div>
-          ) : (activityData.length === 0) ? (
-            <div className="empty-state">
-              <Clock size={48} />
-              <h3>No Activity Found</h3>
-              <p>No transactions found for {periodLabels[timePeriod].toLowerCase()}</p>
-            </div>
-          ) : (
+                      ) : (projectData.length === 0) ? (
+              <div className="empty-state">
+                <Clock size={48} />
+                <h3>No Activity Found</h3>
+                <p>No transactions found for {periodLabels[timePeriod].toLowerCase()}</p>
+              </div>
+            ) : (
             <div className="chart-content">
               {/* Pie chart */}
               <div className="pie-chart-wrapper">
@@ -618,25 +643,35 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
               {/* Legend */}
               <div className="legend">
-                {activityData.map(activity => {
-                  const category = ACTIVITY_CATEGORIES[activity.activityId];
+                {projectData.map((project, index) => {
+                  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#6366f1', '#f97316', '#84cc16'];
+                  const color = project.projectId === 'other' ? '#6b7280' : colors[index % colors.length];
+                  
                   return (
-                    <div key={activity.activityId} className="legend-item">
+                    <div key={project.projectId} className="legend-item">
                       <div 
                         className="legend-color"
-                        style={{ backgroundColor: category.color }}
+                        style={{ backgroundColor: color }}
                       ></div>
                       <div className="legend-info">
                         <div className="legend-label">
-                          {category.icon} {category.name}
+                          {project.projectIcon && (
+                            <img 
+                              src={project.projectIcon} 
+                              alt={project.projectName}
+                              style={{ width: '20px', height: '20px', marginRight: '4px', borderRadius: '4px' }}
+                            />
+                          )}
+                          {!project.projectIcon && project.projectId === 'other' && '📦 '}
+                          {project.projectName}
                         </div>
                         <div className="legend-stats">
-                          <span className="count">{activity.count}</span>
-                          <span className="percentage">({activity.percentage.toFixed(1)}%)</span>
+                          <span className="count">{project.count}</span>
+                          <span className="percentage">({project.percentage.toFixed(1)}%)</span>
                         </div>
-                        {activity.source === 'both' && (
+                        {project.source === 'both' && (
                           <div className="legend-detail">
-                            <span className="source-info">💾 {activity.storageCount || 0} | ⛓️ {activity.onchainCount || 0}</span>
+                            <span className="source-info">💾 {project.storageCount || 0} | ⛓️ {project.onchainCount || 0}</span>
                           </div>
                         )}
                       </div>
@@ -649,7 +684,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         </div>
 
         {/* User info inside card */}
-        {!loading && walletAddress && activityData.length > 0 && (
+        {!loading && walletAddress && projectData.length > 0 && (
           <div className="user-info">
             <span className="wallet">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
           </div>
