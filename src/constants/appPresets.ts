@@ -6,6 +6,7 @@ import bridgeboxIcon from '../assets/bridgebox.png';
 import irysduneIcon from '../assets/irysdune.png';
 import irysProofBoardIcon from '../assets/irysproofboard.png';
 import irysflipIcon from '../assets/irysflip.png';
+import irysCrushIcon from '../assets/iryscrush.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -70,6 +71,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#EF4444',
     icon: irysflipIcon
+  },
+  {
+    id: 'irys-crush',
+    name: 'IrysCrush',
+    tags: [
+      { name: 'App', value: 'IrysCrush' }
+    ],
+    color: '#ff8a00',
+    icon: irysCrushIcon
   },
 ];
 
