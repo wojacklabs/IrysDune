@@ -351,7 +351,7 @@ const IRYS_ENDPOINTS = [
 // Get user transactions from all endpoints
 export async function getUserTransactions(
   walletAddress: string,
-  timePeriod: '24h' | '3d' | '7d',
+  timePeriod: '24h' | '3d' | '7d' | '1m' | '3m' | '6m',
   progressCallback?: (progress: LoadingProgress) => void
 ): Promise<Array<{
   id: string;
@@ -360,25 +360,34 @@ export async function getUserTransactions(
   endpoint: string;
   url: string;
 }>> {
-  console.log(`[IrysService] Fetching transactions for wallet: ${walletAddress}, period: ${timePeriod}`);
-  
-  // Calculate date range
-  const endDate = new Date();
-  const startDate = new Date();
+  // Calculate time range
+  const now = Date.now();
+  let fromTimestamp: number;
   
   switch (timePeriod) {
     case '24h':
-      startDate.setHours(startDate.getHours() - 24);
+      fromTimestamp = now - 24 * 60 * 60 * 1000;
       break;
     case '3d':
-      startDate.setDate(startDate.getDate() - 3);
+      fromTimestamp = now - 3 * 24 * 60 * 60 * 1000;
       break;
     case '7d':
-      startDate.setDate(startDate.getDate() - 7);
+      fromTimestamp = now - 7 * 24 * 60 * 60 * 1000;
       break;
+    case '1m':
+      fromTimestamp = now - 30 * 24 * 60 * 60 * 1000;
+      break;
+    case '3m':
+      fromTimestamp = now - 90 * 24 * 60 * 60 * 1000;
+      break;
+    case '6m':
+      fromTimestamp = now - 180 * 24 * 60 * 60 * 1000;
+      break;
+    default:
+      fromTimestamp = now - 7 * 24 * 60 * 60 * 1000;
   }
   
-  console.log(`[IrysService] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  console.log(`[IrysService] Date range: ${new Date(fromTimestamp).toISOString()} to ${new Date(now).toISOString()}`);
   
   const allTransactions: Array<{
     id: string;
@@ -464,13 +473,13 @@ export async function getUserTransactions(
           const txDate = new Date(timestamp);
           
           // Check date range
-          if (txDate < startDate) {
+          if (txDate < new Date(fromTimestamp)) {
             console.log(`[IrysService] [${endpoint.name}] Transaction ${edge.node.id} is before start date, stopping`);
             stopFetching = true;
             break;
           }
           
-          if (txDate <= endDate) {
+          if (txDate <= new Date(now)) {
             allTransactions.push({
               id: edge.node.id,
               timestamp,

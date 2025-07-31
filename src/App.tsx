@@ -196,7 +196,7 @@ function App() {
         <div className="container">
           {activeTab === 'trends' && <TrendSection onDataUpdate={setTrendData} />}
           {activeTab === 'dashboards' && <DashboardsSection walletAddress={walletAddress} username={username} trendData={trendData} />}
-          {activeTab === 'my-history' && <MyHistorySection walletAddress={walletAddress} username={username} />}
+          {activeTab === 'my-history' && <MyHistorySection walletAddress={walletAddress} />}
         </div>
       </main>
 
