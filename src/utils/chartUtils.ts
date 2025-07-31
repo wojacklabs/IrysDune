@@ -171,11 +171,16 @@ export function filterDataByPeriod(
       
       // Generate cumulative data
       let runningTotal = 0;
-      const mappedData = periodTimestamps.map(timestamp => {
+      const mappedData = periodTimestamps.map((timestamp, index) => {
+        // For the last timestamp, include all data up to end of day
+        const effectiveTimestamp = index === periodTimestamps.length - 1 
+          ? timestamp + (24 * 60 * 60 * 1000) // Add 24 hours to include full day
+          : timestamp;
+        
         // Calculate cumulative total up to this point
         runningTotal = 0;
         sortedResults.forEach(result => {
-          if (result.timestamp <= timestamp) {
+          if (result.timestamp <= effectiveTimestamp) {
             runningTotal += result.count;
           }
         });
