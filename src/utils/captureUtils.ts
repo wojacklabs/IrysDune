@@ -65,11 +65,6 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
           transform: 'none',
           margin: '0',
           padding: computedStyle.padding
-        },
-        // Add filter to exclude cloned canvas elements from dom-to-image processing
-        // since we already copied their content
-        filter: (node: any) => {
-          return !(node instanceof HTMLCanvasElement);
         }
       });
 
