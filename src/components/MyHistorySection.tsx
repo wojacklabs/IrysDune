@@ -22,31 +22,6 @@ interface ActivityData {
   onchainCount?: number;
 }
 
-interface Transaction {
-  id: string;
-  timestamp: number;
-  tags: Array<{ name: string; value: string }>;
-  endpoint: string;
-  url: string;
-}
-
-interface OnChainActivity {
-  contractName: string;
-  contractAddress: string;
-  network: string;
-  count: number;
-  color: string;
-}
-
-interface OnChainTransaction {
-  id: string;
-  timestamp: number;
-  eventName: string;
-  contractName: string;
-  network: string;
-  url: string;
-}
-
 interface UnifiedTransaction {
   id: string;
   timestamp: number;
@@ -61,13 +36,10 @@ interface UnifiedTransaction {
 }
 
 const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('6m');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<LoadingProgressType | null>(null);
-  const [onChainData, setOnChainData] = useState<OnChainActivity[]>([]);
-  const [onChainTransactions, setOnChainTransactions] = useState<OnChainTransaction[]>([]);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [unifiedTransactions, setUnifiedTransactions] = useState<UnifiedTransaction[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -86,6 +58,32 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
     setLoading(true);
     setProgress({ current: 0, total: 200, percentage: 0 }); // storage + onchain 로딩을 위해 200으로 설정
 
+    // 함수 내부에서만 사용되는 타입 정의
+    interface Transaction {
+      id: string;
+      timestamp: number;
+      tags: Array<{ name: string; value: string }>;
+      endpoint: string;
+      url: string;
+    }
+
+    interface OnChainActivity {
+      contractName: string;
+      contractAddress: string;
+      network: string;
+      count: number;
+      color: string;
+    }
+
+    interface OnChainTransaction {
+      id: string;
+      timestamp: number;
+      eventName: string;
+      contractName: string;
+      network: string;
+      url: string;
+    }
+
     try {
       const periodMap = {
         '1m': 1,
@@ -98,7 +96,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         // Storage 데이터 로드
         (async () => {
           console.log('[MyHistory] Loading storage transactions for period:', timePeriod);
-          const fetchedTransactions = await getUserTransactions(walletAddress, timePeriod, (prog) => {
+          const fetchedTransactions: Transaction[] = await getUserTransactions(walletAddress, timePeriod, (prog) => {
             setProgress({
               current: prog.current / 2, // storage는 전체의 절반
               total: 200,
@@ -267,7 +265,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       const activities: ActivityData[] = Object.entries(combinedActivityCounts)
         .map(([activityId, counts]) => {
           const totalCount = counts.storage + counts.onchain;
-          const source = counts.storage > 0 && counts.onchain > 0 ? 'both' : 
+          const source: 'storage' | 'onchain' | 'both' = counts.storage > 0 && counts.onchain > 0 ? 'both' : 
                         counts.storage > 0 ? 'storage' : 'onchain';
           
           return {
@@ -345,9 +343,6 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       const limitedTransactions = allUnifiedTransactions.slice(0, 100);
 
       // 상태 업데이트
-      setTransactions(storageData.transactions);
-      setOnChainData(onchainData.contracts);
-      setOnChainTransactions(onchainData.transactions);
       setActivityData(activities);
       setUnifiedTransactions(limitedTransactions);
       setTotalTransactions(totalCount);
@@ -494,11 +489,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
     });
   };
 
-  // Get activity name from tags
-  const getActivityLabel = (activityId: string) => {
-    const category = ACTIVITY_CATEGORIES[activityId];
-    return category ? `${category.icon} ${category.name}` : 'Others';
-  };
+
 
   if (!walletAddress) {
     return (
