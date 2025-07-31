@@ -52,6 +52,7 @@ const Chart: React.FC<ChartProps> = ({
   captureContainerRef
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstanceRef = useRef<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
 
@@ -62,10 +63,15 @@ const Chart: React.FC<ChartProps> = ({
 
   // Check if multiple datasets for chart options
   const isMultipleDatasets = data.datasets.length > 1;
+  const baseOptions = getChartOptions(isMultipleDatasets, chartType);
   const options = {
-    ...getChartOptions(isMultipleDatasets, chartType),
+    ...baseOptions,
+    animation: {
+      duration: isCapturing ? 0 : 1000,
+      easing: 'easeInOutQuart' as const
+    },
     plugins: {
-      ...getChartOptions(isMultipleDatasets, chartType).plugins,
+      ...baseOptions.plugins,
       title: {
         display: !!title,
         text: title,
@@ -97,6 +103,14 @@ const Chart: React.FC<ChartProps> = ({
     
     setIsCapturing(true);
     try {
+      // Force chart to update without animation
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update('none');
+      }
+      
+      // Wait for chart to stabilize
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const filename = `irys-dune-chart-${Date.now()}.png`;
       const result = await captureAndShare(captureTarget, shareText, filename);
       
@@ -110,6 +124,10 @@ const Chart: React.FC<ChartProps> = ({
       alert('Error occurred while capturing chart.');
     } finally {
       setIsCapturing(false);
+      // Re-enable animations
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update();
+      }
     }
   };
 
@@ -118,13 +136,28 @@ const Chart: React.FC<ChartProps> = ({
     const captureTarget = captureContainerRef?.current || chartRef.current;
     if (!captureTarget) return;
     
+    setIsCapturing(true);
     try {
+      // Force chart to update without animation
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update('none');
+      }
+      
+      // Wait for chart to stabilize
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const blob = await captureElement(captureTarget);
       const filename = `irys-dune-chart-${Date.now()}.png`;
       downloadImage(blob, filename);
     } catch (error) {
       console.error('Error downloading chart:', error);
       alert('Error occurred while downloading chart.');
+    } finally {
+      setIsCapturing(false);
+      // Re-enable animations
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update();
+      }
     }
   };
 
@@ -179,11 +212,16 @@ const Chart: React.FC<ChartProps> = ({
           {chartType === 'treemap' ? (
             <ChartReact
               key={`treemap-${renderKey}`}
+              ref={chartInstanceRef}
               type='treemap'
               data={data}
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                  duration: isCapturing ? 0 : 1000,
+                  easing: 'easeInOutQuart' as const
+                },
                 plugins: {
                   title: {
                     display: !!title,
@@ -250,6 +288,7 @@ const Chart: React.FC<ChartProps> = ({
           ) : (
             <Line 
               key={`line-${renderKey}`}
+              ref={chartInstanceRef}
               data={data} 
               options={options} 
             />

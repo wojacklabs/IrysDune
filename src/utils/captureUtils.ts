@@ -22,6 +22,23 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     clone.style.zIndex = '-9999';
     clone.style.transform = 'none';
     
+    // Handle canvas elements (for Chart.js)
+    const originalCanvases = element.querySelectorAll('canvas');
+    const clonedCanvases = clone.querySelectorAll('canvas');
+    
+    originalCanvases.forEach((originalCanvas, index) => {
+      const clonedCanvas = clonedCanvases[index];
+      if (clonedCanvas && originalCanvas instanceof HTMLCanvasElement && clonedCanvas instanceof HTMLCanvasElement) {
+        // Copy canvas content
+        const context = clonedCanvas.getContext('2d');
+        if (context) {
+          clonedCanvas.width = originalCanvas.width;
+          clonedCanvas.height = originalCanvas.height;
+          context.drawImage(originalCanvas, 0, 0);
+        }
+      }
+    });
+    
     // Add to document temporarily
     document.body.appendChild(clone);
     
@@ -32,7 +49,7 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     });
     
     // Wait for images and fonts to load
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
       // Get device pixel ratio for better quality
@@ -48,6 +65,11 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
           transform: 'none',
           margin: '0',
           padding: computedStyle.padding
+        },
+        // Add filter to exclude cloned canvas elements from dom-to-image processing
+        // since we already copied their content
+        filter: (node: any) => {
+          return !(node instanceof HTMLCanvasElement);
         }
       });
 
@@ -74,9 +96,29 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     clone.style.padding = computedStyle.padding;
     clone.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
     clone.style.zIndex = '-9999';
+    
+    // Handle canvas elements for fallback
+    const originalCanvases = element.querySelectorAll('canvas');
+    const clonedCanvases = clone.querySelectorAll('canvas');
+    
+    originalCanvases.forEach((originalCanvas, index) => {
+      const clonedCanvas = clonedCanvases[index];
+      if (clonedCanvas && originalCanvas instanceof HTMLCanvasElement && clonedCanvas instanceof HTMLCanvasElement) {
+        const context = clonedCanvas.getContext('2d');
+        if (context) {
+          clonedCanvas.width = originalCanvas.width;
+          clonedCanvas.height = originalCanvas.height;
+          context.drawImage(originalCanvas, 0, 0);
+        }
+      }
+    });
+    
     document.body.appendChild(clone);
     
     try {
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Fallback to html2canvas
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -86,7 +128,9 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
         width: rect.width,
         height: clone.scrollHeight,
         windowWidth: rect.width,
-        windowHeight: clone.scrollHeight
+        windowHeight: clone.scrollHeight,
+        // Don't remove DOM elements during capture
+        removeContainer: false
       });
 
       return new Promise((resolve) => {

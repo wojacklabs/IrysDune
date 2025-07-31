@@ -96,14 +96,14 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   };
 
   // Load selected apps data for Individual Apps
-  const loadIndividualData = async () => {
+  const loadIndividualData = async (forceRefresh: boolean = false) => {
     if (selectedApps.length === 0) return;
 
     setIndividualLoading(true);
     
-    // Use cached data if available
+    // Use cached data if available and not forcing refresh
     const cachedData = getCachedData();
-    if (cachedData) {
+    if (cachedData && !forceRefresh) {
       // Filter cached data to only selected apps
       const filteredData: { [key: string]: QueryResult[] } = {};
       selectedApps.forEach(appId => {
@@ -121,6 +121,19 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     try {
       const results = await fetchMultipleProjectsData(selectedApps, setProgress);
       setIndividualData(results);
+      
+      // If force refresh, update the cache with new data
+      if (forceRefresh) {
+        // Merge new data with existing ecosystem data
+        const updatedData = { ...ecosystemData };
+        Object.keys(results).forEach(key => {
+          updatedData[key] = results[key];
+        });
+        saveCacheData(updatedData);
+        setEcosystemData(updatedData);
+        setCacheAge(0);
+      }
+      
       // Always share ecosystem data with parent to ensure all presets are available
       if (onDataUpdate && ecosystemData) {
         onDataUpdate(ecosystemData);
@@ -133,7 +146,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   };
 
   const refreshIndividual = () => {
-    loadIndividualData();
+    loadIndividualData(true);
   };
 
 
