@@ -15,12 +15,13 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     clone.style.left = '0';
     clone.style.top = '0';
     clone.style.width = rect.width + 'px';
-    clone.style.height = 'auto';
+    clone.style.height = rect.height + 'px'; // Use actual height instead of auto
     clone.style.margin = '0';
     clone.style.padding = computedStyle.padding;
     clone.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
     clone.style.zIndex = '-9999';
     clone.style.transform = 'none';
+    clone.style.overflow = 'visible'; // Ensure content is visible
     
     // Handle canvas elements (for Chart.js)
     const originalCanvases = element.querySelectorAll('canvas');
@@ -37,6 +38,21 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
           context.drawImage(originalCanvas, 0, 0);
         }
       }
+    });
+    
+    // Preserve styles for specific classes
+    const preserveStyles = ['.ecosystem-card', '.card', '.chart-container', '.chart-wrapper'];
+    preserveStyles.forEach(selector => {
+      const elements = clone.querySelectorAll(selector);
+      elements.forEach((el: any) => {
+        const originalEl = element.querySelector(selector);
+        if (originalEl) {
+          const originalStyles = getComputedStyle(originalEl);
+          el.style.height = originalStyles.height;
+          el.style.maxHeight = originalStyles.maxHeight;
+          el.style.minHeight = originalStyles.minHeight;
+        }
+      });
     });
     
     // Add to document temporarily
@@ -60,11 +76,14 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
         quality: 1.0,
         pixelRatio: pixelRatio,
         width: rect.width,
-        height: clone.scrollHeight,
+        height: rect.height, // Use actual height
         style: {
           transform: 'none',
           margin: '0',
-          padding: computedStyle.padding
+          padding: computedStyle.padding,
+          width: rect.width + 'px',
+          height: rect.height + 'px',
+          maxHeight: rect.height + 'px'
         }
       });
 
@@ -87,10 +106,12 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     clone.style.left = '0';
     clone.style.top = '0';
     clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px'; // Use actual height instead of auto
     clone.style.margin = '0';
     clone.style.padding = computedStyle.padding;
     clone.style.backgroundColor = computedStyle.backgroundColor || '#ffffff';
     clone.style.zIndex = '-9999';
+    clone.style.overflow = 'visible';
     
     // Handle canvas elements for fallback
     const originalCanvases = element.querySelectorAll('canvas');
@@ -108,6 +129,21 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
       }
     });
     
+    // Preserve styles for specific classes
+    const preserveStyles = ['.ecosystem-card', '.card', '.chart-container', '.chart-wrapper'];
+    preserveStyles.forEach(selector => {
+      const elements = clone.querySelectorAll(selector);
+      elements.forEach((el: any) => {
+        const originalEl = element.querySelector(selector);
+        if (originalEl) {
+          const originalStyles = getComputedStyle(originalEl);
+          el.style.height = originalStyles.height;
+          el.style.maxHeight = originalStyles.maxHeight;
+          el.style.minHeight = originalStyles.minHeight;
+        }
+      });
+    });
+    
     document.body.appendChild(clone);
     
     try {
@@ -121,9 +157,9 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
         allowTaint: true,
         backgroundColor: '#ffffff',
         width: rect.width,
-        height: clone.scrollHeight,
+        height: rect.height, // Use actual height
         windowWidth: rect.width,
-        windowHeight: clone.scrollHeight,
+        windowHeight: rect.height, // Use actual height
         // Don't remove DOM elements during capture
         removeContainer: false
       });
