@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PieChart, Clock, Download, Share2, AlertCircle, ExternalLink, Package } from 'lucide-react';
 import { getUserTransactions } from '../services/irysService';
-import { queryOnChainData, queryOnChainEvents, ON_CHAIN_PRESETS } from '../services/onChainService';
+import { queryUserOnChainData, queryOnChainEvents, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { ACTIVITY_CATEGORIES, getActivityFromTags, getProjectFromTags, getActivityFromEvent } from '../constants/tagActivityMapping';
 import type { LoadingProgress as LoadingProgressType } from '../types';
 import LoadingProgress from './LoadingProgress';
@@ -87,13 +87,14 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress, user
           '7d': 0.25   // ~7 days
         };
         
-        const results = await queryOnChainData(
+        const results = await queryUserOnChainData(
           {
             contractAddress: preset.contractAddress,
             network: preset.network,
             rpcUrl: preset.rpcUrl,
             abis: preset.abis
           },
+          walletAddress,
           setProgress,
           { months: periodMap[timePeriod] }
         );
@@ -132,14 +133,14 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress, user
           }]);
         }
         
-        // 온체인 이벤트 상세 조회
+        // 온체인 이벤트 상세 조회 (walletAddress로 필터링)
         try {
           const events = await queryOnChainEvents({
             contractAddress: preset.contractAddress,
             network: preset.network,
             rpcUrl: preset.rpcUrl,
             abis: preset.abis
-          }, 50); // 최근 50개 이벤트
+          }, 50, walletAddress); // walletAddress 추가
           
           // 이벤트를 트랜잭션 형태로 변환
           const onChainTxs: OnChainTransaction[] = events.map(event => {

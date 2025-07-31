@@ -228,7 +228,8 @@ export interface OnChainEventDetail {
 // 온체인 이벤트 상세 조회
 export async function queryOnChainEvents(
   query: OnChainQuery,
-  limit: number = 100
+  limit: number = 100,
+  walletAddress?: string
 ): Promise<OnChainEventDetail[]> {
   const network = query.network || 'mainnet';
   const rpcUrl = query.rpcUrl;
@@ -238,11 +239,14 @@ export async function queryOnChainEvents(
   }
 
   console.log(`[OnChainService] Querying recent events from ${query.contractAddress}`);
+  if (walletAddress) {
+    console.log(`[OnChainService] Filtering by wallet address: ${walletAddress}`);
+  }
 
   try {
     const provider = new JsonRpcProvider(rpcUrl);
     const latestBlock = await provider.getBlockNumber();
-    const fromBlock = Math.max(0, latestBlock - 1000); // 최근 1000 블록
+    const fromBlock = Math.max(0, latestBlock - 10000); // 최근 10000 블록
     
     const eventDetails: OnChainEventDetail[] = [];
     
@@ -251,15 +255,29 @@ export async function queryOnChainEvents(
       const transferEventSignature = 'Transfer(address,address,uint256)';
       const transferTopic = ethers.id(transferEventSignature);
       
+      // walletAddress가 있으면 from 또는 to 주소로 필터링
       const logs = await provider.getLogs({
         address: query.contractAddress,
-        topics: [transferTopic],
+        topics: walletAddress ? [
+          transferTopic,
+          null, // from (any)
+          null  // to (any)
+        ] : [transferTopic],
         fromBlock: fromBlock,
         toBlock: latestBlock
       });
       
+      // walletAddress로 추가 필터링 (from 또는 to가 walletAddress인 경우만)
+      const filteredLogs = walletAddress ? logs.filter(log => {
+        // Transfer 이벤트의 경우 topics[1]이 from, topics[2]가 to
+        const fromAddress = log.topics[1] ? ethers.getAddress('0x' + log.topics[1].slice(26)) : null;
+        const toAddress = log.topics[2] ? ethers.getAddress('0x' + log.topics[2].slice(26)) : null;
+        const userAddress = ethers.getAddress(walletAddress);
+        return fromAddress === userAddress || toAddress === userAddress;
+      }) : logs;
+      
       // 최근 이벤트부터 정렬
-      const sortedLogs = logs.sort((a, b) => b.blockNumber - a.blockNumber).slice(0, limit);
+      const sortedLogs = filteredLogs.sort((a, b) => b.blockNumber - a.blockNumber).slice(0, limit);
       
       for (const log of sortedLogs) {
         const block = await provider.getBlock(log.blockNumber);
@@ -285,7 +303,27 @@ export async function queryOnChainEvents(
             if (filter) {
               const events = await contract.queryFilter(filter, fromBlock, latestBlock);
               
-              for (const event of events) {
+              // walletAddress로 필터링
+              const filteredEvents = walletAddress ? events.filter(event => {
+                // 이벤트 args에서 address 타입 필드를 찾아서 확인
+                if ('args' in event && event.args) {
+                  const userAddress = ethers.getAddress(walletAddress);
+                  // args의 모든 값을 확인하여 walletAddress와 일치하는지 확인
+                  return Object.values(event.args).some(arg => {
+                    if (typeof arg === 'string') {
+                      try {
+                        return ethers.getAddress(arg) === userAddress;
+                      } catch {
+                        return false;
+                      }
+                    }
+                    return false;
+                  });
+                }
+                return false;
+              }) : events;
+              
+              for (const event of filteredEvents) {
                 const block = await provider.getBlock(event.blockNumber);
                 if (block) {
                   eventDetails.push({
@@ -319,86 +357,6 @@ export async function queryOnChainEvents(
 
 // 온체인 프리셋 정의
 export const ON_CHAIN_PRESETS = [
-  {
-    id: 'uniswap-v3',
-    name: 'Uniswap V3 Factory',
-    contractAddress: '0x1F98431c8aD98523631AE4a59f267346ea31F984',
-    network: 'mainnet',
-    rpcUrl: 'https://ethereum.publicnode.com',
-    description: 'Uniswap V3 Factory - Pool Creation',
-    abis: [
-      {
-        name: 'PoolCreated',
-        type: 'event' as const,
-        inputs: [
-          { name: 'token0', type: 'address' },
-          { name: 'token1', type: 'address' },
-          { name: 'fee', type: 'uint24' },
-          { name: 'tickSpacing', type: 'int24' },
-          { name: 'pool', type: 'address' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'aave-v3',
-    name: 'Aave V3 Pool',
-    contractAddress: '0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2',
-    network: 'mainnet',
-    rpcUrl: 'https://ethereum.publicnode.com',
-    description: 'Aave V3 Lending Pool',
-    abis: [
-      {
-        name: 'Supply',
-        type: 'event' as const,
-        inputs: [
-          { name: 'reserve', type: 'address' },
-          { name: 'user', type: 'address' },
-          { name: 'onBehalfOf', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'referralCode', type: 'uint16' }
-        ]
-      },
-      {
-        name: 'Borrow',
-        type: 'event' as const,
-        inputs: [
-          { name: 'reserve', type: 'address' },
-          { name: 'user', type: 'address' },
-          { name: 'onBehalfOf', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'interestRateMode', type: 'uint8' },
-          { name: 'borrowRate', type: 'uint256' },
-          { name: 'referralCode', type: 'uint16' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'lens-hub',
-    name: 'Lens Protocol Hub',
-    contractAddress: '0xDb46d1Dc155634FbC732f92E853b10B288AD5a1d',
-    network: 'polygon',
-    rpcUrl: 'https://polygon-rpc.com',
-    description: 'Lens Protocol Main Hub',
-    abis: [
-      {
-        name: 'ProfileCreated',
-        type: 'event' as const,
-        inputs: [
-          { name: 'profileId', type: 'uint256' },
-          { name: 'creator', type: 'address' },
-          { name: 'to', type: 'address' },
-          { name: 'handle', type: 'string' },
-          { name: 'imageURI', type: 'string' },
-          { name: 'followModule', type: 'address' },
-          { name: 'followModuleReturnData', type: 'bytes' },
-          { name: 'followNFTURI', type: 'string' },
-          { name: 'timestamp', type: 'uint256' }
-        ]
-      }
-    ]
-  },
   {
     id: 'irys-flip',
     name: 'IrysFlip',
@@ -490,3 +448,112 @@ export const ON_CHAIN_PRESETS = [
     ]
   }
 ]; 
+
+// 사용자별 온체인 활동 쿼리
+export async function queryUserOnChainData(
+  query: OnChainQuery,
+  walletAddress: string,
+  progressCallback?: (progress: LoadingProgress) => void,
+  dateRange?: { months: number }
+): Promise<OnChainQueryResult[]> {
+  // 캐시 체크
+  const cacheKey = getCacheKey('user-onchain-query', {
+    address: query.contractAddress,
+    wallet: walletAddress,
+    abis: query.abis?.map(a => a.name).join(','),
+    network: query.network || 'mainnet',
+    months: dateRange?.months || 6
+  });
+  
+  const cached = getFromCache<OnChainQueryResult[]>(cacheKey);
+  if (cached) {
+    console.log('[OnChainService] Using cached user data');
+    if (progressCallback) {
+      progressCallback({ current: 1, total: 1, percentage: 100 });
+    }
+    return cached;
+  }
+
+  const network = query.network || 'mainnet';
+  const rpcUrl = query.rpcUrl;
+  
+  if (!rpcUrl) {
+    throw new Error(`RPC URL is required for on-chain queries`);
+  }
+
+  console.log(`[OnChainService] Querying user ${walletAddress} activity on ${query.contractAddress}`);
+
+  try {
+    const provider = new JsonRpcProvider(rpcUrl);
+    
+    // 날짜 범위 설정
+    const months = dateRange?.months || 6;
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    
+    // 블록 번호 가져오기
+    const latestBlock = await provider.getBlockNumber();
+    const blockTime = BLOCK_TIME[network] || 12;
+    const blocksPerDay = (24 * 60 * 60) / blockTime;
+    const daysRange = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const startBlock = Math.max(0, latestBlock - Math.floor(blocksPerDay * daysRange));
+    
+    console.log(`[OnChainService] Block range: ${startBlock} to ${latestBlock}`);
+
+    // walletAddress로 필터링된 이벤트 조회
+    const events = await queryOnChainEvents(query, 10000, walletAddress);
+    
+    // 날짜별 집계
+    const dailyCounts: { [key: string]: { [functionName: string]: number } } = {};
+    
+    events.forEach(event => {
+      const date = new Date(event.timestamp).toISOString().split('T')[0];
+      if (!dailyCounts[date]) {
+        dailyCounts[date] = {};
+      }
+      
+      const functionName = event.eventName;
+      dailyCounts[date][functionName] = (dailyCounts[date][functionName] || 0) + 1;
+    });
+    
+    // 결과 생성
+    const results: OnChainQueryResult[] = [];
+    
+    Object.entries(dailyCounts).forEach(([date, functionCounts]) => {
+      if (query.abis && query.abis.length > 0) {
+        // 함수별로 분리
+        Object.entries(functionCounts).forEach(([functionName, count]) => {
+          results.push({
+            date,
+            count,
+            functionName
+          });
+        });
+      } else {
+        // 전체 합계
+        const totalCount = Object.values(functionCounts).reduce((sum, count) => sum + count, 0);
+        results.push({
+          date,
+          count: totalCount
+        });
+      }
+    });
+    
+    // 날짜순 정렬
+    results.sort((a, b) => a.date.localeCompare(b.date));
+    
+    // 캐시 저장 (10분)
+    setCache(cacheKey, results, 10 * 60 * 1000);
+    
+    if (progressCallback) {
+      progressCallback({ current: 1, total: 1, percentage: 100 });
+    }
+    
+    return results;
+    
+  } catch (error) {
+    console.error('[OnChainService] Error querying user on-chain data:', error);
+    throw error;
+  }
+} 
