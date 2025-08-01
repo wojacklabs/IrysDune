@@ -27,7 +27,7 @@ const LoadingProgress: React.FC<LoadingProgressProps> = ({ progress, message }) 
         <Cloud className="loading-icon" />
         <div className="loading-text">
           <div className="loading-message">
-            {message || 'Loading...'}
+            {progress.message || message || 'Loading...'}
           </div>
           <div className="loading-submessage">
             {getThematicMessage()}
@@ -37,14 +37,19 @@ const LoadingProgress: React.FC<LoadingProgressProps> = ({ progress, message }) 
         <div className="loading-progress">
           <div
             className="loading-progress-bar"
-            style={{ width: `${progress.percentage}%` }}
+            style={{ width: `${progress.percentage || Math.min((progress.current / (progress.total || 1)) * 100, 100)}%` }}
           />
         </div>
         
         <div className="loading-stats">
-          <span className="loading-percentage">{progress.percentage}%</span>
+          {progress.percentage > 0 && (
+            <span className="loading-percentage">{progress.percentage}%</span>
+          )}
           <span className="loading-count">
-            Processing {progress.current} of {progress.total} queries
+            {progress.total > progress.current ? 
+              `Found ${progress.current} transactions, still searching...` :
+              `Total: ${progress.current} transactions`
+            }
           </span>
         </div>
       </div>

@@ -2920,6 +2920,7 @@ body::before {
 }
 
 .my-history-section .legend-label {
+  display: flex;
   font-size: 0.875rem;
   font-weight: 600;
   color: #374151;

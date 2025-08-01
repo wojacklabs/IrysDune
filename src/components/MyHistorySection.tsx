@@ -59,7 +59,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
     if (!walletAddress) return;
 
     setLoading(true);
-    setProgress({ current: 0, total: 200, percentage: 0 }); // storage + onchain 로딩을 위해 200으로 설정
+    setProgress({ current: 0, total: 1, percentage: 0, message: 'Starting to fetch transactions...' });
 
     // 함수 내부에서만 사용되는 타입 정의
     interface Transaction {
@@ -101,9 +101,10 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           console.log('[MyHistory] Loading storage transactions for period:', timePeriod);
           const fetchedTransactions: Transaction[] = await getUserTransactions(walletAddress, timePeriod, (prog) => {
             setProgress({
-              current: prog.current / 2, // storage는 전체의 절반
-              total: 200,
-              percentage: prog.percentage / 2
+              current: prog.current,
+              total: prog.total,
+              percentage: prog.percentage,
+              message: prog.message || 'Loading storage transactions...'
             });
           });
           
@@ -212,17 +213,19 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
               // Update progress
               completedPresets++;
               setProgress({
-                current: 100 + (completedPresets / totalPresets * 100), // onchain은 100부터 시작
-                total: 200,
-                percentage: 50 + Math.round((completedPresets / totalPresets) * 50)
+                current: allTransactions.length,
+                total: allTransactions.length + 1,
+                percentage: Math.round((completedPresets / totalPresets) * 100),
+                message: `Loading on-chain data: ${preset.name} (${completedPresets}/${totalPresets})`
               });
             } catch (error) {
               console.error(`[MyHistory] Error querying ${preset.name}:`, error);
               completedPresets++;
               setProgress({
-                current: 100 + (completedPresets / totalPresets * 100),
-                total: 200,
-                percentage: 50 + Math.round((completedPresets / totalPresets) * 50)
+                current: allTransactions.length,
+                total: allTransactions.length + 1,
+                percentage: Math.round((completedPresets / totalPresets) * 100),
+                message: `Error loading ${preset.name}, continuing...`
               });
             }
           });
@@ -379,11 +382,25 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         onchainTransactions: onchainData.transactions.length,
         unifiedTransactions: limitedTransactions.length
       });
+      
+      // 완료 progress 표시
+      setProgress({
+        current: totalCount,
+        total: totalCount,
+        percentage: 100,
+        message: `Completed! Found ${totalCount} transactions in total.`
+      });
+      
+      // 2초 후 progress 숨기기
+      setTimeout(() => {
+        setProgress(null);
+      }, 2000);
+      
     } catch (error) {
       console.error('[MyHistory] Error loading history:', error);
+      setProgress(null);
     } finally {
       setLoading(false);
-      setProgress(null);
     }
   };
 

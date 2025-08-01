@@ -406,8 +406,9 @@ export async function getUserTransactions(
     
     let after = "";
     let hasMore = true;
-    const pageSize = 10;
+    const pageSize = 100; // 페이지 크기를 100으로 증가
     let pageCount = 0;
+    let endpointTransactionCount = 0;
     
     while (hasMore) {
       const query = `
@@ -487,6 +488,7 @@ export async function getUserTransactions(
               endpoint: endpoint.name,
               url: `${endpoint.base}/${edge.node.id}`
             });
+            endpointTransactionCount++;
           }
         }
         
@@ -498,6 +500,16 @@ export async function getUserTransactions(
           after = edges[edges.length - 1].cursor;
         }
         
+        // Progress 업데이트: 각 페이지마다
+        if (progressCallback) {
+          progressCallback({
+            current: allTransactions.length,
+            total: allTransactions.length + 1, // 실시간 업데이트, 정확한 총 개수는 모름
+            percentage: 0, // percentage는 사용하지 않음
+            message: `Fetching from ${endpoint.name}: ${endpointTransactionCount} transactions...`
+          });
+        }
+        
       } catch (error) {
         console.error(`[IrysService] [${endpoint.name}] Error fetching transactions:`, error);
         hasMore = false;
@@ -505,11 +517,14 @@ export async function getUserTransactions(
     }
     
     totalProgress += progressPerEndpoint;
+    console.log(`[IrysService] [${endpoint.name}] Total transactions: ${endpointTransactionCount}`);
+    
     if (progressCallback) {
       progressCallback({
-        current: Math.round(totalProgress),
-        total: 100,
-        percentage: Math.round(totalProgress)
+        current: allTransactions.length,
+        total: allTransactions.length,
+        percentage: Math.round(totalProgress),
+        message: `Completed ${endpoint.name}: ${endpointTransactionCount} transactions`
       });
     }
   }
