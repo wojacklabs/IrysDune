@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PieChart, Clock, Download, Share2, AlertCircle, ExternalLink, Package } from 'lucide-react';
-import { getUserTransactions } from '../services/irysService';
+import { PieChart, Clock, Download, Share2, AlertCircle, ExternalLink, Package, ChevronLeft, ChevronRight, Award, Lock, X } from 'lucide-react';
+import { getUserTransactions, queryBadgeEligibility } from '../services/irysService';
 import { queryUserOnChainData, queryOnChainEvents, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { ACTIVITY_CATEGORIES, getActivityFromTags, getProjectFromTags, getActivityFromEvent } from '../constants/tagActivityMapping';
 import { APP_PRESETS } from '../constants/appPresets';
 import type { LoadingProgress as LoadingProgressType } from '../types';
 import LoadingProgress from './LoadingProgress';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
+import { ethers } from 'ethers';
+import { ensureUploaderReady } from '../services/irysUploadService';
 
 type TimePeriod = '24h' | '3d' | '7d';
 
@@ -38,6 +40,43 @@ interface UnifiedTransaction {
   url: string;
 }
 
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  requirements: string;
+  checkEligibility: (data: { dashboardCount: number }) => boolean;
+}
+
+const BADGES: Badge[] = [
+  {
+    id: 'community-member',
+    name: 'Community Member',
+    description: 'Welcome to IrysDune community!',
+    image: 'https://uploader.irys.xyz/DsqhyusYWuJGnWU7e2EgRyNwU6iCC18mSV65ZNfvtvHT',
+    requirements: 'Available for everyone',
+    checkEligibility: () => true
+  },
+  {
+    id: 'dashboard-creator',
+    name: 'Dashboard Creator',
+    description: 'Created your first dashboard on IrysDune',
+    image: 'https://uploader.irys.xyz/9N7TDkXGcwJGnWU7e2EgRyNwU6iCC18mSV65ZNfvDash', 
+    requirements: 'Create at least 1 dashboard',
+    checkEligibility: (data) => data.dashboardCount >= 1
+  }
+];
+
+// Contract configuration
+const NFT_CONTRACT_ADDRESS = '0x5Aa61c497B4e3592cD69FC88B7303e3Aac5DA5FD';
+const IRYS_TESTNET_RPC = 'https://testnet-rpc.irys.xyz/v1/execution-rpc';
+const NFT_ABI = [
+  'function publicMint(address to, string memory uri) payable',
+  'function getMintPrice() pure returns (uint256)',
+  'event NFTMinted(address indexed minter, uint256 indexed tokenId, string uri)'
+];
+
 const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) => {
   const [projectData, setProjectData] = useState<ProjectData[]>([]);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('7d');
@@ -45,7 +84,18 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
   const [progress, setProgress] = useState<LoadingProgressType | null>(null);
   const [totalTransactions, setTotalTransactions] = useState(0);
   const [unifiedTransactions, setUnifiedTransactions] = useState<UnifiedTransaction[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 8;
   const sectionRef = useRef<HTMLDivElement>(null);
+  
+  // Badge states
+  const [dashboardCount, setDashboardCount] = useState(0);
+  const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintError, setMintError] = useState<string | null>(null);
+  const [mintSuccess, setMintSuccess] = useState<string | null>(null);
+  const [mintTxHash, setMintTxHash] = useState<string | null>(null);
 
   // Time period labels
   const periodLabels: Record<TimePeriod, string> = {
@@ -383,6 +433,8 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         unifiedTransactions: limitedTransactions.length
       });
       
+
+      
       // 완료 progress 표시
       setProgress({
         current: totalCount,
@@ -406,8 +458,36 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
   // Load user history when component mounts or when parameters change
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when period changes
     loadUserHistory();
   }, [walletAddress, timePeriod]);
+
+  // Fetch badge eligibility data separately (independent of time period)
+  useEffect(() => {
+    if (!walletAddress) {
+      setBadgeEligibilityLoading(false);
+      return;
+    }
+
+    const fetchBadgeEligibility = async () => {
+      console.log('[MyHistory] Fetching badge eligibility data...');
+      setBadgeEligibilityLoading(true);
+      
+      try {
+        const eligibility = await queryBadgeEligibility(walletAddress);
+        setDashboardCount(eligibility.dashboardCount);
+        console.log('[MyHistory] Badge eligibility:', eligibility);
+      } catch (error) {
+        console.error('[MyHistory] Error fetching badge eligibility:', error);
+      } finally {
+        setBadgeEligibilityLoading(false);
+      }
+    };
+
+    fetchBadgeEligibility();
+  }, [walletAddress]);
+
+  useEffect(() => {
 
   // Share chart (capture and share)
   const handleCapture = async () => {
@@ -531,6 +611,157 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
     });
   };
 
+  // Upload metadata to Irys
+  const uploadMetadataToIrys = async (badge: Badge) => {
+    try {
+      const uploader = await ensureUploaderReady();
+      if (!uploader) {
+        throw new Error("Failed to initialize Irys uploader");
+      }
+
+      const metadata = {
+        name: badge.name,
+        description: badge.description,
+        image: badge.image,
+        attributes: [
+          { trait_type: "Badge Type", value: badge.id },
+          { trait_type: "Minted Date", value: new Date().toISOString() },
+          { trait_type: "Minter", value: walletAddress }
+        ]
+      };
+
+      const data = JSON.stringify(metadata);
+      const tags = [
+        { name: 'App-Name', value: 'IrysDune-Badge-NFT' },
+        { name: 'Content-Type', value: 'application/json' },
+        { name: 'Type', value: 'badge-nft-metadata' },
+        { name: 'Badge-Id', value: badge.id },
+        { name: 'Creator', value: walletAddress || 'unknown' }
+      ];
+
+      const result = await uploader.upload(data, { tags });
+      const metadataUrl = `https://gateway.irys.xyz/${result.id}`;
+      
+      return metadataUrl;
+    } catch (error) {
+      console.error('[MyHistory] Error uploading metadata:', error);
+      throw error;
+    }
+  };
+
+  // Handle badge minting
+  const handleMintBadge = async (badge: Badge) => {
+    if (!walletAddress) {
+      setMintError("Please connect your wallet first");
+      return;
+    }
+
+    setIsMinting(true);
+    setMintError(null);
+    setMintSuccess(null);
+    setMintTxHash(null);
+
+    try {
+      // Check eligibility
+      const isEligible = badge.checkEligibility({ dashboardCount });
+      if (!isEligible) {
+        throw new Error("You are not eligible to mint this badge yet");
+      }
+
+      // Switch to Irys testnet
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x4F6' }], // 1270 in hex
+        });
+      } catch (switchError: any) {
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x4F6',
+              chainName: 'Irys Testnet',
+              nativeCurrency: {
+                name: 'IRYS',
+                symbol: 'IRYS',
+                decimals: 18
+              },
+              rpcUrls: [IRYS_TESTNET_RPC],
+              blockExplorerUrls: []
+            }]
+          });
+        } else {
+          throw switchError;
+        }
+      }
+
+      // Connect to provider
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const signerAddress = await signer.getAddress();
+      
+      // Check network
+      const network = await provider.getNetwork();
+      if (network.chainId !== 1270n) {
+        throw new Error('Not connected to Irys testnet. Please switch networks.');
+      }
+      
+      // Check balance
+      const balance = await provider.getBalance(signerAddress);
+      const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+      const mintPrice = await contract.getMintPrice();
+      
+      if (balance < mintPrice) {
+        throw new Error(`Insufficient funds. You need at least ${ethers.formatEther(mintPrice)} IRYS to mint this badge.`);
+      }
+
+      // Upload metadata
+      setMintSuccess("Uploading metadata to Irys...");
+      const metadataUri = await uploadMetadataToIrys(badge);
+      
+      setMintSuccess("Metadata uploaded. Minting badge NFT...");
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Mint NFT
+      const contractWithSigner = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, signer);
+      const tx = await contractWithSigner.publicMint(signerAddress, metadataUri, {
+        value: mintPrice
+      });
+
+      setMintTxHash(tx.hash);
+      setMintSuccess("Transaction submitted. Waiting for confirmation...");
+
+      const receipt = await tx.wait();
+      
+      // Get token ID from event
+      const mintEvent = receipt.logs.find((log: any) => {
+        try {
+          const parsed = contractWithSigner.interface.parseLog(log);
+          return parsed?.name === 'NFTMinted';
+        } catch {
+          return false;
+        }
+      });
+
+      let tokenId = null;
+      if (mintEvent) {
+        const parsed = contractWithSigner.interface.parseLog(mintEvent);
+        tokenId = parsed?.args[1]?.toString();
+      }
+
+      setMintSuccess(`Badge minted successfully! ${tokenId ? `Token ID: #${tokenId}` : ''}`);
+      
+    } catch (error: any) {
+      console.error('[MyHistory] Minting error:', error);
+      setMintError(error.message || 'Failed to mint badge');
+    } finally {
+      setIsMinting(false);
+    }
+  };
 
 
   if (!walletAddress) {
@@ -549,6 +780,59 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
 
   return (
     <div className="my-history-section" ref={sectionRef}>
+      {/* Badge Section */}
+      {walletAddress && (
+        <div className="badge-section">
+          <h3>Achievement Badges</h3>
+          {badgeEligibilityLoading ? (
+            <div className="badge-grid">
+              {/* Badge skeleton */}
+              {[1, 2].map((i) => (
+                <div key={`skeleton-${i}`} className="badge-card skeleton">
+                  <div className="badge-image-container skeleton-box"></div>
+                  <div className="badge-info">
+                    <div className="skeleton-text" style={{ width: '80%', height: '1.2rem', marginBottom: '0.5rem' }}></div>
+                    <div className="skeleton-text" style={{ width: '100%', height: '0.875rem' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="badge-grid">
+              {BADGES.map(badge => {
+                const isEligible = badge.checkEligibility({ dashboardCount });
+                return (
+                  <div
+                    key={badge.id}
+                    className={`badge-card ${isEligible ? 'eligible' : 'locked'}`}
+                    onClick={() => setSelectedBadge(badge)}
+                  >
+                    <div className="badge-image-container">
+                      <img src={badge.image} alt={badge.name} className="badge-image" />
+                      {!isEligible && (
+                        <div className="badge-lock-overlay">
+                          <Lock size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="badge-info">
+                      <h4>{badge.name}</h4>
+                      <p className="badge-requirement">{badge.requirements}</p>
+                    </div>
+                    {isEligible && (
+                      <div className="badge-eligible-indicator">
+                        <Award size={16} />
+                        <span>Eligible</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="card">
         {/* Header */}
         <div className="ecosystem-header">
@@ -709,7 +993,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       </div>
 
       {/* Transaction table - for both storage and on-chain */}
-      {!loading && unifiedTransactions.length > 0 && (
+      {loading ? (
         <div className="card transaction-table-container">
           <h3>Recent Activity</h3>
           <div className="table-wrapper">
@@ -719,14 +1003,96 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                   <th>Time</th>
                   <th>Source</th>
                   <th>Project</th>
-                  <th>Activity</th>
                   <th>Detail</th>
                   <th>Transaction ID</th>
                   <th>Link</th>
                 </tr>
               </thead>
               <tbody>
-                {unifiedTransactions.map(tx => (
+                {[...Array(5)].map((_, i) => (
+                  <tr key={`skeleton-row-${i}`}>
+                    <td><div className="skeleton-text" style={{ width: '120px', height: '1rem' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '80px', height: '1rem' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '100px', height: '1rem' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '80px', height: '1rem' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '140px', height: '1rem' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '40px', height: '1rem' }}></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : unifiedTransactions.length > 0 ? (
+        <div className="card transaction-table-container">
+          <h3>Recent Activity</h3>
+          
+          {/* Pagination controls */}
+          <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ fontSize: '14px', color: '#6b7280' }}>
+              Showing {((currentPage - 1) * transactionsPerPage) + 1} to {Math.min(currentPage * transactionsPerPage, unifiedTransactions.length)} of {unifiedTransactions.length}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  background: currentPage === 1 ? '#f9fafb' : 'white',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </button>
+              
+              <span style={{ padding: '0 16px', fontSize: '14px' }}>
+                {currentPage} of {Math.ceil(unifiedTransactions.length / transactionsPerPage)}
+              </span>
+              
+              <button
+                className="pagination-btn"
+                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(unifiedTransactions.length / transactionsPerPage), prev + 1))}
+                disabled={currentPage === Math.ceil(unifiedTransactions.length / transactionsPerPage)}
+                style={{
+                  padding: '8px 12px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  background: currentPage === Math.ceil(unifiedTransactions.length / transactionsPerPage) ? '#f9fafb' : 'white',
+                  cursor: currentPage === Math.ceil(unifiedTransactions.length / transactionsPerPage) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                Next
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+          
+          <div className="table-wrapper">
+            <table className="transaction-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Source</th>
+                  <th>Project</th>
+                  <th>Detail</th>
+                  <th>Transaction ID</th>
+                  <th>Link</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unifiedTransactions
+                  .slice((currentPage - 1) * transactionsPerPage, currentPage * transactionsPerPage)
+                  .map(tx => (
                   <tr key={tx.id}>
                     <td>{formatTimestamp(tx.timestamp)}</td>
                     <td>
@@ -759,12 +1125,6 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                       )}
                     </td>
                     <td>
-                      <div className="activity-cell">
-                        <span className="activity-icon">{tx.activityIcon}</span>
-                        <span className="activity-name">{tx.activity}</span>
-                      </div>
-                    </td>
-                    <td>
                       <span className={tx.source === 'storage' ? 'endpoint-tag' : 'event-tag'}>
                         {tx.detail}
                       </span>
@@ -786,9 +1146,100 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
             </table>
           </div>
         </div>
+      ) : null}
+      
+      {/* Loading Progress Modal */}
+      {loading && loadingProgress && (
+        <LoadingProgress progress={loadingProgress} />
       )}
-
-      {/* On-chain activity summary - remove the old summary */}
+      
+      {/* Badge Minting Modal */}
+      {selectedBadge && (
+        <div className="modal-overlay" onClick={() => setSelectedBadge(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedBadge(null)}>
+              <X size={24} />
+            </button>
+            
+            <div className="modal-header">
+              <img src={selectedBadge.image} alt={selectedBadge.name} className="modal-badge-image" />
+              <h2>{selectedBadge.name}</h2>
+            </div>
+            
+            <div className="modal-body">
+              <p className="badge-description">{selectedBadge.description}</p>
+              <div className="badge-requirements">
+                <h4>Requirements</h4>
+                <p>{selectedBadge.requirements}</p>
+              </div>
+              
+              {walletAddress && (
+                <div className="eligibility-status">
+                  {selectedBadge.checkEligibility({ dashboardCount }) ? (
+                    <div className="eligible-message">
+                      <Award size={20} />
+                      <span>You are eligible to mint this badge!</span>
+                    </div>
+                  ) : (
+                    <div className="not-eligible-message">
+                      <Lock size={20} />
+                      <span>Requirements not met yet</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {mintError && (
+                <div className="alert-message error">
+                  <AlertCircle size={20} />
+                  <span>{mintError}</span>
+                </div>
+              )}
+              
+              {mintSuccess && (
+                <div className="alert-message success">
+                  <Award size={20} />
+                  <span>{mintSuccess}</span>
+                </div>
+              )}
+              
+              {mintTxHash && (
+                <div className="tx-info">
+                  <span>Transaction: </span>
+                  <a 
+                    href={`https://testnet.explorer.irys.xyz/tx/${mintTxHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="tx-link"
+                  >
+                    {mintTxHash.slice(0, 8)}...{mintTxHash.slice(-6)}
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              )}
+              
+              <button
+                className="create-btn"
+                onClick={() => handleMintBadge(selectedBadge)}
+                disabled={
+                  isMinting || 
+                  !walletAddress || 
+                  !selectedBadge.checkEligibility({ dashboardCount })
+                }
+              >
+                {isMinting ? (
+                  <>
+                    <span className="spinner"></span>
+                    <span>Minting...</span>
+                  </>
+                ) : (
+                  <span>Mint Badge</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

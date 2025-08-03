@@ -304,6 +304,99 @@ export async function fetchIrysName(walletAddress: string): Promise<string | nul
   return null;
 }
 
+// Query badge eligibility data for a wallet
+export async function queryBadgeEligibility(walletAddress: string): Promise<{
+  dashboardCount: number;
+  loading: boolean;
+  error?: string;
+}> {
+  console.log('[IrysService] Querying badge eligibility for:', walletAddress);
+  
+  try {
+    // Use executeQuery for rate limiting and queue management
+    const result = await executeQuery(`badge-eligibility-${walletAddress}`, async () => {
+      // Query dashboards created by this wallet (no time limit)
+      const dashboardQuery = {
+        query: `
+          query GetUserDashboards($address: String!) {
+            transactions(
+              owners: [$address]
+              tags: [
+                { name: "App-Name", values: ["IrysDune"] }
+                { name: "Type", values: ["dashboard"] }
+              ]
+              first: 100
+              order: DESC
+            ) {
+              edges {
+                node {
+                  id
+                  tags {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          address: walletAddress
+        }
+      };
+
+      const response = await fetch('https://gateway.irys.xyz/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dashboardQuery)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.errors) {
+        console.error('[IrysService] GraphQL errors:', result.errors);
+        throw new Error('GraphQL query failed');
+      }
+
+      return result;
+    });
+
+    // Count unique dashboards (by Dashboard-ID to avoid counting updates)
+    const dashboardIds = new Set<string>();
+    
+    if (result.data?.transactions?.edges) {
+      for (const edge of result.data.transactions.edges) {
+        const tags = edge.node.tags || [];
+        const dashboardIdTag = tags.find((tag: any) => tag.name === 'Dashboard-ID');
+        if (dashboardIdTag) {
+          dashboardIds.add(dashboardIdTag.value);
+        }
+      }
+    }
+    
+    const dashboardCount = dashboardIds.size;
+    console.log('[IrysService] Found', dashboardCount, 'unique dashboards for wallet');
+    
+    return { 
+      dashboardCount, 
+      loading: false 
+    };
+  } catch (error) {
+    console.error('[IrysService] Error querying badge eligibility:', error);
+    return { 
+      dashboardCount: 0, 
+      loading: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+
 // Batch fetch Irys Names for multiple addresses
 export async function fetchIrysNames(walletAddresses: string[]): Promise<Map<string, string>> {
   console.log(`[IrysService] Fetching Irys Names for ${walletAddresses.length} addresses`);
