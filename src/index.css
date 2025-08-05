@@ -2656,7 +2656,7 @@ body::before {
   overflow: hidden;
   display: flex;
   align-items: center;
-  margin-left: 4px;
+  margin-left: 10px;
 }
 
 .wallet-info {
@@ -2727,7 +2727,7 @@ body::before {
   overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
 }
 
 /* Weather Toggle Button */

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
-import { uploadDashboard } from '../services/irysUploadService';
+import { uploadDashboard, initializeIrysUploader } from '../services/irysUploadService';
 import { queryTagCounts } from '../services/irysService';
 import { queryOnChainData, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { generateChartData } from '../utils/chartUtils';
@@ -563,6 +563,11 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
 
         setTxHash(tx.hash);
         setTransactionStatus("Transaction submitted. Waiting for confirmation...");
+        
+        // Initialize Irys uploader while waiting for transaction
+        console.log('[CreateDashboard] Initializing Irys uploader while waiting for tx confirmation...');
+        const uploaderPromise = initializeIrysUploader();
+        
         const receipt = await tx.wait();
         
         // Check if event was emitted
@@ -581,6 +586,16 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
 
         console.log('[CreateDashboard] Dashboard creation payment successful, tx:', tx.hash);
         setTransactionStatus("Payment confirmed. Uploading dashboard to Irys...");
+        
+        // Wait for Irys uploader to be ready
+        try {
+          const uploader = await uploaderPromise;
+          if (uploader) {
+            console.log('[CreateDashboard] Irys uploader ready');
+          }
+        } catch (err) {
+          console.error('[CreateDashboard] Failed to initialize Irys uploader:', err);
+        }
       }
 
       console.log('[CreateDashboard] Uploading dashboard to Irys...');

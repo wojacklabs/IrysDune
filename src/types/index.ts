@@ -151,4 +151,7 @@ export interface DashboardFilter {
 export interface IrysUploader {
   upload: (data: string | Buffer, options?: { tags?: { name: string; value: string }[] }) => Promise<{ id: string }>;
   address: string;
+  getPrice?: (size: number) => Promise<any>;
+  getLoadedBalance?: () => Promise<any>;
+  [key: string]: any; // Allow additional properties
 } 

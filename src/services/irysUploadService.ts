@@ -128,8 +128,84 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     console.log('[IrysUpload] Uploader constructor name:', uploader?.constructor?.name);
     console.log('[IrysUpload] Uploader methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(uploader || {})));
     
-    // Skip pre-warm to avoid any potential signature requests
-    console.log('[IrysUpload] Skipping pre-warm to avoid signature requests');
+    // Try to prepare upload without triggering signatures
+    console.log('[IrysUpload] Attempting to prepare upload mechanism...');
+    
+    // Wrap the upload method to add detailed logging
+    const originalUpload = uploader.upload.bind(uploader);
+    let isFirstUpload = true;
+    
+    uploader.upload = async function(data: any, options: any) {
+      if (isFirstUpload) {
+        console.log('[IrysUpload] First upload detected, internal initialization may occur...');
+        isFirstUpload = false;
+        
+        // Log the upload method's internal structure
+        console.log('[IrysUpload] Upload method toString:', originalUpload.toString().substring(0, 200) + '...');
+        console.log('[IrysUpload] Upload data size:', typeof data === 'string' ? data.length : data.byteLength);
+        console.log('[IrysUpload] Upload options:', options);
+      }
+      
+      const uploadStart = Date.now();
+      console.log('[IrysUpload] Calling original upload method...');
+      
+      try {
+        const result = await originalUpload(data, options);
+        const uploadEnd = Date.now();
+        console.log(`[IrysUpload] Original upload completed in ${uploadEnd - uploadStart}ms`);
+        return result;
+      } catch (error) {
+        const uploadEnd = Date.now();
+        console.log(`[IrysUpload] Original upload failed after ${uploadEnd - uploadStart}ms`);
+        throw error;
+      }
+    };
+    
+    // Try to pre-initialize various components
+    try {
+      console.log('[IrysUpload] Pre-initializing uploader components...');
+      
+      // 1. Try to get price to initialize pricing engine
+      try {
+        const priceStart = Date.now();
+        await uploader.getPrice(100); // 100 bytes
+        const priceEnd = Date.now();
+        console.log(`[IrysUpload] Price engine initialized in ${priceEnd - priceStart}ms`);
+      } catch (e) {
+        console.log('[IrysUpload] Price initialization failed:', e);
+      }
+      
+      // 2. Try to access other properties/methods that might trigger initialization
+      try {
+        if (typeof uploader.getLoadedBalance === 'function') {
+          const balanceStart = Date.now();
+          await uploader.getLoadedBalance();
+          const balanceEnd = Date.now();
+          console.log(`[IrysUpload] Balance check took ${balanceEnd - balanceStart}ms`);
+        }
+      } catch (e) {
+        console.log('[IrysUpload] Balance check failed:', e);
+      }
+      
+      // 3. Check if uploader has other initialization methods
+      const uploaderMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(uploader));
+      console.log('[IrysUpload] Available uploader methods:', uploaderMethods);
+      
+      // Look for init-related methods
+      const initMethods = uploaderMethods.filter(m => 
+        m.toLowerCase().includes('init') || 
+        m.toLowerCase().includes('ready') || 
+        m.toLowerCase().includes('prepare') ||
+        m.toLowerCase().includes('connect')
+      );
+      
+      if (initMethods.length > 0) {
+        console.log('[IrysUpload] Found potential initialization methods:', initMethods);
+      }
+      
+    } catch (error) {
+      console.log('[IrysUpload] Component pre-initialization failed:', error);
+    }
     
     const totalTime = step3End - step1Start;
     console.log(`[IrysUpload] Total uploader creation took ${totalTime}ms`);
@@ -518,7 +594,27 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     }
     
     console.log('[IrysUpload] Starting actual upload...');
+    console.log('[IrysUpload] Data to upload:', data.length, 'bytes');
+    console.log('[IrysUpload] Number of tags:', tags.length);
+    
+    // Try to get price before upload to ensure pricing is initialized
+    if (typeof uploader!.getPrice === 'function') {
+      try {
+        const price = await uploader!.getPrice(data.length);
+        console.log('[IrysUpload] Price for upload:', price);
+      } catch (error) {
+        console.log('[IrysUpload] Price check failed:', error);
+      }
+    } else {
+      console.log('[IrysUpload] getPrice method not available');
+    }
+    
+    console.log('[IrysUpload] Calling upload method NOW...');
+    const uploadMethodStart = Date.now();
     const result = await uploader!.upload(data, { tags });
+    const uploadMethodEnd = Date.now();
+    console.log(`[IrysUpload] Upload method execution took ${uploadMethodEnd - uploadMethodStart}ms`);
+    
     const uploadCallEnd = Date.now();
     console.log(`[IrysUpload] Upload call took ${uploadCallEnd - uploadCallStart}ms`);
     console.log('[IrysUpload] Upload successful! Transaction ID:', result.id);
