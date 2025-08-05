@@ -69,6 +69,15 @@ function App() {
     console.log('[App] Wallet connected:', address);
     setWalletAddress(address);
     
+    // Pre-initialize Irys uploader in the background
+    initializeIrysUploader().then(uploader => {
+      if (uploader) {
+        console.log('[App] Irys uploader pre-initialized successfully');
+      }
+    }).catch(err => {
+      console.error('[App] Failed to pre-initialize Irys uploader:', err);
+    });
+    
     // Fetch Irys Name for the wallet
     try {
       const irysName = await fetchIrysName(address);

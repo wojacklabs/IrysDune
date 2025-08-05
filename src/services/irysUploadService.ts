@@ -11,12 +11,14 @@ import {
 
 let irysUploader: IrysUploader | null = null;
 let lastInitTime: number = 0;
-const REINIT_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const REINIT_INTERVAL = 30 * 60 * 1000; // 30 minutes
+let cachedProvider: ethers.BrowserProvider | null = null;
+let cachedAddress: string | null = null;
 
 export async function initializeIrysUploader(): Promise<IrysUploader | null> {
   console.log('[IrysUpload] Initializing Irys uploader...');
   
-  // Check if we need to reinitialize (after 5 minutes)
+  // Check if we need to reinitialize (after 30 minutes)
   const now = Date.now();
   if (irysUploader && (now - lastInitTime) < REINIT_INTERVAL) {
     console.log('[IrysUpload] Using existing Irys uploader');
@@ -42,8 +44,15 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
   }
 
   try {
-    console.log('[IrysUpload] Creating Ethereum provider...');
-    const provider = new ethers.BrowserProvider(ethereum);
+    // Check if we can reuse cached provider
+    let provider = cachedProvider;
+    if (!provider || provider.provider !== ethereum) {
+      console.log('[IrysUpload] Creating new Ethereum provider...');
+      provider = new ethers.BrowserProvider(ethereum);
+      cachedProvider = provider;
+    } else {
+      console.log('[IrysUpload] Reusing cached provider');
+    }
     
     // 지갑이 연결되어 있는지 확인
     const accounts = await provider.listAccounts();
@@ -78,10 +87,29 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     const address = await signer.getAddress();
     console.log('[IrysUpload] Signer address:', address);
     
+    // Check if we're reinitializing with the same address
+    if (cachedAddress === address && irysUploader) {
+      console.log('[IrysUpload] Same address, checking if existing uploader is still valid...');
+      try {
+        // Try to use existing uploader
+        if (irysUploader.address === address) {
+          console.log('[IrysUpload] Existing uploader is still valid, reusing it');
+          lastInitTime = now;
+          return irysUploader;
+        }
+      } catch (error) {
+        console.log('[IrysUpload] Existing uploader validation failed, creating new one');
+      }
+    }
+    
     console.log('[IrysUpload] Creating Irys uploader...');
+    const startTime = Date.now();
     const uploader = await WebUploader(WebEthereum).withAdapter(EthersV6Adapter(provider));
+    const endTime = Date.now();
+    console.log(`[IrysUpload] Uploader creation took ${endTime - startTime}ms`);
     
     irysUploader = uploader as unknown as IrysUploader;
+    cachedAddress = address;
     lastInitTime = now;
     console.log('[IrysUpload] Irys uploader initialized successfully with address:', irysUploader.address);
     console.log('[IrysUpload] Irys uploader details:', {
