@@ -474,19 +474,28 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
 
       // If this is a new dashboard (not an edit), require payment
       if (!existingDashboard) {
-        // Switch to Irys testnet
-        if (!window.ethereum) {
-          throw new Error("MetaMask is not installed");
+        // Get wallet provider
+        let provider = null;
+        if (typeof window.ethereum !== 'undefined') {
+          provider = window.ethereum;
+        } else if (typeof (window as any).okxwallet !== 'undefined') {
+          provider = (window as any).okxwallet;
+        } else if (typeof (window as any).web3 !== 'undefined' && (window as any).web3.currentProvider) {
+          provider = (window as any).web3.currentProvider;
+        }
+        
+        if (!provider) {
+          throw new Error("No wallet provider found. Please install MetaMask, OKX Wallet, or another Ethereum wallet");
         }
 
         try {
-          await window.ethereum.request({
+          await provider.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0x4F6' }], // 1270 in hex
           });
         } catch (switchError: any) {
           if (switchError.code === 4902) {
-            await window.ethereum.request({
+            await provider.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: '0x4F6',
@@ -506,19 +515,19 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         }
 
         // Connect to provider
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
+        const ethersProvider = new ethers.BrowserProvider(provider);
+        const signer = await ethersProvider.getSigner();
         const signerAddress = await signer.getAddress();
         
         // Check network
-        const network = await provider.getNetwork();
+        const network = await ethersProvider.getNetwork();
         if (network.chainId !== 1270n) {
           throw new Error('Not connected to Irys testnet. Please switch networks.');
         }
         
         // Check balance
-        const balance = await provider.getBalance(signerAddress);
-        const contract = new ethers.Contract(DASHBOARD_CONTRACT_ADDRESS, DASHBOARD_ABI, provider);
+        const balance = await ethersProvider.getBalance(signerAddress);
+        const contract = new ethers.Contract(DASHBOARD_CONTRACT_ADDRESS, DASHBOARD_ABI, ethersProvider);
         const creationFee = await contract.ARTICLE_PRICE();
         
         if (balance < creationFee) {
