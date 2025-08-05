@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction } from '../types';
+import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction, IrysUploader } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
 import { uploadDashboard, initializeIrysUploader } from '../services/irysUploadService';
 import { queryTagCounts } from '../services/irysService';
@@ -52,6 +52,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [uploaderInstance, setUploaderInstance] = useState<IrysUploader | null>(null);
 
   // Current chart being edited
   const [editingChart, setEditingChart] = useState<ChartConfig | null>(null);
@@ -101,20 +102,20 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     }
   }, [existingDashboard]);
 
-  // Skip pre-initialization to avoid unwanted signatures
-  // useEffect(() => {
-  //   if (isOpen && !existingDashboard) {
-  //     // Only pre-initialize for new dashboards (not edits)
-  //     console.log('[CreateDashboard] Pre-initializing Irys uploader...');
-  //     initializeIrysUploader().then(uploader => {
-  //       if (uploader) {
-  //         console.log('[CreateDashboard] Irys uploader pre-initialized');
-  //       }
-  //     }).catch(err => {
-  //       console.error('[CreateDashboard] Failed to pre-initialize Irys uploader:', err);
-  //     });
-  //   }
-  // }, [isOpen, existingDashboard]);
+  // Initialize uploader when modal opens for new dashboards
+  useEffect(() => {
+    if (isOpen && !existingDashboard && !uploaderInstance) {
+      console.log('[CreateDashboard] Pre-initializing Irys uploader on modal open...');
+      initializeIrysUploader().then(uploader => {
+        if (uploader) {
+          console.log('[CreateDashboard] Irys uploader pre-initialized successfully');
+          setUploaderInstance(uploader);
+        }
+      }).catch(err => {
+        console.error('[CreateDashboard] Failed to pre-initialize Irys uploader:', err);
+      });
+    }
+  }, [isOpen, existingDashboard, uploaderInstance]);
 
   if (!isOpen) return null;
 
@@ -564,9 +565,49 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         setTxHash(tx.hash);
         setTransactionStatus("Transaction submitted. Waiting for confirmation...");
         
-        // Initialize Irys uploader while waiting for transaction
-        console.log('[CreateDashboard] Initializing Irys uploader while waiting for tx confirmation...');
-        const uploaderPromise = initializeIrysUploader();
+        // Initialize Irys uploader immediately and prepare it
+        console.log('[CreateDashboard] Initializing Irys uploader immediately...');
+        const uploaderPromise = initializeIrysUploader().then(async (uploader) => {
+          if (uploader) {
+            console.log('[CreateDashboard] Uploader initialized, attempting to prepare it...');
+            
+            // Try to trigger any lazy initialization
+            try {
+              // Check if we can access internal properties that might trigger initialization
+              if ((uploader as any)._irys) {
+                console.log('[CreateDashboard] Accessing _irys property...');
+                const irys = (uploader as any)._irys;
+                
+                // Try to access signer if available
+                if (irys.signer || irys._signer) {
+                  console.log('[CreateDashboard] Found signer in _irys');
+                }
+                
+                // Try to call any initialization methods
+                if (typeof irys.ready === 'function') {
+                  console.log('[CreateDashboard] Calling _irys.ready()...');
+                  await irys.ready();
+                }
+              }
+              
+              // Try to get the token/currency info which might trigger initialization
+              if ((uploader as any).token || (uploader as any).currency) {
+                console.log('[CreateDashboard] Token/currency:', (uploader as any).token || (uploader as any).currency);
+              }
+              
+              // Try to create a data item without uploading
+              if (typeof (uploader as any).createDataItem === 'function') {
+                console.log('[CreateDashboard] Creating test data item...');
+                const testData = Buffer.from('test');
+                await (uploader as any).createDataItem(testData);
+                console.log('[CreateDashboard] Test data item created');
+              }
+            } catch (e) {
+              console.log('[CreateDashboard] Preparation attempt failed:', e);
+            }
+          }
+          return uploader;
+        });
         
         const receipt = await tx.wait();
         
@@ -598,11 +639,20 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         }
       }
 
-      console.log('[CreateDashboard] Uploading dashboard to Irys...');
+      console.log('[CreateDashboard] Starting dashboard upload process...');
+      const uploadProcessStart = Date.now();
+      
       if (!existingDashboard && !transactionStatus) {
         setTransactionStatus("Uploading dashboard to Irys...");
       }
+      
+      console.log('[CreateDashboard] Calling uploadDashboard function...');
+      const uploadCallStart = Date.now();
       const result = await uploadDashboard(dashboard);
+      const uploadCallEnd = Date.now();
+      
+      console.log(`[CreateDashboard] uploadDashboard call completed in ${uploadCallEnd - uploadCallStart}ms`);
+      console.log(`[CreateDashboard] Total time from payment to upload completion: ${uploadCallEnd - uploadProcessStart}ms`);
 
       if (result.success && result.transactionId) {
         console.log('[CreateDashboard] Dashboard uploaded successfully:', result.transactionId);

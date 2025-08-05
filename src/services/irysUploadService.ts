@@ -127,39 +127,38 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     console.log('[IrysUpload] Uploader type:', typeof uploader);
     console.log('[IrysUpload] Uploader constructor name:', uploader?.constructor?.name);
     console.log('[IrysUpload] Uploader methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(uploader || {})));
+    console.log('[IrysUpload] Uploader properties:', Object.keys(uploader || {}));
+    
+    // Check for internal Irys instance
+    if ((uploader as any)._irys) {
+      console.log('[IrysUpload] Found _irys property');
+      console.log('[IrysUpload] _irys type:', typeof (uploader as any)._irys);
+      console.log('[IrysUpload] _irys methods:', Object.getOwnPropertyNames(Object.getPrototypeOf((uploader as any)._irys || {})).slice(0, 20));
+    }
+    
+    // Try to access signer
+    if ((uploader as any).signer || (uploader as any)._signer) {
+      console.log('[IrysUpload] Found signer property');
+    }
+    
+    // Try to build/initialize the uploader if build method exists
+    if (typeof (uploader as any).build === 'function') {
+      console.log('[IrysUpload] Calling build method...');
+      try {
+        const buildStart = Date.now();
+        await (uploader as any).build({});
+        const buildEnd = Date.now();
+        console.log(`[IrysUpload] Build completed in ${buildEnd - buildStart}ms`);
+      } catch (error) {
+        console.log('[IrysUpload] Build failed:', error);
+      }
+    }
     
     // Try to prepare upload without triggering signatures
     console.log('[IrysUpload] Attempting to prepare upload mechanism...');
     
-    // Wrap the upload method to add detailed logging
-    const originalUpload = uploader.upload.bind(uploader);
-    let isFirstUpload = true;
-    
-    uploader.upload = async function(data: any, options: any) {
-      if (isFirstUpload) {
-        console.log('[IrysUpload] First upload detected, internal initialization may occur...');
-        isFirstUpload = false;
-        
-        // Log the upload method's internal structure
-        console.log('[IrysUpload] Upload method toString:', originalUpload.toString().substring(0, 200) + '...');
-        console.log('[IrysUpload] Upload data size:', typeof data === 'string' ? data.length : data.byteLength);
-        console.log('[IrysUpload] Upload options:', options);
-      }
-      
-      const uploadStart = Date.now();
-      console.log('[IrysUpload] Calling original upload method...');
-      
-      try {
-        const result = await originalUpload(data, options);
-        const uploadEnd = Date.now();
-        console.log(`[IrysUpload] Original upload completed in ${uploadEnd - uploadStart}ms`);
-        return result;
-      } catch (error) {
-        const uploadEnd = Date.now();
-        console.log(`[IrysUpload] Original upload failed after ${uploadEnd - uploadStart}ms`);
-        throw error;
-      }
-    };
+    // Don't wrap the upload method - it might be causing issues
+    console.log('[IrysUpload] Skipping upload method wrapping');
     
     // Try to pre-initialize various components
     try {
@@ -187,20 +186,73 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
         console.log('[IrysUpload] Balance check failed:', e);
       }
       
-      // 3. Check if uploader has other initialization methods
+      // 3. Check uploader internal structure
       const uploaderMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(uploader));
       console.log('[IrysUpload] Available uploader methods:', uploaderMethods);
       
-      // Look for init-related methods
-      const initMethods = uploaderMethods.filter(m => 
-        m.toLowerCase().includes('init') || 
-        m.toLowerCase().includes('ready') || 
-        m.toLowerCase().includes('prepare') ||
-        m.toLowerCase().includes('connect')
-      );
+      // 4. Try to access internal irys instance
+      console.log('[IrysUpload] Checking internal structure...');
+      console.log('[IrysUpload] Uploader keys:', Object.keys(uploader));
       
-      if (initMethods.length > 0) {
-        console.log('[IrysUpload] Found potential initialization methods:', initMethods);
+      // Look for internal properties that might contain the actual Irys instance
+      for (const key of Object.keys(uploader)) {
+        const value = (uploader as any)[key];
+        if (value && typeof value === 'object') {
+          console.log(`[IrysUpload] Found object property "${key}":`, value.constructor?.name);
+          
+          // Check if this object has upload-related methods
+          const innerMethods = Object.getOwnPropertyNames(Object.getPrototypeOf(value));
+          if (innerMethods.includes('upload') || innerMethods.includes('createTransaction')) {
+            console.log(`[IrysUpload] Found potential Irys instance at "${key}" with methods:`, innerMethods.slice(0, 10));
+          }
+        }
+      }
+      
+      // 5. Force initialization by creating a transaction
+      try {
+        console.log('[IrysUpload] Attempting to create a test transaction...');
+        const testData = Buffer.from('1');
+        const testTags = [{ name: 'Test', value: 'init' }];
+        
+        // Try different ways to create a transaction
+        if (typeof (uploader as any).createTransaction === 'function') {
+          const tx = await (uploader as any).createTransaction(testData, { tags: testTags });
+          console.log('[IrysUpload] Test transaction created:', tx);
+        } else if ((uploader as any)._irys && typeof (uploader as any)._irys.createTransaction === 'function') {
+          const tx = await (uploader as any)._irys.createTransaction(testData, { tags: testTags });
+          console.log('[IrysUpload] Test transaction created via _irys:', tx);
+        } else if ((uploader as any).irys && typeof (uploader as any).irys.createTransaction === 'function') {
+          const tx = await (uploader as any).irys.createTransaction(testData, { tags: testTags });
+          console.log('[IrysUpload] Test transaction created via irys:', tx);
+        } else {
+          // Try to find createTransaction or createDataItem methods
+          console.log('[IrysUpload] Looking for transaction creation methods...');
+          
+          // Check if uploader has createDataItem
+          if (typeof (uploader as any).createDataItem === 'function') {
+            console.log('[IrysUpload] Found createDataItem method');
+            try {
+              const dataItem = await (uploader as any).createDataItem(testData, { tags: testTags });
+              console.log('[IrysUpload] Data item created:', dataItem);
+            } catch (e) {
+              console.log('[IrysUpload] createDataItem failed:', e);
+            }
+          }
+          
+          // Check for other transaction-related methods
+          const allMethods = [...Object.getOwnPropertyNames(uploader), ...Object.getOwnPropertyNames(Object.getPrototypeOf(uploader))];
+          const txMethods = allMethods.filter(m => 
+            m.toLowerCase().includes('transaction') || 
+            m.toLowerCase().includes('dataitem') ||
+            m.toLowerCase().includes('bundle')
+          );
+          
+          if (txMethods.length > 0) {
+            console.log('[IrysUpload] Found transaction-related methods:', txMethods);
+          }
+        }
+      } catch (e) {
+        console.log('[IrysUpload] Transaction creation failed:', e);
       }
       
     } catch (error) {
@@ -535,6 +587,15 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
   const uploaderEndTime = Date.now();
   console.log(`[IrysUpload] Uploader ready check took ${uploaderEndTime - uploaderStartTime}ms`);
   
+  // Log uploader state
+  if (uploader) {
+    console.log('[IrysUpload] Uploader state check:');
+    console.log('[IrysUpload] - Has address:', !!uploader.address);
+    console.log('[IrysUpload] - Has upload method:', typeof uploader.upload === 'function');
+    console.log('[IrysUpload] - Uploader type:', uploader.constructor?.name);
+    console.log('[IrysUpload] - Time since initialization:', lastInitTime ? Date.now() - lastInitTime : 'unknown');
+  }
+  
   if (!uploader) {
     console.error('[IrysUpload] Failed to initialize Irys uploader for dashboard upload');
     return { success: false, error: 'Failed to initialize Irys uploader. Please check your wallet connection.' };
@@ -597,11 +658,16 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     console.log('[IrysUpload] Data to upload:', data.length, 'bytes');
     console.log('[IrysUpload] Number of tags:', tags.length);
     
+    // Log time from dashboard upload start to this point
+    console.log(`[IrysUpload] Time from upload start to pre-upload: ${Date.now() - uploadStartTime}ms`);
+    
     // Try to get price before upload to ensure pricing is initialized
     if (typeof uploader!.getPrice === 'function') {
       try {
+        const priceStart = Date.now();
         const price = await uploader!.getPrice(data.length);
-        console.log('[IrysUpload] Price for upload:', price);
+        const priceEnd = Date.now();
+        console.log(`[IrysUpload] Price check took ${priceEnd - priceStart}ms, price:`, price);
       } catch (error) {
         console.log('[IrysUpload] Price check failed:', error);
       }
@@ -610,8 +676,31 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     }
     
     console.log('[IrysUpload] Calling upload method NOW...');
+    console.log(`[IrysUpload] Time from upload start to upload call: ${Date.now() - uploadStartTime}ms`);
+    
     const uploadMethodStart = Date.now();
+    
+    // Log when we're about to call upload
+    console.log('[IrysUpload] About to call uploader.upload() - signature prompt should appear soon...');
+    console.log('[IrysUpload] Current time:', new Date().toISOString());
+    
+    // Add a focus listener to detect when signature prompt appears
+    const originalFocus = window.onfocus;
+    let signaturePromptDetected = false;
+    window.onfocus = (event) => {
+      if (!signaturePromptDetected) {
+        signaturePromptDetected = true;
+        const timeToPrompt = Date.now() - uploadMethodStart;
+        console.log(`[IrysUpload] Window focus lost (likely signature prompt appeared) after ${timeToPrompt}ms`);
+      }
+      if (originalFocus && event) originalFocus.call(window, event);
+    };
+    
     const result = await uploader!.upload(data, { tags });
+      
+    // Restore original focus handler
+    window.onfocus = originalFocus;
+    
     const uploadMethodEnd = Date.now();
     console.log(`[IrysUpload] Upload method execution took ${uploadMethodEnd - uploadMethodStart}ms`);
     
