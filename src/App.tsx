@@ -63,26 +63,6 @@ function App() {
     };
     
     loadBackgroundData();
-    
-    // Pre-initialize Irys uploader on app mount if wallet is already connected
-    const checkAndInitUploader = async () => {
-      const ethereum = window.ethereum || window.okxwallet || (window.web3 && window.web3.currentProvider);
-      if (ethereum) {
-        try {
-          const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts && accounts.length > 0) {
-            console.log('[App] Pre-initializing Irys uploader on mount...');
-            initializeIrysUploader().catch(err => {
-              console.error('[App] Failed to pre-initialize Irys uploader:', err);
-            });
-          }
-        } catch (err) {
-          console.error('[App] Error checking wallet accounts:', err);
-        }
-      }
-    };
-    
-    checkAndInitUploader();
   }, []);
 
   const handleWalletConnect = async (address: string) => {

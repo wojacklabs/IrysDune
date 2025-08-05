@@ -159,25 +159,6 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
       
       const warmEnd = Date.now();
       console.log(`[IrysUpload] Connection pre-warm took ${warmEnd - warmStart}ms`);
-      
-      // Try a tiny test upload to fully initialize everything
-      try {
-        console.log('[IrysUpload] Attempting tiny test upload for full initialization...');
-        const testStart = Date.now();
-        const testData = '1'; // Minimal data to reduce cost
-        const testTags = [
-          { name: 'App-Name', value: 'IrysDune-Init' },
-          { name: 'Type', value: 'init-test' },
-          { name: 'Timestamp', value: Date.now().toString() }
-        ];
-        
-        const testResult = await uploader.upload(testData, { tags: testTags });
-        const testEnd = Date.now();
-        console.log(`[IrysUpload] Test upload completed in ${testEnd - testStart}ms, tx:`, testResult.id);
-        console.log('[IrysUpload] Full initialization successful');
-      } catch (testError) {
-        console.log('[IrysUpload] Test upload failed (this may be normal):', testError);
-      }
     } catch (error) {
       console.log('[IrysUpload] Pre-warm failed:', error);
     }
