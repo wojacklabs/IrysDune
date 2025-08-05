@@ -1,24 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-const IRYS_GRAPHQL_URL = 'https://uploader.irys.xyz/graphql';
-
-interface Tag {
-  name: string;
-  value: string;
-}
-
-interface Transaction {
-  node: {
-    id: string;
-    timestamp: number;
-    tags: Tag[];
-  };
-}
-
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req, res) {
   // CORS 헤더 설정
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -75,7 +55,7 @@ export default async function handler(
       }
     `;
 
-    const response = await fetch(IRYS_GRAPHQL_URL, {
+    const response = await fetch('https://uploader.irys.xyz/graphql', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,7 +68,7 @@ export default async function handler(
     }
 
     const data = await response.json();
-    const transactions: Transaction[] = data?.data?.transactions?.edges || [];
+    const transactions = data?.data?.transactions?.edges || [];
     
     // 오늘 생성된 Dashboard-ID 태그가 있는 트랜잭션 찾기 (edit 제외)
     let hasCreatedDashboardToday = false;
@@ -96,8 +76,8 @@ export default async function handler(
     
     for (const edge of transactions) {
       const tags = edge.node.tags || [];
-      const dashboardIdTag = tags.find((tag: Tag) => tag.name === 'Dashboard-ID');
-      const actionTag = tags.find((tag: Tag) => tag.name === 'Action');
+      const dashboardIdTag = tags.find(tag => tag.name === 'Dashboard-ID');
+      const actionTag = tags.find(tag => tag.name === 'Action');
       
       // Dashboard-ID가 있고, Action이 'create'이거나 없는 경우 (edit이 아닌 경우)
       if (dashboardIdTag && (!actionTag || actionTag.value === 'create')) {
