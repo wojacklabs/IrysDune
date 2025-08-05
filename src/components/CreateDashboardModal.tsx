@@ -50,6 +50,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [loadingProgress, setLoadingProgress] = useState<{ current: number; total: number; percentage: number } | null>(null);
   const [transactionStatus, setTransactionStatus] = useState<string>('');
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Current chart being edited
   const [editingChart, setEditingChart] = useState<ChartConfig | null>(null);
@@ -205,17 +207,20 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
 
   const addChart = () => {
     if (!chartTitle.trim()) {
-      alert('Please enter a chart title');
+      setError('Please enter a chart title');
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
     if (queryMode === 'storage' && selectedQueries.length === 0 && customTags.length === 0) {
-      alert('Please select at least one data source or add custom tags');
+      setError('Please select at least one data source or add custom tags');
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
     if (queryMode === 'onchain' && (!contractAddress.trim() || !rpcUrl.trim())) {
-      alert('Please enter a contract address and RPC URL');
+      setError('Please enter a contract address and RPC URL');
+      setTimeout(() => setError(''), 3000);
       return;
     }
 
@@ -576,19 +581,29 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         dashboard.rootTxId = result.rootTxId;
         
         // Show success message
-        let successMessage = `Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\n`;
+        let message = `Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\n`;
         if (!existingDashboard && txHash) {
-          successMessage += `\nPayment Transaction: ${txHash}`;
-          successMessage += `\nExplorer: https://testnet-explorer.irys.xyz/tx/${txHash}\n`;
+          message += `\nPayment Transaction: ${txHash}`;
+          message += `\nExplorer: https://testnet.explorer.irys.xyz/tx/${txHash}\n`;
         }
-        successMessage += `\nIrys Transaction ID: ${result.transactionId}`;
-        successMessage += `\nMutable Address: ${result.mutableAddress || 'N/A'}`;
-        successMessage += `\n\nIt will appear in the dashboard list shortly.`;
+        message += `\nIrys Transaction ID: ${result.transactionId}`;
+        message += `\nMutable Address: ${result.mutableAddress || 'N/A'}`;
         
-        alert(successMessage);
+        setSuccessMessage(message);
+        setShowSuccess(true);
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => {
+          setShowSuccess(false);
+          setSuccessMessage('');
+        }, 5000);
         
         onSuccess(dashboard);
-        onClose();
+        
+        // Close modal after a short delay to show success message
+        setTimeout(() => {
+          onClose();
+        }, 2000);
         
         // Reset form
         setName('');
@@ -626,6 +641,15 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         <div className="modal-body">
           {error && (
             <div className="error-message">{error}</div>
+          )}
+          
+          {showSuccess && (
+            <div className="success-message">
+              <h4>✅ Success!</h4>
+              <pre style={{whiteSpace: 'pre-wrap', fontSize: '0.875rem', margin: '0.5rem 0'}}>
+                {successMessage}
+              </pre>
+            </div>
           )}
           
           <div className="dashboard-info-section">

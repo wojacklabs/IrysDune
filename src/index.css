@@ -4291,6 +4291,29 @@ body.weather-stormy .modal-header {
   font-size: 0.875rem;
 }
 
+/* Success message */
+.success-message {
+  background-color: #e6fffa;
+  color: #047857;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  border: 1px solid #10b981;
+}
+
+.success-message h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Dark mode success message */
+body.weather-stormy .success-message {
+  background-color: #064e3b;
+  color: #6ee7b7;
+  border-color: #047857;
+}
+
 /* Data sources selection - Grid Layout */
 
 /* My History Section */
