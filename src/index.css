@@ -4644,6 +4644,7 @@ body.weather-stormy .success-message {
 
 .badge-card {
   width: 150px;
+  margin: 0 auto;
   background: var(--cloud-white);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
