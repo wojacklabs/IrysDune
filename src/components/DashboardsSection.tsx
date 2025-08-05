@@ -624,7 +624,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               className="create-btn"
               onClick={() => setIsCreateModalOpen(true)}
             >
-              + Create Dashboard
+              Create Dashboard
             </button>
           )}
         </div>
