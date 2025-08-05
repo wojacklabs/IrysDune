@@ -69,7 +69,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     groupName?: string;
   }>>([]);
 
-  // 온체인 쿼리 관련 상태
+  // On-chain query related state
   const [queryMode, setQueryMode] = useState<'storage' | 'onchain'>('storage');
   const [contractAddress, setContractAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState('mainnet');
@@ -233,8 +233,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       return;
     }
 
-    if (queryMode === 'onchain' && (!contractAddress.trim() || !rpcUrl.trim())) {
-      setError('Please enter a contract address and RPC URL');
+    if (queryMode === 'onchain' && !selectedOnChainPreset && (!contractAddress.trim() || !rpcUrl.trim())) {
+      setError('Please enter a contract address and RPC URL or select a preset');
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -338,7 +338,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     setLoadingProgress({ current: 0, total: 1, percentage: 0 });
     
     try {
-      // 온체인 쿼리인 경우
+      // For on-chain queries
       if (chart.onChainQuery) {
         const monthsMap = {
           'week': 0.25,
@@ -765,7 +765,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 </>
               ) : (
                 <>
-                  {/* 온체인 프리셋 선택 */}
+                  {/* On-chain preset selection */}
                   <div className="form-group">
                     <label>On-chain Presets</label>
                     <select 
@@ -799,35 +799,38 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                     </select>
                   </div>
 
-                  {/* 네트워크 선택 */}
-                  <div className="form-group">
-                    <label>Network</label>
-                    <select
-                      value={selectedNetwork}
-                      onChange={(e) => setSelectedNetwork(e.target.value)}
-                    >
-                      <option value="mainnet">Ethereum Mainnet</option>
-                      <option value="polygon">Polygon</option>
-                      <option value="arbitrum">Arbitrum</option>
-                      <option value="avalanche">Avalanche</option>
-                      <option value="base">Base</option>
-                      <option value="irys-testnet">Irys Testnet</option>
-                    </select>
-                  </div>
+                  {/* Only show input fields when no preset is selected */}
+                  {!selectedOnChainPreset && (
+                    <>
+                      {/* Network selection */}
+                      <div className="form-group">
+                        <label>Network</label>
+                        <select
+                          value={selectedNetwork}
+                          onChange={(e) => setSelectedNetwork(e.target.value)}
+                        >
+                          <option value="mainnet">Ethereum Mainnet</option>
+                          <option value="polygon">Polygon</option>
+                          <option value="arbitrum">Arbitrum</option>
+                          <option value="avalanche">Avalanche</option>
+                          <option value="base">Base</option>
+                          <option value="irys-testnet">Irys Testnet</option>
+                        </select>
+                      </div>
 
-                  {/* RPC URL 입력 */}
-                  <div className="form-group">
-                    <label>RPC URL *</label>
-                    <input
-                      type="text"
-                      value={rpcUrl}
-                      onChange={(e) => setRpcUrl(e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
+                      {/* RPC URL input */}
+                      <div className="form-group">
+                        <label>RPC URL *</label>
+                        <input
+                          type="text"
+                          value={rpcUrl}
+                          onChange={(e) => setRpcUrl(e.target.value)}
+                          placeholder="https://..."
+                        />
+                      </div>
 
-                  {/* Contract Address 입력 */}
-                  <div className="form-group">
+                      {/* Contract Address input */}
+                      <div className="form-group">
                     <label>Contract Address *</label>
                     <input
                       type="text"
@@ -837,8 +840,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                     />
                   </div>
 
-                  {/* ABI 입력 */}
-                  <div className="form-group">
+                      {/* ABI input */}
+                      <div className="form-group">
                     <label>
                       ABI Functions/Events (Optional)
                       <span className="field-hint"> - Leave empty to track all Transfer events</span>
@@ -891,8 +894,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                     </button>
                   </div>
 
-                  {/* 표시 모드 선택 (ABI가 있을 때만) */}
-                  {parsedAbis.length > 0 && (
+                      {/* Display mode selection (only when ABI exists) */}
+                      {parsedAbis.length > 0 && (
                     <div className="form-group">
                       <label>Display Mode</label>
                       <div className="display-mode-selector">
@@ -903,7 +906,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                             checked={onChainDisplayMode === 'combined'}
                             onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
                           />
-                          Combined (모든 함수 합계)
+                          Combined (sum of all functions)
                         </label>
                         <label>
                           <input
@@ -912,10 +915,12 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                             checked={onChainDisplayMode === 'separated'}
                             onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
                           />
-                          Separated (함수별 구분)
+                          Separated (by function)
                         </label>
                       </div>
                     </div>
+                  )}
+                    </>
                   )}
                 </>
               )}

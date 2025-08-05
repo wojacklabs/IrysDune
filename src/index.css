@@ -2656,6 +2656,7 @@ body::before {
   overflow: hidden;
   display: flex;
   align-items: center;
+  margin-left: 4px;
 }
 
 .wallet-info {
@@ -3673,13 +3674,17 @@ body::before {
   /* Reduce excessive padding on mobile */
   .header-content {
     padding: 0 1rem;
-    gap: 0.5rem;
+    gap: 2rem;
   }
   
   .header-left {
     gap: 0.5rem;
   }
   
+  .header-right {
+    gap: 6px;
+  }
+
   .logo {
     gap: 0.25rem;
   }
@@ -5543,24 +5548,48 @@ body.weather-stormy .success-message {
 
 .display-mode-selector {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.5rem;
   margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--gray-50);
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
 }
 
 .display-mode-selector label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   cursor: pointer;
+  color: var(--gray-700);
+  transition: color 0.2s ease;
+}
+
+.display-mode-selector label:hover {
+  color: var(--sky-600);
 }
 
 .display-mode-selector input[type="radio"] {
   cursor: pointer;
+  accent-color: var(--sky-500);
 }
 
-/* 온체인 쿼리 관련 스타일 (MyHistorySection) */
+/* Dark mode for display mode selector */
+body.weather-stormy .display-mode-selector {
+  background-color: rgba(30, 41, 59, 0.5);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+body.weather-stormy .display-mode-selector label {
+  color: #cbd5e1;
+}
+
+body.weather-stormy .display-mode-selector label:hover {
+  color: #60a5fa;
+}
+
+/* On-chain query related styles (MyHistorySection) */
 .query-mode-section {
   padding: 1rem 0;
   border-bottom: 1px solid #e5e7eb;
