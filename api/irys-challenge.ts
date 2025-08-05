@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
 
 const IRYS_GRAPHQL_URL = 'https://uploader.irys.xyz/graphql';
 
@@ -77,17 +76,20 @@ export default async function handler(
       }
     `;
 
-    const response = await axios.post(
-      IRYS_GRAPHQL_URL,
-      { query },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    const response = await fetch(IRYS_GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query })
+    });
 
-    const transactions: Transaction[] = response.data?.data?.transactions?.edges || [];
+    if (!response.ok) {
+      throw new Error(`GraphQL request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const transactions: Transaction[] = data?.data?.transactions?.edges || [];
     
     // 오늘 생성된 Dashboard-ID 태그가 있는 트랜잭션 찾기 (edit 제외)
     let hasCreatedDashboardToday = false;
