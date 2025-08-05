@@ -69,21 +69,20 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
     
     try {
       // Get device pixel ratio for better quality
-      const pixelRatio = 2; // Fixed to 2 for consistent quality
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const scale = Math.max(3, devicePixelRatio * 2);
       
       // Try dom-to-image-more first
       const dataUrl = await domtoimage.toPng(clone, {
         quality: 1.0,
-        pixelRatio: pixelRatio,
-        width: rect.width,
-        height: rect.height, // Use actual height
+        pixelRatio: scale,
+        width: clone.offsetWidth * scale,
+        height: clone.offsetHeight * scale,
         style: {
-          transform: 'none',
-          margin: '0',
-          padding: computedStyle.padding,
-          width: rect.width + 'px',
-          height: rect.height + 'px',
-          maxHeight: rect.height + 'px'
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          width: clone.offsetWidth + 'px',
+          height: clone.offsetHeight + 'px',
         }
       });
 
@@ -151,8 +150,11 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       // Fallback to html2canvas
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const scale = Math.max(3, devicePixelRatio * 2);
+      
       const canvas = await html2canvas(clone, {
-        scale: 2,
+        scale: scale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',

@@ -84,6 +84,10 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     irysUploader = uploader as unknown as IrysUploader;
     lastInitTime = now;
     console.log('[IrysUpload] Irys uploader initialized successfully with address:', irysUploader.address);
+    console.log('[IrysUpload] Irys uploader details:', {
+      address: irysUploader.address,
+      uploaderInfo: uploader
+    });
     
     return irysUploader;
   } catch (error) {
@@ -103,7 +107,7 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
 }
 
 // Helper function to ensure uploader is ready
-async function ensureUploaderReady(): Promise<IrysUploader | null> {
+export async function ensureUploaderReady(): Promise<IrysUploader | null> {
   if (!irysUploader || Date.now() - lastInitTime > REINIT_INTERVAL) {
     console.log('[IrysUpload] Uploader not ready or expired, reinitializing...');
     return await initializeIrysUploader();

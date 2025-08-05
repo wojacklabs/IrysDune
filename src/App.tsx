@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
 import MyHistorySection from './components/MyHistorySection';
+import BadgesSection from './components/BadgesSection';
+import CloudBackground from './components/CloudBackground';
 import { ConnectWallet } from './components/ConnectWallet';
 import { initializeIrysUploader } from './services/irysUploadService';
 import { fetchIrysName } from './services/irysService';
@@ -15,6 +17,17 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [trendData, setTrendData] = useState<{ [key: string]: QueryResult[] }>({});
+  const [weatherState, setWeatherState] = useState<'clear' | 'stormy'>('clear');
+  const [fullscreenBackground, setFullscreenBackground] = useState(false);
+
+  // Apply weather state class to body
+  useEffect(() => {
+    if (weatherState === 'stormy') {
+      document.body.classList.add('weather-stormy');
+    } else {
+      document.body.classList.remove('weather-stormy');
+    }
+  }, [weatherState]);
 
   // Background data loading on app mount
   useEffect(() => {
@@ -102,12 +115,8 @@ function App() {
 
   return (
     <div className="app">
-      {/* Animated cloud background */}
-      <div className="cloud-background">
-        <div className="cloud cloud-1"></div>
-        <div className="cloud cloud-2"></div>
-        <div className="cloud cloud-3"></div>
-      </div>
+      {/* Three.js cloud background */}
+      <CloudBackground weatherState={weatherState} />
 
       {/* Header */}
       <header className="header">
@@ -157,6 +166,22 @@ function App() {
             </div>
           </div>
           <div className="header-right">
+            {/* Weather Toggle */}
+            <button
+              onClick={() => setWeatherState(prev => prev === 'clear' ? 'stormy' : 'clear')}
+              className="weather-toggle"
+              title={weatherState === 'clear' ? 'Switch to stormy' : 'Switch to clear'}
+            >
+              {weatherState === 'clear' ? '☀️' : '⛈️'}
+            </button>
+            {/* Background Toggle */}
+            <button
+              onClick={() => setFullscreenBackground(prev => !prev)}
+              className="background-toggle"
+              title={fullscreenBackground ? 'Show interface' : 'View background only'}
+            >
+              {fullscreenBackground ? '🏞️' : '📈'}
+            </button>
             <ConnectWallet 
               onConnect={handleWalletConnect}
               onDisconnect={handleWalletDisconnect}
@@ -168,7 +193,7 @@ function App() {
       </header>
 
       {/* Navigation */}
-      <nav className="nav">
+      <nav className={`nav ${fullscreenBackground ? 'hidden' : ''}`}>
         <div className="nav-content">
           <button
             onClick={() => setActiveTab('trends')}
@@ -183,6 +208,12 @@ function App() {
             Dashboards
           </button>
           <button
+            onClick={() => setActiveTab('badges')}
+            className={`nav-button ${activeTab === 'badges' ? 'active' : ''}`}
+          >
+            Badges
+          </button>
+          <button
             onClick={() => setActiveTab('my-history')}
             className={`nav-button ${activeTab === 'my-history' ? 'active' : ''}`}
           >
@@ -192,11 +223,12 @@ function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="main">
+      <main className={`main ${fullscreenBackground ? 'hidden' : ''}`}>
         <div className="container">
           {activeTab === 'trends' && <TrendSection onDataUpdate={setTrendData} />}
           {activeTab === 'dashboards' && <DashboardsSection walletAddress={walletAddress} username={username} trendData={trendData} />}
           {activeTab === 'my-history' && <MyHistorySection walletAddress={walletAddress} />}
+          {activeTab === 'badges' && <BadgesSection walletAddress={walletAddress} />}
         </div>
       </main>
 

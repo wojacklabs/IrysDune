@@ -563,4 +563,165 @@ export async function queryUserOnChainData(
     console.error('[OnChainService] Error querying user on-chain data:', error);
     throw error;
   }
+}
+
+// Badge NFT contract configuration
+const NFT_CONTRACT_ADDRESS = '0x5Aa61c497B4e3592cD69FC88B7303e3Aac5DA5FD';
+const IRYS_TESTNET_RPC = 'https://testnet-rpc.irys.xyz/v1/execution-rpc';
+const NFT_ABI = [
+  'function publicMint(address to, string memory uri) payable',
+  'function getMintPrice() pure returns (uint256)',
+  'event NFTMinted(address indexed minter, uint256 indexed tokenId, string uri)'
+];
+
+// Query minted badges from on-chain NFT contract
+export async function queryMintedBadgesOnChain(
+  walletAddress: string
+): Promise<Map<string, { 
+  badgeId: string; 
+  txHash: string; 
+  tokenId: string;
+  timestamp: number; 
+  metadataUri: string 
+}>> {
+  console.log('[OnChainService] Querying minted badges on-chain for wallet:', walletAddress);
+  
+  try {
+    const provider = new JsonRpcProvider(IRYS_TESTNET_RPC);
+    const contract = new Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+    
+    // Get latest block number
+    const latestBlock = await provider.getBlockNumber();
+    const fromBlock = Math.max(0, latestBlock - 100000); // Look back ~100k blocks
+    
+    // Query NFTMinted events for this wallet
+    const filter = contract.filters.NFTMinted(walletAddress);
+    const events = await contract.queryFilter(filter, fromBlock, latestBlock);
+    
+    console.log('[OnChainService] Found', events.length, 'NFTMinted events');
+    
+    const mintedBadges = new Map<string, {
+      badgeId: string;
+      txHash: string;
+      tokenId: string;
+      timestamp: number;
+      metadataUri: string;
+    }>();
+    
+    // Process each minting event
+    for (const event of events) {
+      if ('args' in event && event.args && event.transactionHash) {
+        const [, tokenId, uri] = event.args;
+        
+        // Get block timestamp
+        const block = await provider.getBlock(event.blockNumber);
+        const timestamp = block ? Number(block.timestamp) * 1000 : Date.now();
+        
+        // Extract badge ID from metadata URI if possible
+        // First, try to fetch metadata from Irys to get badge ID
+        let badgeId = 'unknown';
+        try {
+          const metadataResponse = await fetch(uri);
+          if (metadataResponse.ok) {
+            const metadata = await metadataResponse.json();
+            // Look for badge ID in attributes
+            const badgeTypeAttr = metadata.attributes?.find((attr: any) => 
+              attr.trait_type === 'Badge Type'
+            );
+            if (badgeTypeAttr) {
+              badgeId = badgeTypeAttr.value;
+            }
+          }
+        } catch (error) {
+          console.error('[OnChainService] Error fetching metadata:', error);
+        }
+        
+        mintedBadges.set(badgeId, {
+          badgeId,
+          txHash: event.transactionHash,
+          tokenId: tokenId.toString(),
+          timestamp,
+          metadataUri: uri
+        });
+        
+        console.log('[OnChainService] Found minted badge:', {
+          badgeId,
+          tokenId: tokenId.toString(),
+          txHash: event.transactionHash
+        });
+      }
+    }
+    
+    return mintedBadges;
+  } catch (error) {
+    console.error('[OnChainService] Error querying minted badges on-chain:', error);
+    return new Map();
+  }
+}
+
+// Query total mint counts for all badges
+export async function queryBadgeMintCounts(): Promise<Map<string, number>> {
+  console.log('[OnChainService] Querying total badge mint counts');
+  
+  try {
+    const provider = new JsonRpcProvider(IRYS_TESTNET_RPC);
+    const contract = new Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+    
+    // Get latest block number
+    const latestBlock = await provider.getBlockNumber();
+    const fromBlock = Math.max(0, latestBlock - 100000); // Look back ~100k blocks
+    
+    // Query ALL NFTMinted events (no wallet filter)
+    const filter = contract.filters.NFTMinted();
+    const events = await contract.queryFilter(filter, fromBlock, latestBlock);
+    
+    console.log('[OnChainService] Found', events.length, 'total NFTMinted events');
+    
+    const badgeCounts = new Map<string, number>();
+    
+    // Create a cache for metadata
+    const metadataCache = new Map<string, string>();
+    
+    // Process events in batches for better performance
+    const batchSize = 10;
+    for (let i = 0; i < events.length; i += batchSize) {
+      const batch = events.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (event) => {
+        if ('args' in event && event.args) {
+          const [, , uri] = event.args;
+          
+          // Check cache first
+          let badgeId = metadataCache.get(uri) || 'unknown';
+          
+          if (badgeId === 'unknown') {
+            try {
+              const metadataResponse = await fetch(uri);
+              if (metadataResponse.ok) {
+                const metadata = await metadataResponse.json();
+                const badgeTypeAttr = metadata.attributes?.find((attr: any) => 
+                  attr.trait_type === 'Badge Type'
+                );
+                if (badgeTypeAttr) {
+                  badgeId = badgeTypeAttr.value;
+                  metadataCache.set(uri, badgeId);
+                }
+              }
+            } catch (error) {
+              console.error('[OnChainService] Error fetching metadata:', error);
+            }
+          }
+          
+          // Increment count for this badge
+          badgeCounts.set(badgeId, (badgeCounts.get(badgeId) || 0) + 1);
+        }
+      }));
+    }
+    
+    console.log('[OnChainService] Badge mint counts:', Array.from(badgeCounts.entries()));
+    return badgeCounts;
+  } catch (error) {
+    console.error('[OnChainService] Error querying badge mint counts:', error);
+    return new Map();
+  }
 } 

@@ -25,4 +25,16 @@ export default defineConfig({
       crypto: 'vite-plugin-node-polyfills/crypto',
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'three': ['three'],
+          'vendor': ['react', 'react-dom'],
+          'irys': ['@irys/web-upload']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000, // 1MB로 증가
+  }
 })

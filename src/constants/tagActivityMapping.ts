@@ -17,16 +17,16 @@ export interface TagActivityMapping {
 
 // Activity category definitions
 export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
-  'note': {
-    id: 'note',
-    name: 'Notes',
+  'social': {
+    id: 'social',
+    name: 'Social',
     color: '#d4a574',
-    icon: '📝',
-    description: 'Note-taking and documentation'
+    icon: '💬',
+    description: 'Social media and communication'
   },
-  'code': {
-    id: 'code',
-    name: 'Code',
+  'dev': {
+    id: 'dev',
+    name: 'Dev',
     color: '#333333',
     icon: '💻',
     description: 'Code repositories and development'
@@ -59,13 +59,6 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
     icon: '✅',
     description: 'Proof and verification'
   },
-  'nft': {
-    id: 'nft',
-    name: 'NFT',
-    color: '#8b5cf6',
-    icon: '🖼️',
-    description: 'NFT and digital collectibles'
-  },
   'gaming': {
     id: 'gaming',
     name: 'Gaming',
@@ -73,40 +66,12 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
     icon: '🎮',
     description: 'Gaming and entertainment'
   },
-  'gaming-bet': {
-    id: 'gaming-bet',
-    name: 'Betting',
-    color: '#f59e0b',
-    icon: '🎰',
-    description: 'Betting and gambling activities'
-  },
-  'gaming-room': {
-    id: 'gaming-room',
-    name: 'Game Room',
-    color: '#10b981',
-    icon: '🏠',
-    description: 'Game room management'
-  },
-  'gaming-score': {
-    id: 'gaming-score',
-    name: 'Score',
-    color: '#3b82f6',
-    icon: '🏆',
-    description: 'Score and leaderboard updates'
-  },
   'storage': {
     id: 'storage',
     name: 'Storage',
     color: '#10b981',
     icon: '💾',
     description: 'File storage and management'
-  },
-  'defi': {
-    id: 'defi',
-    name: 'DeFi',
-    color: '#f59e0b',
-    icon: '🏦',
-    description: 'Decentralized finance'
   },
   'other': {
     id: 'other',
@@ -121,24 +86,18 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
 export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
   // CM Note
   {
-    tags: [{ name: 'App-Name', value: 'irys-cm-note' }],
-    activityId: 'note',
+    tags: [{ name: 'App-Name', value: 'irys-cm-note-unified' }],
+    activityId: 'social',
     projectId: 'cm-note'
   },
-  {
-    tags: [{ name: 'App-Name', value: 'CM-Note' }],
-    activityId: 'note',
-    projectId: 'cm-note'
-  },
-  // GitHirys
   {
     tags: [{ name: 'App-Name', value: 'irys-git' }],
-    activityId: 'code',
+    activityId: 'dev',
     projectId: 'githirys'
   },
   {
-    tags: [{ name: 'App-Name', value: 'git-hirys' }],
-    activityId: 'code',
+    tags: [{ name: 'App-Name', value: 'irys-git-nickname' }],
+    activityId: 'dev',
     projectId: 'githirys'
   },
   // Irys Name Service
@@ -147,14 +106,14 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'identity',
     projectId: 'irys-names'
   },
+    {
+      tags: [{ name: 'IrysPFP-Data-Type', value: 'image' }],
+      activityId: 'identity',
+      projectId: 'irys-pfp'
+    },
   // BridgeBox
   {
     tags: [{ name: 'App-Name', value: 'Bridgbox-Email-Lit' }],
-    activityId: 'email',
-    projectId: 'bridgebox'
-  },
-  {
-    tags: [{ name: 'App-Name', value: 'BridgeBox' }],
     activityId: 'email',
     projectId: 'bridgebox'
   },
@@ -169,22 +128,21 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'analytics',
     projectId: 'irysdune'
   },
+  {
+    tags: [{ name: 'App-Name', value: 'IrysDune-Badge-NFT' }],
+    activityId: 'analytics',
+    projectId: 'irysdune'
+  },
+  {
+    tags: [{ name: 'App-Name', value: 'IrysDune-Event-NFT' }],
+    activityId: 'analytics',
+    projectId: 'irysdune'
+  },
   // IrysProof Board
   {
     tags: [{ name: 'App', value: 'IRYS Proofboard' }],
     activityId: 'proof',
     projectId: 'irys-proof-board'
-  },
-  {
-    tags: [{ name: 'App-Name', value: 'IrysProof' }],
-    activityId: 'proof',
-    projectId: 'irys-proof-board'
-  },
-  // Lofty
-  {
-    tags: [{ name: 'App-Name', value: 'Lofty' }],
-    activityId: 'nft',
-    projectId: 'lofty'
   },
   // IrysFlip
   {
@@ -192,21 +150,12 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'gaming',
     projectId: 'irysflip'
   },
-  // General file storage
+  // IrysMemory
   {
-    tags: [{ name: 'Content-Type' }],
-    activityId: 'storage'
+    tags: [{ name: 'App-Name', value: 'IrysMemoryGameByPrmak' }],
+    activityId: 'gaming',
+    projectId: 'irys-memory'
   },
-  // NFT related
-  {
-    tags: [{ name: 'Type', value: 'NFT' }],
-    activityId: 'nft'
-  },
-  // Smart contracts
-  {
-    tags: [{ name: 'App-Name', value: 'SmartWeaveContract' }],
-    activityId: 'defi'
-  }
 ];
 
 // 온체인 이벤트를 activity로 매핑

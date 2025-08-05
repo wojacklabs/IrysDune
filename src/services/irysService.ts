@@ -307,20 +307,21 @@ export async function fetchIrysName(walletAddress: string): Promise<string | nul
 // Query badge eligibility data for a wallet
 export async function queryBadgeEligibility(walletAddress: string): Promise<{
   dashboardCount: number;
+  mintedBadges: string[];
+  mintedBadgeDetails: Map<string, { txHash: string; timestamp: number; metadataUri: string }>;
   loading: boolean;
   error?: string;
 }> {
   console.log('[IrysService] Querying badge eligibility for:', walletAddress);
-  
   try {
     // Use executeQuery for rate limiting and queue management
     const result = await executeQuery(`badge-eligibility-${walletAddress}`, async () => {
-      // Query dashboards created by this wallet (no time limit)
+      // Query dashboards created by this wallet (using owners field)
       const dashboardQuery = {
         query: `
-          query GetUserDashboards($address: String!) {
+          query GetUserDashboards {
             transactions(
-              owners: [$address]
+              owners: ["${walletAddress}"]
               tags: [
                 { name: "App-Name", values: ["IrysDune"] }
                 { name: "Type", values: ["dashboard"] }
@@ -339,13 +340,10 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
               }
             }
           }
-        `,
-        variables: {
-          address: walletAddress
-        }
+        `
       };
 
-      const response = await fetch('https://gateway.irys.xyz/graphql', {
+      const response = await fetch(IRYS_GRAPHQL_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -369,28 +367,127 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
 
     // Count unique dashboards (by Dashboard-ID to avoid counting updates)
     const dashboardIds = new Set<string>();
+    console.log('[IrysService] Query result:', JSON.stringify(result, null, 2));
     
     if (result.data?.transactions?.edges) {
+      console.log('[IrysService] Found', result.data.transactions.edges.length, 'dashboard transactions');
+      
       for (const edge of result.data.transactions.edges) {
         const tags = edge.node.tags || [];
+        console.log('[IrysService] Transaction tags:', tags);
+        
         const dashboardIdTag = tags.find((tag: any) => tag.name === 'Dashboard-ID');
         if (dashboardIdTag) {
           dashboardIds.add(dashboardIdTag.value);
+          console.log('[IrysService] Found Dashboard-ID:', dashboardIdTag.value);
+        } else {
+          console.log('[IrysService] No Dashboard-ID tag found in transaction');
+          // Also check Author tag to ensure it's really the user's dashboard
+          const authorTag = tags.find((tag: any) => tag.name === 'Author');
+          if (authorTag && authorTag.value === walletAddress) {
+            console.log('[IrysService] Confirmed Author tag matches wallet address');
+          }
         }
       }
+    } else {
+      console.log('[IrysService] No dashboard transactions found in query result');
     }
     
     const dashboardCount = dashboardIds.size;
-    console.log('[IrysService] Found', dashboardCount, 'unique dashboards for wallet');
+    console.log('[IrysService] Found', dashboardCount, 'unique dashboards for wallet:', walletAddress);
+
+          // Query minted badges by this wallet (using owners since user mints with their own wallet)
+      const mintedBadgesResult = await executeQuery(`minted-badges-${walletAddress}`, async () => {
+        const mintedBadgesQuery = {
+          query: `
+            query GetMintedBadges($address: String!) {
+              transactions(
+                owners: [$address]
+                tags: [
+                  { name: "App-Name", values: ["IrysDune-Badge-NFT"] }
+                  { name: "Type", values: ["badge-nft-metadata"] }
+                ]
+                first: 100
+                order: DESC
+              ) {
+                edges {
+                  node {
+                    id
+                    timestamp
+                    tags {
+                      name
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            address: walletAddress
+          }
+        };
+
+      const response = await fetch(IRYS_GRAPHQL_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mintedBadgesQuery)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.errors) {
+        console.error('[IrysService] GraphQL errors:', result.errors);
+        throw new Error('GraphQL query failed');
+      }
+
+      return result;
+    });
+
+    // Extract minted badge IDs and transaction details
+    const mintedBadges = new Set<string>();
+    const mintedBadgeDetails = new Map<string, { txHash: string; timestamp: number; metadataUri: string }>();
+    
+    if (mintedBadgesResult.data?.transactions?.edges) {
+      for (const edge of mintedBadgesResult.data.transactions.edges) {
+        const tags = edge.node.tags || [];
+        const badgeIdTag = tags.find((tag: any) => tag.name === 'Badge-Id');
+        if (badgeIdTag) {
+          mintedBadges.add(badgeIdTag.value);
+          
+          // Store transaction details
+          mintedBadgeDetails.set(badgeIdTag.value, {
+            txHash: edge.node.id,
+            timestamp: edge.node.timestamp || Date.now(),
+            metadataUri: `https://gateway.irys.xyz/${edge.node.id}`
+          });
+          
+          console.log('[IrysService] Found minted badge:', badgeIdTag.value, 'tx:', edge.node.id);
+        }
+      }
+    }
+
+    console.log('[IrysService] Found minted badges:', Array.from(mintedBadges));
+    console.log('[IrysService] Minted badge details:', Array.from(mintedBadgeDetails.entries()));
     
     return { 
       dashboardCount, 
+      mintedBadges: Array.from(mintedBadges),
+      mintedBadgeDetails,
       loading: false 
     };
   } catch (error) {
     console.error('[IrysService] Error querying badge eligibility:', error);
     return { 
       dashboardCount: 0, 
+      mintedBadges: [],
+      mintedBadgeDetails: new Map(),
       loading: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     };

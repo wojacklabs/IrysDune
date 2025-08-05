@@ -7,6 +7,8 @@ import irysduneIcon from '../assets/irysdune.png';
 import irysProofBoardIcon from '../assets/irysproofboard.png';
 import irysflipIcon from '../assets/irysflip.png';
 import irysCrushIcon from '../assets/irys-crush.png';
+import irysMemoryIcon from '../assets/irysmemoryicon.jpg';
+import irysPfpIcon from '../assets/iryspfp.jpg';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -19,12 +21,21 @@ export const APP_PRESETS: AppPreset[] = [
     icon: cmNoteIcon
   },
   {
+    id: 'irys-pfp',
+    name: 'Irys PFP',
+    tags: [
+      { name: 'IrysPFP-Data-Type', value: 'image' }
+    ],
+    color: 'lightgreen',
+    icon: irysPfpIcon
+  },
+  {
     id: 'githirys',
     name: 'GitHirys',
     tags: [
       { name: 'App-Name', value: 'irys-git' }
     ],
-    color: '#333',
+    color: '#91c8e4',
     icon: githirysIcon
   },
   {
@@ -60,7 +71,7 @@ export const APP_PRESETS: AppPreset[] = [
     tags: [
       { name: 'App', value: 'IRYS Proofboard' }
     ],
-    color: '#1affe8',
+    color: 'orange',
     icon: irysProofBoardIcon
   },
   {
@@ -69,7 +80,7 @@ export const APP_PRESETS: AppPreset[] = [
     tags: [
       { name: 'App-Name', value: 'IrysFlip' }
     ],
-    color: '#EF4444',
+    color: 'brown',
     icon: irysflipIcon
   },
   {
@@ -80,6 +91,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#ff8a00',
     icon: irysCrushIcon
+  },
+  {
+    id: 'irys-memory',
+    name: 'IrysMemory',
+    tags: [
+      { name: 'App-Name', value: 'IrysMemoryGameByPrmak' }
+    ],
+    color: 'magenta',
+    icon: irysMemoryIcon
   },
 ];
 

@@ -8,6 +8,18 @@ import { generateChartData } from '../utils/chartUtils';
 import { getCachedData, waitForCache } from '../services/storageService';
 import Chart from './Chart';
 import LoadingProgress from './LoadingProgress';
+import { ethers } from 'ethers';
+
+// Dashboard Contract configuration
+const DASHBOARD_CONTRACT_ADDRESS = '0xcEFd26e34d86d07F04D21eDA589b4C81D4f4FcA4';
+const IRYS_TESTNET_RPC = 'https://testnet-rpc.irys.xyz/v1/execution-rpc';
+const DASHBOARD_ABI = [
+  'function payForArticle() payable',
+  'function ARTICLE_PRICE() view returns (uint256)',
+  'event ArticlePaymentReceived(address indexed payer, uint256 amount, uint256 articleId, uint256 timestamp)',
+  'function totalArticles() view returns (uint256)',
+  'function userArticleCount(address user) view returns (uint256)'
+];
 
 interface CreateDashboardModalProps {
   isOpen: boolean;
@@ -36,6 +48,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [loadingChartId, setLoadingChartId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<{ [chartId: string]: any }>({});
   const [loadingProgress, setLoadingProgress] = useState<{ current: number; total: number; percentage: number } | null>(null);
+  const [transactionStatus, setTransactionStatus] = useState<string>('');
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   // Current chart being edited
   const [editingChart, setEditingChart] = useState<ChartConfig | null>(null);
@@ -458,7 +472,92 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         rootTxId: existingDashboard?.rootTxId
       };
 
+      // If this is a new dashboard (not an edit), require payment
+      if (!existingDashboard) {
+        // Switch to Irys testnet
+        if (!window.ethereum) {
+          throw new Error("MetaMask is not installed");
+        }
+
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x4F6' }], // 1270 in hex
+          });
+        } catch (switchError: any) {
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x4F6',
+                chainName: 'Irys Testnet',
+                nativeCurrency: {
+                  name: 'IRYS',
+                  symbol: 'IRYS',
+                  decimals: 18
+                },
+                rpcUrls: [IRYS_TESTNET_RPC],
+                blockExplorerUrls: []
+              }]
+            });
+          } else {
+            throw switchError;
+          }
+        }
+
+        // Connect to provider
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const signerAddress = await signer.getAddress();
+        
+        // Check network
+        const network = await provider.getNetwork();
+        if (network.chainId !== 1270n) {
+          throw new Error('Not connected to Irys testnet. Please switch networks.');
+        }
+        
+        // Check balance
+        const balance = await provider.getBalance(signerAddress);
+        const contract = new ethers.Contract(DASHBOARD_CONTRACT_ADDRESS, DASHBOARD_ABI, provider);
+        const creationFee = await contract.ARTICLE_PRICE();
+        
+        if (balance < creationFee) {
+          throw new Error(`Insufficient funds. You need at least ${ethers.formatEther(creationFee)} IRYS to create a dashboard.`);
+        }
+
+        // Call contract to pay creation fee
+        setTransactionStatus("Submitting transaction...");
+        const contractWithSigner = new ethers.Contract(DASHBOARD_CONTRACT_ADDRESS, DASHBOARD_ABI, signer);
+        const tx = await contractWithSigner.payForArticle({
+          value: creationFee
+        });
+
+        setTxHash(tx.hash);
+        setTransactionStatus("Transaction submitted. Waiting for confirmation...");
+        const receipt = await tx.wait();
+        
+        // Check if event was emitted
+        const paymentEvent = receipt.logs.find((log: any) => {
+          try {
+            const parsed = contractWithSigner.interface.parseLog(log);
+            return parsed?.name === 'ArticlePaymentReceived';
+          } catch {
+            return false;
+          }
+        });
+
+        if (!paymentEvent) {
+          throw new Error('Dashboard payment failed on-chain');
+        }
+
+        console.log('[CreateDashboard] Dashboard creation payment successful, tx:', tx.hash);
+        setTransactionStatus("Payment confirmed. Uploading dashboard to Irys...");
+      }
+
       console.log('[CreateDashboard] Uploading dashboard to Irys...');
+      if (!existingDashboard && !transactionStatus) {
+        setTransactionStatus("Uploading dashboard to Irys...");
+      }
       const result = await uploadDashboard(dashboard);
 
       if (result.success && result.transactionId) {
@@ -468,7 +567,16 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         dashboard.rootTxId = result.rootTxId;
         
         // Show success message
-        alert(`Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\nTransaction ID: ${result.transactionId}\nMutable Address: ${result.mutableAddress || 'N/A'}\n\nIt will appear in the dashboard list shortly.`);
+        let successMessage = `Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\n`;
+        if (!existingDashboard && txHash) {
+          successMessage += `\nPayment Transaction: ${txHash}`;
+          successMessage += `\nExplorer: https://testnet-explorer.irys.xyz/tx/${txHash}\n`;
+        }
+        successMessage += `\nIrys Transaction ID: ${result.transactionId}`;
+        successMessage += `\nMutable Address: ${result.mutableAddress || 'N/A'}`;
+        successMessage += `\n\nIt will appear in the dashboard list shortly.`;
+        
+        alert(successMessage);
         
         onSuccess(dashboard);
         onClose();
@@ -478,6 +586,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         setDescription('');
         setCharts([]);
         setChartData({});
+        setTransactionStatus('');
+        setTxHash(null);
       } else {
         console.error('[CreateDashboard] Upload failed:', result.error);
         setError(result.error || 'Failed to create dashboard');
@@ -491,6 +601,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       }
     } finally {
       setIsCreating(false);
+      setTransactionStatus('');
+      setTxHash(null);
     }
   };
 
@@ -1024,6 +1136,24 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
           </div>
         </div>
 
+        {transactionStatus && (
+          <div className="transaction-status" style={{ padding: '10px 20px', color: '#3b82f6' }}>
+            {transactionStatus}
+            {txHash && (
+              <div style={{ fontSize: '0.875rem', marginTop: '4px' }}>
+                <a 
+                  href={`https://testnet-explorer.irys.xyz/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#60a5fa', textDecoration: 'underline' }}
+                >
+                  View Transaction
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="modal-footer">
           <button 
             className="cancel-btn" 
@@ -1037,7 +1167,11 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
             onClick={handleCreate}
             disabled={isCreating || charts.length === 0}
           >
-            {isCreating ? 'Uploading...' : existingDashboard ? 'Update Dashboard' : 'Create Dashboard'}
+            {isCreating ? 
+              (transactionStatus ? 'Processing...' : 'Uploading...') : 
+              existingDashboard ? 'Update Dashboard' : 
+              'Create Dashboard (0.1 IRYS)'
+            }
           </button>
         </div>
       </div>
