@@ -106,6 +106,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   useEffect(() => {
     if (isOpen && !existingDashboard && !uploaderInstance) {
       console.log('[CreateDashboard] Pre-initializing Irys uploader on modal open...');
+      
+      // Check if we already have an initialized uploader
       initializeIrysUploader().then(uploader => {
         if (uploader) {
           console.log('[CreateDashboard] Irys uploader pre-initialized successfully');
@@ -565,54 +567,9 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         setTxHash(tx.hash);
         setTransactionStatus("Transaction submitted. Waiting for confirmation...");
         
-        // Initialize Irys uploader immediately and prepare it
-        console.log('[CreateDashboard] Initializing Irys uploader immediately...');
-        const uploaderPromise = initializeIrysUploader().then(async (uploader) => {
-          if (uploader) {
-            console.log('[CreateDashboard] Uploader initialized, attempting to prepare it...');
-            
-            // Try to trigger any lazy initialization
-            try {
-              // Check if we can access internal properties that might trigger initialization
-              if ((uploader as any)._irys) {
-                console.log('[CreateDashboard] Accessing _irys property...');
-                const irys = (uploader as any)._irys;
-                
-                // Try to access signer if available
-                if (irys.signer || irys._signer) {
-                  console.log('[CreateDashboard] Found signer in _irys');
-                }
-                
-                // Try to call any initialization methods
-                if (typeof irys.ready === 'function') {
-                  console.log('[CreateDashboard] Calling _irys.ready()...');
-                  try {
-                    await irys.ready();
-                    console.log('[CreateDashboard] _irys.ready() completed');
-                  } catch (e) {
-                    console.log('[CreateDashboard] _irys.ready() failed:', e);
-                  }
-                }
-              }
-              
-              // Try to get the token/currency info which might trigger initialization
-              if ((uploader as any).token || (uploader as any).currency) {
-                console.log('[CreateDashboard] Token/currency:', (uploader as any).token || (uploader as any).currency);
-              }
-              
-              // Try to create a data item without uploading
-              if (typeof (uploader as any).createDataItem === 'function') {
-                console.log('[CreateDashboard] Creating test data item...');
-                const testData = Buffer.from('test', 'utf-8');
-                await (uploader as any).createDataItem(testData);
-                console.log('[CreateDashboard] Test data item created');
-              }
-            } catch (e) {
-              console.log('[CreateDashboard] Preparation attempt failed:', e);
-            }
-          }
-          return uploader;
-        });
+        // Initialize Irys uploader while waiting for transaction
+        console.log('[CreateDashboard] Getting Irys uploader...');
+        const uploaderPromise = initializeIrysUploader();
         
         const receipt = await tx.wait();
         

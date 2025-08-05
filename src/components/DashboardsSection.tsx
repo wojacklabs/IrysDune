@@ -382,8 +382,34 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
   };
 
   const handleCreateSuccess = (dashboard: Dashboard) => {
-    setDashboards([dashboard, ...dashboards]);
-    loadDashboards(); // Reload to get the latest data
+    // Process the new dashboard
+    const processedDashboard = processDashboardDateRanges(dashboard);
+    
+    // Add to the beginning of the list
+    setDashboards([processedDashboard, ...dashboards]);
+    
+    // Update cache
+    const updatedDashboards = [processedDashboard, ...dashboards];
+    try {
+      localStorage.setItem('irys-dune-dashboards', JSON.stringify({
+        data: updatedDashboards,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('[DashboardsSection] Error updating cache:', error);
+    }
+    
+    // Fetch Irys Name for the new author only
+    if (dashboard.authorAddress) {
+      fetchIrysNames([dashboard.authorAddress]).then(names => {
+        setIrysNames(prev => new Map([...prev, ...names]));
+      }).catch(error => {
+        console.error('[DashboardsSection] Error fetching Irys Name:', error);
+      });
+    }
+    
+    // Don't reload all dashboards - we already have the new one
+    console.log('[DashboardsSection] Dashboard added locally without full reload');
   };
 
   const handleLike = async (dashboard: Dashboard) => {
