@@ -8,8 +8,7 @@ import { ConnectWallet } from './components/ConnectWallet';
 import { initializeIrysUploader } from './services/irysUploadService';
 import { fetchIrysName } from './services/irysService';
 import { getCachedData, saveCacheData, isCacheValid } from './services/storageService';
-import { APP_PRESETS } from './constants/appPresets';
-import { queryTagCounts } from './services/irysService';
+import { fetchAllProjectsData } from './services/dataService';
 import type { QueryResult } from './types';
 
 function App() {
@@ -49,23 +48,14 @@ function App() {
         console.log('[App] Cache is invalid or missing, fetching fresh data in background...');
         
         try {
-          // Fetch data for all presets
-          const allProjectIds = APP_PRESETS.map(preset => preset.id);
-          const results: { [key: string]: QueryResult[] } = {};
-          
-          for (const projectId of allProjectIds) {
-            const preset = APP_PRESETS.find(p => p.id === projectId);
-            if (preset) {
-              console.log(`[App] Fetching background data for ${preset.name}...`);
-              const projectResults = await queryTagCounts(preset.tags, undefined, { months: 6 });
-              results[projectId] = projectResults;
-            }
-          }
+          // Fetch data from mutable addresses (complete dataset)
+          console.log('[App] Fetching complete data from mutable addresses...');
+          const results = await fetchAllProjectsData();
           
           // Save to cache
           saveCacheData(results);
           setTrendData(results);
-          console.log('[App] Background data update completed');
+          console.log('[App] Background data update completed with full dataset');
         } catch (error) {
           console.error('[App] Error loading background data:', error);
         }
