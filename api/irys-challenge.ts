@@ -56,8 +56,7 @@ export default async function handler(
         transactions(
           owners: ["${address}"]
           tags: [
-            { name: "Content-Type", values: ["application/json"] }
-            { name: "Application", values: ["IrysDune"] }
+            { name: "App-Name", values: ["IrysDune"] }
             { name: "Type", values: ["dashboard"] }
           ]
           first: 100
