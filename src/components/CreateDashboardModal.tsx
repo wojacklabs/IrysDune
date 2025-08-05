@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
-import { uploadDashboard, initializeIrysUploader } from '../services/irysUploadService';
+import { uploadDashboard } from '../services/irysUploadService';
 import { queryTagCounts } from '../services/irysService';
 import { queryOnChainData, ON_CHAIN_PRESETS } from '../services/onChainService';
 import { generateChartData } from '../utils/chartUtils';
@@ -101,20 +101,20 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     }
   }, [existingDashboard]);
 
-  // Pre-initialize Irys uploader when modal opens
-  useEffect(() => {
-    if (isOpen && !existingDashboard) {
-      // Only pre-initialize for new dashboards (not edits)
-      console.log('[CreateDashboard] Pre-initializing Irys uploader...');
-      initializeIrysUploader().then(uploader => {
-        if (uploader) {
-          console.log('[CreateDashboard] Irys uploader pre-initialized');
-        }
-      }).catch(err => {
-        console.error('[CreateDashboard] Failed to pre-initialize Irys uploader:', err);
-      });
-    }
-  }, [isOpen, existingDashboard]);
+  // Skip pre-initialization to avoid unwanted signatures
+  // useEffect(() => {
+  //   if (isOpen && !existingDashboard) {
+  //     // Only pre-initialize for new dashboards (not edits)
+  //     console.log('[CreateDashboard] Pre-initializing Irys uploader...');
+  //     initializeIrysUploader().then(uploader => {
+  //       if (uploader) {
+  //         console.log('[CreateDashboard] Irys uploader pre-initialized');
+  //       }
+  //     }).catch(err => {
+  //       console.error('[CreateDashboard] Failed to pre-initialize Irys uploader:', err);
+  //     });
+  //   }
+  // }, [isOpen, existingDashboard]);
 
   if (!isOpen) return null;
 

@@ -128,40 +128,8 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     console.log('[IrysUpload] Uploader constructor name:', uploader?.constructor?.name);
     console.log('[IrysUpload] Uploader methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(uploader || {})));
     
-    // Try to pre-warm the connection and trigger internal initialization
-    try {
-      console.log('[IrysUpload] Pre-warming connection and initializing internals...');
-      const warmStart = Date.now();
-      
-      // Try multiple methods to ensure full initialization
-      try {
-        await uploader.getLoadedBalance();
-        console.log('[IrysUpload] Balance check completed');
-      } catch (e) {
-        console.log('[IrysUpload] Balance check failed (normal)');
-      }
-      
-      // Try to get price - this might initialize pricing module
-      try {
-        const price = await uploader.getPrice(100);
-        console.log('[IrysUpload] Price check completed:', price);
-      } catch (e) {
-        console.log('[IrysUpload] Price check failed (normal)');
-      }
-      
-      // Try to get the uploader address - this should be instant if properly initialized
-      try {
-        const addr = uploader.address;
-        console.log('[IrysUpload] Address check completed:', addr);
-      } catch (e) {
-        console.log('[IrysUpload] Address check failed');
-      }
-      
-      const warmEnd = Date.now();
-      console.log(`[IrysUpload] Connection pre-warm took ${warmEnd - warmStart}ms`);
-    } catch (error) {
-      console.log('[IrysUpload] Pre-warm failed:', error);
-    }
+    // Skip pre-warm to avoid any potential signature requests
+    console.log('[IrysUpload] Skipping pre-warm to avoid signature requests');
     
     const totalTime = step3End - step1Start;
     console.log(`[IrysUpload] Total uploader creation took ${totalTime}ms`);

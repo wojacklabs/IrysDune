@@ -5,7 +5,7 @@ import MyHistorySection from './components/MyHistorySection';
 import BadgesSection from './components/BadgesSection';
 import CloudBackground from './components/CloudBackground';
 import { ConnectWallet } from './components/ConnectWallet';
-import { initializeIrysUploader } from './services/irysUploadService';
+
 import { fetchIrysName } from './services/irysService';
 import { getCachedData, saveCacheData, isCacheValid } from './services/storageService';
 import { fetchAllProjectsData } from './services/dataService';
@@ -69,14 +69,7 @@ function App() {
     console.log('[App] Wallet connected:', address);
     setWalletAddress(address);
     
-    // Pre-initialize Irys uploader in the background
-    initializeIrysUploader().then(uploader => {
-      if (uploader) {
-        console.log('[App] Irys uploader pre-initialized successfully');
-      }
-    }).catch(err => {
-      console.error('[App] Failed to pre-initialize Irys uploader:', err);
-    });
+    // Skip pre-initialization to avoid unwanted signatures
     
     // Fetch Irys Name for the wallet
     try {
@@ -93,18 +86,7 @@ function App() {
       setUsername(null);
     }
     
-    // Initialize Irys uploader when wallet connects
-    try {
-      console.log('[App] Initializing Irys uploader...');
-      const uploader = await initializeIrysUploader();
-      if (uploader) {
-        console.log('[App] Irys uploader ready for uploads');
-      } else {
-        console.warn('[App] Irys uploader initialization failed - uploads will be unavailable');
-      }
-    } catch (error) {
-      console.error('[App] Error during Irys initialization:', error);
-    }
+    // Skip Irys initialization on wallet connect to avoid unwanted signatures
   };
 
   const handleWalletDisconnect = () => {
