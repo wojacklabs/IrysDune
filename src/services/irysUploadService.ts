@@ -123,16 +123,63 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     const step3End = Date.now();
     console.log(`[IrysUpload] Step 3 (WebUploader) took ${step3End - step3Start}ms`);
     
-    // Try to pre-warm the connection
+    // Log uploader properties to understand its structure
+    console.log('[IrysUpload] Uploader type:', typeof uploader);
+    console.log('[IrysUpload] Uploader constructor name:', uploader?.constructor?.name);
+    console.log('[IrysUpload] Uploader methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(uploader || {})));
+    
+    // Try to pre-warm the connection and trigger internal initialization
     try {
-      console.log('[IrysUpload] Pre-warming connection...');
+      console.log('[IrysUpload] Pre-warming connection and initializing internals...');
       const warmStart = Date.now();
-      // This will establish the connection early
-      await uploader.getLoadedBalance();
+      
+      // Try multiple methods to ensure full initialization
+      try {
+        await uploader.getLoadedBalance();
+        console.log('[IrysUpload] Balance check completed');
+      } catch (e) {
+        console.log('[IrysUpload] Balance check failed (normal)');
+      }
+      
+      // Try to get price - this might initialize pricing module
+      try {
+        const price = await uploader.getPrice(100);
+        console.log('[IrysUpload] Price check completed:', price);
+      } catch (e) {
+        console.log('[IrysUpload] Price check failed (normal)');
+      }
+      
+      // Try to get the uploader address - this should be instant if properly initialized
+      try {
+        const addr = uploader.address;
+        console.log('[IrysUpload] Address check completed:', addr);
+      } catch (e) {
+        console.log('[IrysUpload] Address check failed');
+      }
+      
       const warmEnd = Date.now();
       console.log(`[IrysUpload] Connection pre-warm took ${warmEnd - warmStart}ms`);
+      
+      // Try a tiny test upload to fully initialize everything
+      try {
+        console.log('[IrysUpload] Attempting tiny test upload for full initialization...');
+        const testStart = Date.now();
+        const testData = '1'; // Minimal data to reduce cost
+        const testTags = [
+          { name: 'App-Name', value: 'IrysDune-Init' },
+          { name: 'Type', value: 'init-test' },
+          { name: 'Timestamp', value: Date.now().toString() }
+        ];
+        
+        const testResult = await uploader.upload(testData, { tags: testTags });
+        const testEnd = Date.now();
+        console.log(`[IrysUpload] Test upload completed in ${testEnd - testStart}ms, tx:`, testResult.id);
+        console.log('[IrysUpload] Full initialization successful');
+      } catch (testError) {
+        console.log('[IrysUpload] Test upload failed (this may be normal):', testError);
+      }
     } catch (error) {
-      console.log('[IrysUpload] Pre-warm failed (this is normal):', error);
+      console.log('[IrysUpload] Pre-warm failed:', error);
     }
     
     const totalTime = step3End - step1Start;
@@ -507,8 +554,21 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
       console.log(`[IrysUpload] Tag ${index}: ${tag.name} = ${tag.value}`);
     });
 
-    console.log('[IrysUpload] Calling upload with options:', { tags });
+        console.log('[IrysUpload] Calling upload with options:', { tags });
     const uploadCallStart = Date.now();
+    
+    // Try to force eager initialization
+    console.log('[IrysUpload] Checking uploader readiness...');
+    try {
+      // Check if uploader is properly initialized
+      if (uploader && uploader.address) {
+        console.log('[IrysUpload] Uploader is ready with address:', uploader.address);
+      }
+    } catch (error) {
+      console.log('[IrysUpload] Ready check error (continuing):', error);
+    }
+    
+    console.log('[IrysUpload] Starting actual upload...');
     const result = await uploader!.upload(data, { tags });
     const uploadCallEnd = Date.now();
     console.log(`[IrysUpload] Upload call took ${uploadCallEnd - uploadCallStart}ms`);
