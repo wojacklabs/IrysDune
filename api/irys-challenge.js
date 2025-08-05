@@ -29,6 +29,7 @@ export default async function handler(req, res) {
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
     
     console.log(`[API] Checking for dashboards created today: ${todayStart.toISOString()} - ${todayEnd.toISOString()}`);
+    console.log(`[API] Current UTC time: ${now.toISOString()}`);
 
     // GraphQL 쿼리로 dashboard 작성 여부 확인
     // Author 태그로 쿼리 (대소문자 구분 없이 비교)
@@ -71,6 +72,8 @@ export default async function handler(req, res) {
     const data = await response.json();
     const transactions = data?.data?.transactions?.edges || [];
     
+    console.log(`[API] Found ${transactions.length} total dashboard transactions`);
+    
     // 주소를 소문자로 변환하여 비교
     const addressLower = address.toLowerCase();
     
@@ -89,15 +92,22 @@ export default async function handler(req, res) {
         continue;
       }
       
+      console.log(`[API] Found transaction by ${authorTag.value} with Dashboard-ID: ${dashboardIdTag?.value}`);
+      
       // Dashboard-ID가 있고, Action이 'create'이거나 없는 경우 (edit이 아닌 경우)
       if (dashboardIdTag && (!actionTag || actionTag.value === 'create')) {
         // timestamp 확인 (Irys timestamp는 이미 밀리초 단위)
         const transactionTime = edge.node.timestamp;
         
+        console.log(`[API] Transaction time: ${new Date(transactionTime).toISOString()}`);
+        console.log(`[API] Today range: ${new Date(todayStart.getTime()).toISOString()} - ${new Date(todayEnd.getTime()).toISOString()}`);
+        
         if (transactionTime >= todayStart.getTime() && transactionTime < todayEnd.getTime()) {
           hasCreatedDashboardToday = true;
           todayDashboardCount++;
-          console.log(`[API] Found dashboard created today: ${new Date(transactionTime).toISOString()}`);
+          console.log(`[API] ✅ Dashboard created today!`);
+        } else {
+          console.log(`[API] ❌ Dashboard NOT created today`);
         }
       }
     }
