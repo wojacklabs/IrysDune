@@ -98,6 +98,49 @@ Irys GraphQL API를 사용합니다:
 
 MIT License
 
+## 🔌 API 엔드포인트
+
+### Irys Challenge API
+
+매일 Dashboard 작성 챌린지 완료 여부를 확인하는 API입니다. (Daily Challenge)
+
+**Endpoint:**
+```
+GET /api/irys-challenge?address=WALLET_ADDRESS
+```
+
+**Parameters:**
+- `address` (required): 확인할 지갑 주소
+
+**Response:**
+- `1`: 챌린지 완료 (오늘 dashboard를 작성함)
+- `0`: 챌린지 미완료 (오늘 dashboard를 작성하지 않음)
+
+**Example:**
+```bash
+# 챌린지 완료 확인
+curl https://your-domain.vercel.app/api/irys-challenge?address=0x1234...
+
+# 로컬 테스트
+vercel dev  # 다른 터미널에서 실행
+curl http://localhost:3000/api/irys-challenge?address=0x1234...
+```
+
+**테스트:**
+```bash
+# 테스트 스크립트 실행
+node test-api.js YOUR_WALLET_ADDRESS
+
+# 프로덕션 테스트 포함
+node test-api.js YOUR_WALLET_ADDRESS --prod
+```
+
+**Note:** 
+- **매일 챌린지**: UTC 기준 당일(00:00-23:59)에 생성된 dashboard만 인정됩니다
+- Dashboard 작성은 edit을 제외한 새로운 dashboard 생성만 카운트됩니다
+- 결과는 JSON 형식으로 반환됩니다 (1 또는 0)
+- 시간대는 UTC 기준이므로 한국 시간으로는 오전 9시에 날짜가 바뀝니다
+
 ## 🤝 기여
 
 1. Fork the repository
