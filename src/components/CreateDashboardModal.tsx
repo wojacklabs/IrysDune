@@ -586,7 +586,12 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 // Try to call any initialization methods
                 if (typeof irys.ready === 'function') {
                   console.log('[CreateDashboard] Calling _irys.ready()...');
-                  await irys.ready();
+                  try {
+                    await irys.ready();
+                    console.log('[CreateDashboard] _irys.ready() completed');
+                  } catch (e) {
+                    console.log('[CreateDashboard] _irys.ready() failed:', e);
+                  }
                 }
               }
               
@@ -598,7 +603,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
               // Try to create a data item without uploading
               if (typeof (uploader as any).createDataItem === 'function') {
                 console.log('[CreateDashboard] Creating test data item...');
-                const testData = Buffer.from('test');
+                const testData = Buffer.from('test', 'utf-8');
                 await (uploader as any).createDataItem(testData);
                 console.log('[CreateDashboard] Test data item created');
               }

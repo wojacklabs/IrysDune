@@ -123,6 +123,18 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     const step3End = Date.now();
     console.log(`[IrysUpload] Step 3 (WebUploader) took ${step3End - step3Start}ms`);
     
+    // Step 4: Call ready() to complete initialization
+    console.log('[IrysUpload] Calling uploader.ready() to complete initialization...');
+    const readyStart = Date.now();
+    try {
+      await uploader.ready();
+      const readyEnd = Date.now();
+      console.log(`[IrysUpload] ready() completed in ${readyEnd - readyStart}ms`);
+    } catch (error) {
+      console.error('[IrysUpload] ready() failed:', error);
+      throw error;
+    }
+    
     // Log uploader properties to understand its structure
     console.log('[IrysUpload] Uploader type:', typeof uploader);
     console.log('[IrysUpload] Uploader constructor name:', uploader?.constructor?.name);
@@ -143,15 +155,7 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     
     // Try to build/initialize the uploader if build method exists
     if (typeof (uploader as any).build === 'function') {
-      console.log('[IrysUpload] Calling build method...');
-      try {
-        const buildStart = Date.now();
-        await (uploader as any).build({});
-        const buildEnd = Date.now();
-        console.log(`[IrysUpload] Build completed in ${buildEnd - buildStart}ms`);
-      } catch (error) {
-        console.log('[IrysUpload] Build failed:', error);
-      }
+      console.log('[IrysUpload] Found build method (but skipping as ready() should handle initialization)');
     }
     
     // Try to prepare upload without triggering signatures
@@ -211,7 +215,7 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
       // 5. Force initialization by creating a transaction
       try {
         console.log('[IrysUpload] Attempting to create a test transaction...');
-        const testData = Buffer.from('1');
+        const testData = Buffer.from('1', 'utf-8');
         const testTags = [{ name: 'Test', value: 'init' }];
         
         // Try different ways to create a transaction
@@ -259,8 +263,15 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
       console.log('[IrysUpload] Component pre-initialization failed:', error);
     }
     
-    const totalTime = step3End - step1Start;
-    console.log(`[IrysUpload] Total uploader creation took ${totalTime}ms`);
+    const totalTime = Date.now() - step1Start;
+    console.log(`[IrysUpload] Total uploader initialization (including ready()) took ${totalTime}ms`);
+    
+    // Verify the address is properly set after ready()
+    if (!uploader.address || uploader.address === "Please run `await Irys.ready()`") {
+      console.error('[IrysUpload] Uploader address not properly initialized after ready()');
+      console.error('[IrysUpload] Current address:', uploader.address);
+      throw new Error('Uploader initialization failed - address not set');
+    }
     
     irysUploader = uploader as unknown as IrysUploader;
     cachedAddress = address;
@@ -268,7 +279,7 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     console.log('[IrysUpload] Irys uploader initialized successfully with address:', irysUploader.address);
     console.log('[IrysUpload] Irys uploader details:', {
       address: irysUploader.address,
-      uploaderInfo: uploader
+      uploaderType: uploader.constructor?.name
     });
     
     return irysUploader;
@@ -608,7 +619,16 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     const existingRef = dashboard.rootTxId ? dashboardMutableRefs[dashboard.id] : null;
     const isFirstUpload = !existingRef && !dashboard.rootTxId;
     
-    const data = JSON.stringify(dashboard);
+    const dataString = JSON.stringify(dashboard);
+    // Convert to Buffer for Irys upload
+    const data = Buffer.from(dataString, 'utf-8');
+    
+    console.log('[IrysUpload] Data prepared:', {
+      stringLength: dataString.length,
+      bufferByteLength: data.byteLength,
+      isBuffer: Buffer.isBuffer(data)
+    });
+    
     const tags = [
       { name: 'App-Name', value: 'IrysDune' },
       { name: 'Content-Type', value: 'application/json' },
@@ -633,7 +653,7 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
 
     console.log('[IrysUpload] Upload tags:', tags);
     console.log('[IrysUpload] Tags count:', tags.length);
-    console.log('[IrysUpload] Data size:', data.length, 'bytes');
+    console.log('[IrysUpload] Data size:', data.byteLength, 'bytes');
     
     // Log each tag for debugging
     tags.forEach((tag, index) => {
@@ -655,7 +675,7 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     }
     
     console.log('[IrysUpload] Starting actual upload...');
-    console.log('[IrysUpload] Data to upload:', data.length, 'bytes');
+    console.log('[IrysUpload] Data to upload:', data.byteLength, 'bytes');
     console.log('[IrysUpload] Number of tags:', tags.length);
     
     // Log time from dashboard upload start to this point
@@ -665,7 +685,7 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     if (typeof uploader!.getPrice === 'function') {
       try {
         const priceStart = Date.now();
-        const price = await uploader!.getPrice(data.length);
+        const price = await uploader!.getPrice(data.byteLength);
         const priceEnd = Date.now();
         console.log(`[IrysUpload] Price check took ${priceEnd - priceStart}ms, price:`, price);
       } catch (error) {
