@@ -14,6 +14,7 @@ let lastInitTime: number = 0;
 const REINIT_INTERVAL = 30 * 60 * 1000; // 30 minutes
 let cachedProvider: ethers.BrowserProvider | null = null;
 let cachedAddress: string | null = null;
+let initializationPromise: Promise<IrysUploader | null> | null = null;
 
 export async function initializeIrysUploader(): Promise<IrysUploader | null> {
   console.log('[IrysUpload] Initializing Irys uploader...');
@@ -103,10 +104,39 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
     }
     
     console.log('[IrysUpload] Creating Irys uploader...');
-    const startTime = Date.now();
-    const uploader = await WebUploader(WebEthereum).withAdapter(EthersV6Adapter(provider));
-    const endTime = Date.now();
-    console.log(`[IrysUpload] Uploader creation took ${endTime - startTime}ms`);
+    
+    // Step 1: Create WebEthereum instance
+    const step1Start = Date.now();
+    const webEthereum = WebEthereum;
+    const step1End = Date.now();
+    console.log(`[IrysUpload] Step 1 (WebEthereum) took ${step1End - step1Start}ms`);
+    
+    // Step 2: Create adapter
+    const step2Start = Date.now();
+    const adapter = EthersV6Adapter(provider);
+    const step2End = Date.now();
+    console.log(`[IrysUpload] Step 2 (Adapter) took ${step2End - step2Start}ms`);
+    
+    // Step 3: Create uploader with adapter
+    const step3Start = Date.now();
+    const uploader = await WebUploader(webEthereum).withAdapter(adapter);
+    const step3End = Date.now();
+    console.log(`[IrysUpload] Step 3 (WebUploader) took ${step3End - step3Start}ms`);
+    
+    // Try to pre-warm the connection
+    try {
+      console.log('[IrysUpload] Pre-warming connection...');
+      const warmStart = Date.now();
+      // This will establish the connection early
+      await uploader.getLoadedBalance();
+      const warmEnd = Date.now();
+      console.log(`[IrysUpload] Connection pre-warm took ${warmEnd - warmStart}ms`);
+    } catch (error) {
+      console.log('[IrysUpload] Pre-warm failed (this is normal):', error);
+    }
+    
+    const totalTime = step3End - step1Start;
+    console.log(`[IrysUpload] Total uploader creation took ${totalTime}ms`);
     
     irysUploader = uploader as unknown as IrysUploader;
     cachedAddress = address;
@@ -136,22 +166,30 @@ export async function initializeIrysUploader(): Promise<IrysUploader | null> {
 
 // Helper function to ensure uploader is ready
 export async function ensureUploaderReady(): Promise<IrysUploader | null> {
-  if (!irysUploader || Date.now() - lastInitTime > REINIT_INTERVAL) {
-    console.log('[IrysUpload] Uploader not ready or expired, reinitializing...');
-    return await initializeIrysUploader();
-  }
-  
-  // Verify the uploader is still valid
-  try {
-    if (irysUploader.address) {
-      return irysUploader;
+  // First check if we have a valid cached uploader
+  if (irysUploader) {
+    try {
+      if (irysUploader.address) {
+        console.log('[IrysUpload] Using existing uploader, address:', irysUploader.address);
+        return irysUploader;
+      }
+    } catch (error) {
+      console.log('[IrysUpload] Existing uploader invalid');
     }
-  } catch (error) {
-    console.log('[IrysUpload] Uploader validation failed, reinitializing...');
-    return await initializeIrysUploader();
   }
   
-  return irysUploader;
+  // Check if initialization is already in progress
+  if (initializationPromise) {
+    console.log('[IrysUpload] Initialization already in progress, waiting...');
+    return await initializationPromise;
+  }
+  
+  // Need to initialize
+  console.log('[IrysUpload] Uploader not ready, initializing...');
+  initializationPromise = initializeIrysUploader();
+  const result = await initializationPromise;
+  initializationPromise = null;
+  return result;
 }
 
 // Test function that returns mock data for testing UI
@@ -417,8 +455,14 @@ const statsRootRefs: { [dashboardId: string]: string } = {};
 
 export async function uploadDashboard(dashboard: any): Promise<{ success: boolean; transactionId?: string; mutableAddress?: string; rootTxId?: string; error?: string }> {
   console.log('[IrysUpload] Starting dashboard upload...');
+  const uploadStartTime = Date.now();
   
+  console.log('[IrysUpload] Ensuring uploader is ready...');
+  const uploaderStartTime = Date.now();
   const uploader = await ensureUploaderReady();
+  const uploaderEndTime = Date.now();
+  console.log(`[IrysUpload] Uploader ready check took ${uploaderEndTime - uploaderStartTime}ms`);
+  
   if (!uploader) {
     console.error('[IrysUpload] Failed to initialize Irys uploader for dashboard upload');
     return { success: false, error: 'Failed to initialize Irys uploader. Please check your wallet connection.' };
@@ -464,9 +508,15 @@ export async function uploadDashboard(dashboard: any): Promise<{ success: boolea
     });
 
     console.log('[IrysUpload] Calling upload with options:', { tags });
+    const uploadCallStart = Date.now();
     const result = await uploader!.upload(data, { tags });
+    const uploadCallEnd = Date.now();
+    console.log(`[IrysUpload] Upload call took ${uploadCallEnd - uploadCallStart}ms`);
     console.log('[IrysUpload] Upload successful! Transaction ID:', result.id);
     console.log('[IrysUpload] Full upload result:', result);
+    
+    const totalUploadTime = Date.now() - uploadStartTime;
+    console.log(`[IrysUpload] Total upload process took ${totalUploadTime}ms`);
     
     // Verify tags were attached
     console.log('[IrysUpload] Verifying uploaded transaction tags...');
