@@ -5073,7 +5073,6 @@ body.weather-stormy .success-message {
 
 .modal-header {
   text-align: center;
-  padding: 2rem 2rem 1rem;
 }
 
 .modal-badge-image {
@@ -5081,10 +5080,6 @@ body.weather-stormy .success-message {
   height: 120px;
   object-fit: contain;
   margin-bottom: 1rem;
-}
-
-.modal-body {
-  padding: 2rem;
 }
 
 .badge-description {
