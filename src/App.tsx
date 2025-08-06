@@ -21,6 +21,11 @@ function App() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Log dropdown state changes
+  useEffect(() => {
+    console.log('[Dropdown] State changed to:', dropdownOpen);
+  }, [dropdownOpen]);
+
   // Apply weather state class to body
   useEffect(() => {
     if (weatherState === 'stormy') {
@@ -32,8 +37,10 @@ function App() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    console.log('[Dropdown] Setting up click outside handler');
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        console.log('[Dropdown] Clicked outside, closing dropdown');
         setDropdownOpen(false);
       }
     };
@@ -200,7 +207,10 @@ function App() {
             {/* Dropdown Menu */}
             <div className="dropdown" ref={dropdownRef}>
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onClick={() => {
+                  console.log('[Dropdown] Toggle clicked, current state:', dropdownOpen);
+                  setDropdownOpen(!dropdownOpen);
+                }}
                 className="dropdown-toggle"
                 aria-label="Settings menu"
               >

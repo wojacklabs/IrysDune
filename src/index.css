@@ -2724,7 +2724,6 @@ body::before {
 }
 
 .header-right {
-  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2793,6 +2792,8 @@ body::before {
   width: 40px;
   height: 40px;
   color: var(--text-secondary);
+  position: relative;
+  z-index: 10;
 }
 
 .dropdown-toggle:hover {
