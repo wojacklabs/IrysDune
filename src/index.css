@@ -2811,8 +2811,7 @@ body::before {
   border: 1px solid var(--cloud-whisper);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 0.75rem;
-  min-width: 220px;
+  width: 250px;
   z-index: 1000;
 }
 
@@ -2861,6 +2860,7 @@ body::before {
   transition: all 0.3s ease;
   border-radius: 24px;
   border: 1px solid var(--gray-400);
+  background-color: lightgray;
   padding: 3px;
 }
 
@@ -2898,7 +2898,7 @@ body::before {
 
 .toggle-icon {
   position: absolute;
-  right: 8px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 16px;
@@ -2907,11 +2907,12 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1px;
 }
 
 .toggle-switch input:checked + .toggle-slider .toggle-icon {
   right: auto;
-  left: 8px;
+  left: 12px;
 }
 
 /* Dark mode for dropdown */
