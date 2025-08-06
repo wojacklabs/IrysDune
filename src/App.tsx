@@ -224,7 +224,7 @@ function App() {
               {dropdownOpen && (
                 <div className="dropdown-menu">
                   <div className="dropdown-item">
-                    <span>날씨</span>
+                    <span>Weather</span>
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
@@ -238,7 +238,7 @@ function App() {
                   </div>
                   
                   <div className="dropdown-item">
-                    <span>배경만 보기</span>
+                    <span>Background Only</span>
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
