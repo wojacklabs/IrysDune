@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
 import MyHistorySection from './components/MyHistorySection';
@@ -18,6 +18,8 @@ function App() {
   const [trendData, setTrendData] = useState<{ [key: string]: QueryResult[] }>({});
   const [weatherState, setWeatherState] = useState<'clear' | 'stormy'>('clear');
   const [fullscreenBackground, setFullscreenBackground] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Apply weather state class to body
   useEffect(() => {
@@ -27,6 +29,18 @@ function App() {
       document.body.classList.remove('weather-stormy');
     }
   }, [weatherState]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Background data loading on app mount
   useEffect(() => {
@@ -146,62 +160,94 @@ function App() {
               <h1>IrysDune</h1>
             </div>
           </div>
+          
+          {/* Navigation Tabs */}
+          <div className="header-nav">
+            <button
+              onClick={() => setActiveTab('trends')}
+              className={`nav-button ${activeTab === 'trends' ? 'active' : ''}`}
+            >
+              Trends
+            </button>
+            <button
+              onClick={() => setActiveTab('dashboards')}
+              className={`nav-button ${activeTab === 'dashboards' ? 'active' : ''}`}
+            >
+              Dashboards
+            </button>
+            <button
+              onClick={() => setActiveTab('badges')}
+              className={`nav-button ${activeTab === 'badges' ? 'active' : ''}`}
+            >
+              Badges
+            </button>
+            <button
+              onClick={() => setActiveTab('my-history')}
+              className={`nav-button ${activeTab === 'my-history' ? 'active' : ''}`}
+            >
+              My History
+            </button>
+          </div>
+          
           <div className="header-right">
-            {/* Weather Toggle */}
-            <button
-              onClick={() => setWeatherState(prev => prev === 'clear' ? 'stormy' : 'clear')}
-              className="weather-toggle"
-              title={weatherState === 'clear' ? 'Switch to stormy' : 'Switch to clear'}
-            >
-              {weatherState === 'clear' ? '☀️' : '⛈️'}
-            </button>
-            {/* Background Toggle */}
-            <button
-              onClick={() => setFullscreenBackground(prev => !prev)}
-              className="background-toggle"
-              title={fullscreenBackground ? 'Show interface' : 'View background only'}
-            >
-              {fullscreenBackground ? '🏞️' : '📈'}
-            </button>
             <ConnectWallet 
               onConnect={handleWalletConnect}
               onDisconnect={handleWalletDisconnect}
               walletAddress={walletAddress}
               username={username}
             />
+            
+            {/* Dropdown Menu */}
+            <div className="dropdown" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="dropdown-toggle"
+                aria-label="Settings menu"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+              </button>
+              
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  <div className="dropdown-item">
+                    <span>날씨</span>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={weatherState === 'stormy'}
+                        onChange={(e) => setWeatherState(e.target.checked ? 'stormy' : 'clear')}
+                      />
+                      <span className="toggle-slider">
+                        <span className="toggle-icon">{weatherState === 'clear' ? '☀️' : '⛈️'}</span>
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div className="dropdown-item">
+                    <span>배경만 보기</span>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={fullscreenBackground}
+                        onChange={(e) => setFullscreenBackground(e.target.checked)}
+                      />
+                      <span className="toggle-slider">
+                        <span className="toggle-icon">{fullscreenBackground ? '🏞️' : '📈'}</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className={`nav ${fullscreenBackground ? 'hidden' : ''}`}>
-        <div className="nav-content">
-          <button
-            onClick={() => setActiveTab('trends')}
-            className={`nav-button ${activeTab === 'trends' ? 'active' : ''}`}
-          >
-            Trends
-          </button>
-          <button
-            onClick={() => setActiveTab('dashboards')}
-            className={`nav-button ${activeTab === 'dashboards' ? 'active' : ''}`}
-          >
-            Dashboards
-          </button>
-          <button
-            onClick={() => setActiveTab('badges')}
-            className={`nav-button ${activeTab === 'badges' ? 'active' : ''}`}
-          >
-            Badges
-          </button>
-          <button
-            onClick={() => setActiveTab('my-history')}
-            className={`nav-button ${activeTab === 'my-history' ? 'active' : ''}`}
-          >
-            My History
-          </button>
-        </div>
-      </nav>
+
 
       {/* Main Content */}
       <main className={`main ${fullscreenBackground ? 'hidden' : ''}`}>
