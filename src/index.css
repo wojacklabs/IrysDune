@@ -4377,6 +4377,10 @@ body.weather-stormy .modal-header {
   margin-bottom: 20px;
 }
 
+.form-group:first-child {
+  margin-top: 10px;
+}
+
 .form-group label {
   display: block;
   font-size: 0.875rem;
