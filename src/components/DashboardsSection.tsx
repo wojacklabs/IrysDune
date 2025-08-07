@@ -759,24 +759,43 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 className="dashboard-clickable"
                 onClick={() => handleDashboardClick(dashboard)}
               >
-                <h3>{dashboard.name}</h3>
-                {/* Project logos */}
-                {(() => {
-                  const logos = getProjectLogos(dashboard);
-                  return logos.length > 0 ? (
-                    <div className="dashboard-project-logos">
-                      {logos.map((logo, index) => (
-                        <img 
-                          key={index} 
-                          src={logo} 
-                          alt="Project logo" 
-                          className="dashboard-project-logo"
-                        />
-                      ))}
-                    </div>
-                  ) : null;
-                })()}
-                <p>{dashboard.description}</p>
+                <div className="dashboard-content">
+                  <h3>{dashboard.name}</h3>
+                  {/* Project logos */}
+                  {(() => {
+                    const logos = getProjectLogos(dashboard);
+                    return logos.length > 0 ? (
+                      <div className="dashboard-project-logos">
+                        {logos.map((logo, index) => (
+                          <img 
+                            key={index} 
+                            src={logo} 
+                            alt="Project logo" 
+                            className="dashboard-project-logo"
+                          />
+                        ))}
+                      </div>
+                    ) : null;
+                  })()}
+                  <p>{dashboard.description}</p>
+                </div>
+                
+                {walletAddress === dashboard.authorAddress && (
+                  <div className="dashboard-actions" onClick={(e) => e.stopPropagation()}>
+                    <button 
+                      className="edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('[DashboardsSection] Opening dashboard editor...');
+                        setEditingDashboard(dashboard);
+                        setIsCreateModalOpen(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
+                
                 <div className="dashboard-footer">
                   <div className="dashboard-author">
                     By {getFormattedAuthor(dashboard)}
@@ -786,21 +805,6 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   </div>
                 </div>
               </div>
-              {walletAddress === dashboard.authorAddress && (
-                <div className="dashboard-actions">
-                  <button 
-                    className="edit-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('[DashboardsSection] Opening dashboard editor...');
-                      setEditingDashboard(dashboard);
-                      setIsCreateModalOpen(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                </div>
-              )}
             </div>
           ))}
         </div>

@@ -3136,6 +3136,10 @@ body.weather-stormy .dashboard-project-logo {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+body.weather-stormy .dashboard-footer {
+  border-top-color: rgba(71, 85, 105, 0.3);
+}
+
 .dashboard-card p {
   font-size: 0.875rem;
   color: #6b7280;
@@ -3149,6 +3153,7 @@ body.weather-stormy .dashboard-project-logo {
   align-items: center;
   margin-top: auto;
   padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
 }
 
 .dashboard-author {
@@ -3162,10 +3167,7 @@ body.weather-stormy .dashboard-project-logo {
   font-weight: 500;
 }
 
-/* Dashboard actions */
-.dashboard-clickable + .dashboard-actions {
-  margin-top: 10px;
-}
+/* Dashboard actions - removed old sibling selector */
 
 .chart-date-range {
   margin-top: 10px;
@@ -3174,6 +3176,9 @@ body.weather-stormy .dashboard-project-logo {
 .dashboard-actions {
   display: flex;
   gap: 0.75rem;
+  margin-top: auto;
+  margin-bottom: 0.75rem;
+  padding-top: 0.75rem;
 }
 
 .action-btn {
@@ -3361,7 +3366,9 @@ body.weather-stormy .dashboard-project-logo {
 }
 
 .dashboard-content {
-  background: transparent;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .no-data {
