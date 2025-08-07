@@ -384,10 +384,10 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
       }
 
       // Upload metadata
-      setMintSuccess("Uploading metadata to Irys...");
+      setMintSuccess("Please confirm the metadata upload signature (1/2)...");
       const metadataUri = await uploadMetadataToIrys(badge);
       
-      setMintSuccess("Metadata uploaded. Minting badge NFT...");
+      setMintSuccess("✅ Metadata uploaded successfully!\n\n🔄 A second signature is required to mint your NFT badge.\nPlease confirm the upcoming transaction (2/2)...");
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mint NFT
@@ -397,7 +397,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
       });
 
       setMintTxHash(tx.hash);
-      setMintSuccess("Transaction submitted. Waiting for confirmation...");
+      setMintSuccess("⏳ Minting transaction submitted. Waiting for confirmation...");
 
       const receipt = await tx.wait();
       
@@ -417,7 +417,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         tokenId = parsed?.args[1]?.toString();
       }
 
-      setMintSuccess(`Badge minted successfully! ${tokenId ? `Token ID: #${tokenId}` : ''}\nTx: ${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}\nExplorer: https://testnet-explorer.irys.xyz/tx/${tx.hash}`);
+      setMintSuccess(`✅ Badge minted successfully! ${tokenId ? `Token ID: #${tokenId}` : ''}\nTx: ${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}\nExplorer: https://testnet-explorer.irys.xyz/tx/${tx.hash}`);
       
       // Add badge to minted list and store details
       setMintedBadges(prev => [...prev, badge.id]);

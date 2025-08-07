@@ -938,6 +938,9 @@ body.weather-stormy .badge-status.minted {
   background: #d1fae5;
   color: #065f46;
   border: 1px solid #6ee7b7;
+  line-height: 1.6;
+  text-align: center;
+  font-weight: 500;
 }
 
 .mint-error {
@@ -4488,6 +4491,8 @@ body.weather-stormy .modal-header {
   border-radius: 6px;
   margin-bottom: 16px;
   border: 1px solid #10b981;
+  white-space: pre-line;
+  line-height: 1.6;
 }
 
 .success-message h4 {
@@ -4496,11 +4501,32 @@ body.weather-stormy .modal-header {
   font-weight: 600;
 }
 
+/* Transaction status */
+.transaction-status {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  color: var(--sky-700);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  text-align: center;
+  font-weight: 500;
+}
+
 /* Dark mode success message */
 body.weather-stormy .success-message {
   background-color: #064e3b;
   color: #6ee7b7;
   border-color: #047857;
+}
+
+body.weather-stormy .transaction-status {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.3);
+  color: #93c5fd;
 }
 
 /* Data sources selection - Grid Layout */

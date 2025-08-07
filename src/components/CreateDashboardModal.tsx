@@ -558,14 +558,14 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         }
 
         // Call contract to pay creation fee
-        setTransactionStatus("Submitting transaction...");
+        setTransactionStatus("Please confirm the payment transaction (1/2)...");
         const contractWithSigner = new ethers.Contract(DASHBOARD_CONTRACT_ADDRESS, DASHBOARD_ABI, signer);
         const tx = await contractWithSigner.payForArticle({
           value: creationFee
         });
 
         setTxHash(tx.hash);
-        setTransactionStatus("Transaction submitted. Waiting for confirmation...");
+        setTransactionStatus("⏳ Payment transaction submitted. Waiting for confirmation...");
         
         // Initialize Irys uploader while waiting for transaction
         console.log('[CreateDashboard] Getting Irys uploader...');
@@ -588,7 +588,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         }
 
         console.log('[CreateDashboard] Dashboard creation payment successful, tx:', tx.hash);
-        setTransactionStatus("Payment confirmed. Uploading dashboard to Irys...");
+        setTransactionStatus("✅ Payment confirmed!\n\n🔄 A second signature is required to upload your dashboard to Irys.\nPlease confirm the upcoming signature request (2/2)...");
         
         // Wait for Irys uploader to be ready
         try {
@@ -605,7 +605,9 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       const uploadProcessStart = Date.now();
       
       if (!existingDashboard && !transactionStatus) {
-        setTransactionStatus("Uploading dashboard to Irys...");
+        setTransactionStatus("Please confirm the upload signature to Irys...");
+      } else if (transactionStatus && transactionStatus.includes("(2/2)")) {
+        // Keep the second signature message visible
       }
       
       console.log('[CreateDashboard] Calling uploadDashboard function...');
@@ -622,8 +624,11 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
         dashboard.mutableAddress = result.mutableAddress;
         dashboard.rootTxId = result.rootTxId;
         
+        // Clear transaction status before showing success
+        setTransactionStatus("");
+        
         // Show success message
-        let message = `Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\n`;
+        let message = `✅ Dashboard successfully ${existingDashboard ? 'updated' : 'created'} and uploaded to Irys!\n`;
         if (!existingDashboard && txHash) {
           message += `\nPayment Transaction: ${txHash}`;
           message += `\nExplorer: https://testnet.explorer.irys.xyz/tx/${txHash}\n`;
