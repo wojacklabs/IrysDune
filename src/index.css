@@ -6443,9 +6443,6 @@ body.weather-stormy .pagination-number.active {
   }
   
   /* Header responsive */
-  .header {
-    padding: 0.75rem 1rem;
-  }
   
   .header-content {
     gap: 0.75rem;
@@ -6506,10 +6503,6 @@ body.weather-stormy .pagination-number.active {
   }
   
   /* Chart container */
-  .chart-container {
-    height: 250px;
-  }
-  
   /* Trends grid specific */
   .trends-grid {
     gap: 1rem;
@@ -6699,10 +6692,6 @@ body.weather-stormy .pagination-number.active {
 /* Mobile Small (480px and below) */
 @media (max-width: 480px) {
   /* Even smaller adjustments */
-  .header {
-    padding: 0.5rem;
-  }
-  
   .logo {
     font-size: 1.125rem;
   }
@@ -6732,11 +6721,6 @@ body.weather-stormy .pagination-number.active {
   /* Data source grid single column */
   .data-sources-grid {
     grid-template-columns: 1fr;
-  }
-  
-  /* Chart container smaller */
-  .chart-container {
-    height: 200px;
   }
   
   /* Modal close button position */
