@@ -224,7 +224,7 @@ function App() {
               {dropdownOpen && (
                 <div className="dropdown-menu">
                   <div className="dropdown-item">
-                    <span>Weather</span>
+                    <span>DarkMode</span>
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
@@ -232,13 +232,12 @@ function App() {
                         onChange={(e) => setWeatherState(e.target.checked ? 'stormy' : 'clear')}
                       />
                       <span className="toggle-slider">
-                        <span className="toggle-icon">{weatherState === 'clear' ? '☀️' : '⛈️'}</span>
                       </span>
                     </label>
                   </div>
                   
                   <div className="dropdown-item">
-                    <span>Background Only</span>
+                    <span>Background Mode</span>
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
@@ -246,7 +245,6 @@ function App() {
                         onChange={(e) => setFullscreenBackground(e.target.checked)}
                       />
                       <span className="toggle-slider">
-                        <span className="toggle-icon">{fullscreenBackground ? '🏞️' : '📈'}</span>
                       </span>
                     </label>
                   </div>
