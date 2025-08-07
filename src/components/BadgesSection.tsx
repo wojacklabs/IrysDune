@@ -387,7 +387,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
       setMintSuccess("Please confirm the metadata upload signature (1/2)...");
       const metadataUri = await uploadMetadataToIrys(badge);
       
-      setMintSuccess("✅ Metadata uploaded successfully!\n\n🔄 A second signature is required to mint your NFT badge.\nPlease confirm the upcoming transaction (2/2)...");
+      setMintSuccess("A second signature is required to mint your NFT badge.\nPlease confirm the upcoming transaction (2/2)...");
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mint NFT
