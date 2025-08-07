@@ -3663,6 +3663,10 @@ body.weather-stormy .header-nav .nav-button.active {
   gap: 1rem;
 }
 
+.form-row .form-group {
+  margin-bottom: 20px !important;
+}
+
 /* Chart editor buttons */
 .add-chart-btn,
 .cancel-edit-btn {
