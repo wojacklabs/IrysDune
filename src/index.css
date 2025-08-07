@@ -6946,7 +6946,7 @@ body.weather-stormy .dropdown-divider {
   }
 }
 
-.wallet-info {
+.mobile-wallet-section .wallet-info {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
