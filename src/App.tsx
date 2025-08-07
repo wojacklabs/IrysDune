@@ -272,7 +272,6 @@ function App() {
                     {walletAddress ? (
                       <div className="wallet-info">
                         <div className="wallet-status">
-                          <span className="wallet-label">Connected</span>
                           <span className="wallet-address-mobile">
                             {username || `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
                           </span>
