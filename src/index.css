@@ -3091,6 +3091,8 @@ body.weather-stormy .header-nav .nav-button.active {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-card:hover {
@@ -3100,6 +3102,9 @@ body.weather-stormy .header-nav .nav-button.active {
 
 .dashboard-clickable {
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .dashboard-card h3 {
@@ -3138,17 +3143,23 @@ body.weather-stormy .dashboard-project-logo {
   line-height: 1.5;
 }
 
-.dashboard-stats {
+.dashboard-footer {
   display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.75rem;
 }
 
 .dashboard-author {
   font-size: 0.75rem;
   color: #9ca3af;
+}
+
+.dashboard-likes {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* Dashboard actions */

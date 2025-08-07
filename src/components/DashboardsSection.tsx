@@ -222,7 +222,13 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
 
     const getFormattedAuthor = (dashboard: Dashboard) => {
     const name = irysNames.get(dashboard.authorAddress) || dashboard.author;
-    return name || `${dashboard.authorAddress.slice(0, 6)}...${dashboard.authorAddress.slice(-4)}`;
+    if (name && name !== dashboard.authorAddress) {
+      // If it's an Irys name, add .irys suffix and limit length
+      const displayName = name.length > 12 ? `${name.slice(0, 12)}...` : name;
+      return `${displayName}.irys`;
+    }
+    // For addresses, show shortened format
+    return `${dashboard.authorAddress.slice(0, 6)}...${dashboard.authorAddress.slice(-4)}`;
   };
   
   // Extract unique project logos from dashboard
@@ -771,12 +777,13 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   ) : null;
                 })()}
                 <p>{dashboard.description}</p>
-                <div className="dashboard-stats">
-                  <span>📊 {dashboard.charts?.length || 0} charts</span>
-                  <span>❤️ {dashboard.likes}</span>
-                </div>
-                <div className="dashboard-author">
-                  By {getFormattedAuthor(dashboard)}
+                <div className="dashboard-footer">
+                  <div className="dashboard-author">
+                    By {getFormattedAuthor(dashboard)}
+                  </div>
+                  <div className="dashboard-likes">
+                    ❤️ {dashboard.likes}
+                  </div>
                 </div>
               </div>
               {walletAddress === dashboard.authorAddress && (
