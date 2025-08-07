@@ -686,7 +686,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
     }
   };
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayClick = () => {
     // Don't close if creating or there's an error
     if (!isCreating && !error) {
       onClose();
@@ -699,6 +699,8 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       onClose();
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -871,162 +873,164 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                   </div>
 
                   {queryMode === 'onchain' && (
-                <>
-                  {/* On-chain preset selection */}
-                  <div className="form-group">
-                    <label>On-chain Presets</label>
-                    <select 
-                      value={selectedOnChainPreset}
-                      onChange={(e) => {
-                        const preset = ON_CHAIN_PRESETS.find(p => p.id === e.target.value);
-                        if (preset) {
-                          setSelectedOnChainPreset(preset.id);
-                          setContractAddress(preset.contractAddress);
-                          setSelectedNetwork(preset.network || 'mainnet');
-                          setRpcUrl(preset.rpcUrl || '');
-                          // 프리셋의 ABI 설정
-                          if (preset.abis) {
-                            setAbiInputs(preset.abis.map(abi => JSON.stringify(abi, null, 2)));
-                            setParsedAbis(preset.abis);
-                          }
-                        } else {
-                          setSelectedOnChainPreset('');
-                          setAbiInputs(['']);
-                          setParsedAbis([]);
-                          setRpcUrl('');
-                        }
-                      }}
-                    >
-                      <option value="">Select a preset or enter custom</option>
-                      {ON_CHAIN_PRESETS.map(preset => (
-                        <option key={preset.id} value={preset.id}>
-                          {preset.name} - {preset.description}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Only show input fields when no preset is selected */}
-                  {!selectedOnChainPreset && (
                     <>
-                      {/* Network selection */}
+                      {/* On-chain preset selection */}
                       <div className="form-group">
-                        <label>Network</label>
-                        <select
-                          value={selectedNetwork}
-                          onChange={(e) => setSelectedNetwork(e.target.value)}
+                        <label>On-chain Presets</label>
+                        <select 
+                          value={selectedOnChainPreset}
+                          onChange={(e) => {
+                            const preset = ON_CHAIN_PRESETS.find(p => p.id === e.target.value);
+                            if (preset) {
+                              setSelectedOnChainPreset(preset.id);
+                              setContractAddress(preset.contractAddress);
+                              setSelectedNetwork(preset.network || 'mainnet');
+                              setRpcUrl(preset.rpcUrl || '');
+                              // 프리셋의 ABI 설정
+                              if (preset.abis) {
+                                setAbiInputs(preset.abis.map(abi => JSON.stringify(abi, null, 2)));
+                                setParsedAbis(preset.abis);
+                              }
+                            } else {
+                              setSelectedOnChainPreset('');
+                              setAbiInputs(['']);
+                              setParsedAbis([]);
+                              setRpcUrl('');
+                            }
+                          }}
                         >
-                          <option value="mainnet">Ethereum Mainnet</option>
-                          <option value="polygon">Polygon</option>
-                          <option value="arbitrum">Arbitrum</option>
-                          <option value="avalanche">Avalanche</option>
-                          <option value="base">Base</option>
-                          <option value="irys-testnet">Irys Testnet</option>
+                          <option value="">Select a preset or enter custom</option>
+                          {ON_CHAIN_PRESETS.map(preset => (
+                            <option key={preset.id} value={preset.id}>
+                              {preset.name} - {preset.description}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
-                      {/* RPC URL input */}
-                      <div className="form-group">
-                        <label>RPC URL *</label>
-                        <input
-                          type="text"
-                          value={rpcUrl}
-                          onChange={(e) => setRpcUrl(e.target.value)}
-                          placeholder="https://..."
-                        />
-                      </div>
+                      {/* Only show input fields when no preset is selected */}
+                      {!selectedOnChainPreset && (
+                        <>
+                          {/* Network selection */}
+                          <div className="form-group">
+                            <label>Network</label>
+                            <select
+                              value={selectedNetwork}
+                              onChange={(e) => setSelectedNetwork(e.target.value)}
+                            >
+                              <option value="mainnet">Ethereum Mainnet</option>
+                              <option value="polygon">Polygon</option>
+                              <option value="arbitrum">Arbitrum</option>
+                              <option value="avalanche">Avalanche</option>
+                              <option value="base">Base</option>
+                              <option value="irys-testnet">Irys Testnet</option>
+                            </select>
+                          </div>
 
-                      {/* Contract Address input */}
-                      <div className="form-group">
-                    <label>Contract Address *</label>
-                    <input
-                      type="text"
-                      value={contractAddress}
-                      onChange={(e) => setContractAddress(e.target.value)}
-                      placeholder="0x..."
-                    />
-                  </div>
+                          {/* RPC URL input */}
+                          <div className="form-group">
+                            <label>RPC URL *</label>
+                            <input
+                              type="text"
+                              value={rpcUrl}
+                              onChange={(e) => setRpcUrl(e.target.value)}
+                              placeholder="https://..."
+                            />
+                          </div>
 
-                      {/* ABI input */}
-                      <div className="form-group">
-                    <label>
-                      ABI Functions/Events (Optional)
-                      <span className="field-hint"> - Leave empty to track all Transfer events</span>
-                    </label>
-                    {abiInputs.map((abi, index) => (
-                      <div key={index} className="abi-input-row">
-                        <textarea
-                          value={abi}
-                          onChange={(e) => {
-                            const newAbis = [...abiInputs];
-                            newAbis[index] = e.target.value;
-                            setAbiInputs(newAbis);
-                            
-                            // Try to parse ABI
-                            try {
-                              if (e.target.value.trim()) {
-                                const parsed = JSON.parse(e.target.value);
-                                // Validate ABI structure
-                                if (parsed.name && parsed.type && (parsed.type === 'event' || parsed.type === 'function')) {
-                                  const newParsedAbis = [...parsedAbis];
-                                  newParsedAbis[index] = parsed;
-                                  setParsedAbis(newParsedAbis);
-                                }
-                              }
-                            } catch (err) {
-                              // Invalid JSON, ignore
-                            }
-                          }}
-                          placeholder='{"name": "Transfer", "type": "event", "inputs": [{"name": "from", "type": "address"}, {"name": "to", "type": "address"}, {"name": "value", "type": "uint256"}]}'
-                          rows={3}
-                        />
-                        <button
-                          type="button"
-                          className="remove-abi-btn"
-                          onClick={() => {
-                            setAbiInputs(abiInputs.filter((_, i) => i !== index));
-                            setParsedAbis(parsedAbis.filter((_, i) => i !== index));
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="add-abi-btn"
-                      onClick={() => setAbiInputs([...abiInputs, ''])}
-                    >
-                      + Add Function/Event
-                    </button>
-                  </div>
+                          {/* Contract Address input */}
+                          <div className="form-group">
+                            <label>Contract Address *</label>
+                            <input
+                              type="text"
+                              value={contractAddress}
+                              onChange={(e) => setContractAddress(e.target.value)}
+                              placeholder="0x..."
+                            />
+                          </div>
 
-                      {/* Display mode selection (only when ABI exists) */}
-                      {parsedAbis.length > 0 && (
-                    <div className="form-group">
-                      <label>Display Mode</label>
-                      <div className="display-mode-selector">
-                        <label>
-                          <input
-                            type="radio"
-                            value="combined"
-                            checked={onChainDisplayMode === 'combined'}
-                            onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
-                          />
-                          Combined (sum of all functions)
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            value="separated"
-                            checked={onChainDisplayMode === 'separated'}
-                            onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
-                          />
-                          Separated (by function)
-                        </label>
-                      </div>
-                    </div>
-                  )}
+                          {/* ABI input */}
+                          <div className="form-group">
+                            <label>
+                              ABI Functions/Events (Optional)
+                              <span className="field-hint"> - Leave empty to track all Transfer events</span>
+                            </label>
+                            {abiInputs.map((abi, index) => (
+                              <div key={index} className="abi-input-row">
+                                <textarea
+                                  value={abi}
+                                  onChange={(e) => {
+                                    const newAbis = [...abiInputs];
+                                    newAbis[index] = e.target.value;
+                                    setAbiInputs(newAbis);
+                                    
+                                    // Try to parse ABI
+                                    try {
+                                      if (e.target.value.trim()) {
+                                        const parsed = JSON.parse(e.target.value);
+                                        // Validate ABI structure
+                                        if (parsed.name && parsed.type && (parsed.type === 'event' || parsed.type === 'function')) {
+                                          const newParsedAbis = [...parsedAbis];
+                                          newParsedAbis[index] = parsed;
+                                          setParsedAbis(newParsedAbis);
+                                        }
+                                      }
+                                    } catch (err) {
+                                      // Invalid JSON, ignore
+                                    }
+                                  }}
+                                  placeholder='{"name": "Transfer", "type": "event", "inputs": [{"name": "from", "type": "address"}, {"name": "to", "type": "address"}, {"name": "value", "type": "uint256"}]}'
+                                  rows={3}
+                                />
+                                <button
+                                  type="button"
+                                  className="remove-abi-btn"
+                                  onClick={() => {
+                                    setAbiInputs(abiInputs.filter((_, i) => i !== index));
+                                    setParsedAbis(parsedAbis.filter((_, i) => i !== index));
+                                  }}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              className="add-abi-btn"
+                              onClick={() => setAbiInputs([...abiInputs, ''])}
+                            >
+                              + Add Function/Event
+                            </button>
+                          </div>
+
+                          {/* Display mode selection (only when ABI exists) */}
+                          {parsedAbis.length > 0 && (
+                            <div className="form-group">
+                              <label>Display Mode</label>
+                              <div className="display-mode-selector">
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="combined"
+                                    checked={onChainDisplayMode === 'combined'}
+                                    onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
+                                  />
+                                  Combined (sum of all functions)
+                                </label>
+                                <label>
+                                  <input
+                                    type="radio"
+                                    value="separated"
+                                    checked={onChainDisplayMode === 'separated'}
+                                    onChange={(e) => setOnChainDisplayMode(e.target.value as 'combined' | 'separated')}
+                                  />
+                                  Separated (by function)
+                                </label>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </>
@@ -1291,11 +1295,9 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 </div>
               )}
             </div>
-
-
           </div>
         </div>
-
+        
         {transactionStatus && (
           <div className="transaction-status" style={{ padding: '10px 20px', color: '#3b82f6' }}>
             {transactionStatus}
