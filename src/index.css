@@ -2814,7 +2814,7 @@ body::before {
   border: 1px solid var(--cloud-whisper);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  width: 200px;
+  width: 250px;
   z-index: 1000;
 }
 
@@ -2878,8 +2878,8 @@ body::before {
   content: "";
   height: 24px;
   width: 24px;
-  left: 3px;
-  bottom: 3px;
+  left: 4px;
+  bottom: 4px;
   background: white;
   transition: all 0.3s ease;
   border-radius: 50%;

@@ -234,7 +234,7 @@ function App() {
                       }}
                       className={`mobile-nav-item ${activeTab === 'trends' ? 'active' : ''}`}
                     >
-                      📈 Trends
+                      Trends
                     </button>
                     <button
                       onClick={() => {
@@ -243,7 +243,7 @@ function App() {
                       }}
                       className={`mobile-nav-item ${activeTab === 'dashboards' ? 'active' : ''}`}
                     >
-                      📊 Dashboards
+                      Dashboards
                     </button>
                     <button
                       onClick={() => {
@@ -252,7 +252,7 @@ function App() {
                       }}
                       className={`mobile-nav-item ${activeTab === 'badges' ? 'active' : ''}`}
                     >
-                      🏅 Badges
+                      Badges
                     </button>
                     <button
                       onClick={() => {
@@ -261,7 +261,7 @@ function App() {
                       }}
                       className={`mobile-nav-item ${activeTab === 'my-history' ? 'active' : ''}`}
                     >
-                      📜 My History
+                      My History
                     </button>
                   </div>
                   
