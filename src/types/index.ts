@@ -86,6 +86,7 @@ export interface OnChainPreset {
   description: string;
   abis?: AbiFunction[];
   color?: string;
+  icon?: string;
 }
 
 // 온체인 쿼리 결과

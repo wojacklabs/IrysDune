@@ -1,6 +1,8 @@
 import { ethers, Contract, JsonRpcProvider } from 'ethers';
 import type { OnChainQuery, OnChainQueryResult, LoadingProgress } from '../types';
 import { getCacheKey, getFromCache, setCache } from '../utils/queryUtils';
+import irysflipIcon from '../assets/irysflip.png';
+import irysCrushIcon from '../assets/irys-crush.png';
 
 // 네트워크별 블록 생성 시간 (초)
 const BLOCK_TIME: { [key: string]: number } = {
@@ -365,6 +367,7 @@ export const ON_CHAIN_PRESETS = [
     rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
     description: 'IrysFlip Game Contract',
     color: '#ff6b6b',
+    icon: irysflipIcon,
     abis: [
       {
         name: 'BetPlaced',
@@ -386,6 +389,7 @@ export const ON_CHAIN_PRESETS = [
     rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
     description: 'IrysCrush Game Contract',
     color: '#4ecdc4',
+    icon: irysCrushIcon,
     abis: [
       {
         name: 'PlayerRegistered',

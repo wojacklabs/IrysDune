@@ -827,6 +827,9 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                         }
                       }}
                     >
+                      {preset.icon && (
+                        <img src={preset.icon} alt={preset.name} className="source-icon" />
+                      )}
                       <div className="source-name">{preset.name}</div>
                       <div className="source-type">On-chain</div>
                       <div className="source-check">
