@@ -608,6 +608,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
               <div className="badge-details">
                 <h4>{selectedBadge.name}</h4>
                 <p className="badge-project">{selectedBadge.project}</p>
+                <p>{selectedBadge.description}</p>
               </div>
             </div>
             
