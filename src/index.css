@@ -3711,6 +3711,7 @@ body.weather-stormy .source-name {
 }
 
 .form-row .form-group {
+  margin-top: 0 !important;
   margin-bottom: 20px !important;
 }
 
