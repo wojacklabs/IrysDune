@@ -2814,8 +2814,14 @@ body::before {
   border: 1px solid var(--cloud-whisper);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  width: 250px;
+  width: 200px;
   z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  .dropdown-menu {
+    width: 250px;
+  }
 }
 
 .dropdown-item {
@@ -6457,7 +6463,6 @@ body.weather-stormy .pagination-number.active {
   /* Dropdown adjustments */
   .dropdown-menu {
     right: -1rem;
-    width: 250px;
     max-width: calc(100vw - 2rem);
   }
   
@@ -6852,11 +6857,19 @@ body.weather-stormy .pagination-number.active {
   padding: 0.5rem 0;
 }
 
+.mobile-only {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .mobile-nav-section {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+  }
+  
+  .mobile-only {
+    display: block;
   }
 }
 

@@ -265,7 +265,7 @@ function App() {
                     </button>
                   </div>
                   
-                  <div className="dropdown-divider"></div>
+                  <div className="dropdown-divider mobile-only"></div>
                   
                   {/* Mobile Wallet Section */}
                   <div className="mobile-wallet-section">
@@ -313,7 +313,7 @@ function App() {
                     )}
                   </div>
                   
-                  <div className="dropdown-divider"></div>
+                  <div className="dropdown-divider mobile-only"></div>
                   
                   <div className="dropdown-item">
                     <span>DarkMode</span>
