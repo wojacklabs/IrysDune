@@ -269,6 +269,20 @@ export function generateChartData(
   isOnChainData: boolean = false,
   displayMode?: 'combined' | 'separated'
 ): ChartData {
+  // Validate inputs
+  if (!queries || queries.length === 0) {
+    console.warn('[GenerateChartData] No queries provided, returning empty chart data');
+    return {
+      labels: [],
+      datasets: [{
+        label: 'No Data',
+        data: [],
+        backgroundColor: 'transparent',
+        borderColor: '#94a3b8',
+        borderWidth: 2
+      }]
+    };
+  }
   // 온체인 데이터 처리
   if (isOnChainData && data) {
     const results = Object.values(data)[0] as any[];
@@ -536,16 +550,18 @@ export function generateChartData(
   }
 
   // Calculate data for each preset
-  const rawDatasets = queries.map(preset => {
-    const results = data[preset.id] || [];
-    
-    const dataPoints = timestamps.map(timestamp => {
-      const result = results.find(r => r.timestamp === timestamp);
-      return result ? result.count : 0;
+  const rawDatasets = queries
+    .filter(preset => preset && preset.id) // Filter out undefined or invalid presets
+    .map(preset => {
+      const results = data[preset.id] || [];
+      
+      const dataPoints = timestamps.map(timestamp => {
+        const result = results.find(r => r.timestamp === timestamp);
+        return result ? result.count : 0;
+      });
+      
+      return { preset, dataPoints };
     });
-    
-    return { preset, dataPoints };
-  });
 
   if (chartType === 'stacked') {
     // Cumulative chart: values are already cumulative from filterDataByPeriod
@@ -555,14 +571,14 @@ export function generateChartData(
       const hasData = dataPoints.some(value => value > 0);
       
       if (!hasData) {
-        console.log(`[GenerateChartData] Warning: ${preset.name} has no data for stacked chart, all values are 0`);
+        console.log(`[GenerateChartData] Warning: ${preset?.name || 'Unknown'} has no data for stacked chart, all values are 0`);
       }
       
       return {
-        label: preset.name,
+        label: preset?.name || 'Unknown',
         data: dataPoints,
         backgroundColor: 'transparent',
-        borderColor: preset.color,
+        borderColor: preset?.color || '#94a3b8',
         borderWidth: 2,
         fill: false,
         tension: 0.1,
@@ -589,10 +605,10 @@ export function generateChartData(
         });
 
         return {
-          label: `${preset.name} (Relative)`,
+          label: `${preset?.name || 'Unknown'} (Relative)`,
           data: scaledDataPoints,
           backgroundColor: 'transparent',
-          borderColor: preset.color,
+          borderColor: preset?.color || '#94a3b8',
           fill: false,
           tension: 0.1,
           yAxisID: 'relative'
@@ -602,13 +618,13 @@ export function generateChartData(
       return { labels, datasets };
     } else {
       // Single dataset - absolute values
-      const { preset, dataPoints } = rawDatasets[0];
+      const { preset, dataPoints } = rawDatasets[0] || { preset: null, dataPoints: [] };
       
       const datasets = [{
-        label: `${preset.name} (Daily)`,
+        label: `${preset?.name || 'Unknown'} (Daily)`,
         data: dataPoints,
         backgroundColor: 'transparent',
-        borderColor: preset.color,
+        borderColor: preset?.color || '#94a3b8',
         fill: false,
         tension: 0.1,
         yAxisID: 'absolute'
