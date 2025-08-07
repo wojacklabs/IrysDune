@@ -798,7 +798,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
               try {
                 const success = await captureAndShare(
                   captureContainer,
-                  `🏆 I just earned the "${selectedMintedBadge.badge.name}" badge on @IrysDune! 🎉\n\nJoin me in exploring the Irys ecosystem and earn your badges too! 🚀`,
+                  `🏆 I just earned the "${selectedMintedBadge.badge.name}" badge on IrysDune! 🎉\n\nJoin me in exploring the Irys ecosystem and earn your badges too! 🚀\n\nhttps://irys-dune.vercel.app`,
                   'IrysDune Badge'
                 );
                 if (success) {
