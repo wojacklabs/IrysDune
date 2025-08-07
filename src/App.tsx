@@ -197,12 +197,14 @@ function App() {
           </div>
           
           <div className="header-right">
-            <ConnectWallet 
-              onConnect={handleWalletConnect}
-              onDisconnect={handleWalletDisconnect}
-              walletAddress={walletAddress}
-              username={username}
-            />
+            <div className="desktop-wallet">
+              <ConnectWallet 
+                onConnect={handleWalletConnect}
+                onDisconnect={handleWalletDisconnect}
+                walletAddress={walletAddress}
+                username={username}
+              />
+            </div>
             
             {/* Dropdown Menu */}
             <div className="dropdown" ref={dropdownRef}>
@@ -261,6 +263,54 @@ function App() {
                     >
                       📜 My History
                     </button>
+                  </div>
+                  
+                  <div className="dropdown-divider"></div>
+                  
+                  {/* Mobile Wallet Section */}
+                  <div className="mobile-wallet-section">
+                    {walletAddress ? (
+                      <div className="wallet-info">
+                        <div className="wallet-status">
+                          <span className="wallet-label">Connected</span>
+                          <span className="wallet-address-mobile">
+                            {username || `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            handleWalletDisconnect();
+                            setDropdownOpen(false);
+                          }}
+                          className="disconnect-btn-mobile"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          setDropdownOpen(false);
+                          // Trigger wallet connection
+                          const provider = window.ethereum || (window as any).okxwallet || (window as any).web3?.currentProvider;
+                          if (!provider) {
+                            alert('Please install a Web3 wallet');
+                            return;
+                          }
+                          try {
+                            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                            if (accounts.length > 0) {
+                              handleWalletConnect(accounts[0]);
+                            }
+                          } catch (error) {
+                            console.error('Failed to connect wallet:', error);
+                          }
+                        }}
+                        className="connect-btn-mobile"
+                      >
+                        🔗 Connect Wallet
+                      </button>
+                    )}
                   </div>
                   
                   <div className="dropdown-divider"></div>

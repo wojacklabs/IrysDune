@@ -6457,7 +6457,8 @@ body.weather-stormy .pagination-number.active {
   /* Dropdown adjustments */
   .dropdown-menu {
     right: -1rem;
-    width: 200px;
+    width: 250px;
+    max-width: calc(100vw - 2rem);
   }
   
   /* Main content padding */
@@ -6907,6 +6908,112 @@ body.weather-stormy .mobile-nav-item.active {
 
 body.weather-stormy .dropdown-divider {
   background: rgba(71, 85, 105, 0.3);
+}
+
+/* Desktop wallet - hide on mobile */
+.desktop-wallet {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .desktop-wallet {
+    display: none;
+  }
+}
+
+/* Mobile wallet section */
+.mobile-wallet-section {
+  display: none;
+  padding: 0.5rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .mobile-wallet-section {
+    display: block;
+  }
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.wallet-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wallet-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+body.weather-stormy .wallet-label {
+  color: #94a3b8;
+}
+
+.wallet-address-mobile {
+  font-size: 0.875rem;
+  color: #1e293b;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+body.weather-stormy .wallet-address-mobile {
+  color: #f1f5f9;
+}
+
+.connect-btn-mobile,
+.disconnect-btn-mobile {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connect-btn-mobile {
+  background: #0ea5e9;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.connect-btn-mobile:hover {
+  background: #0284c7;
+}
+
+.disconnect-btn-mobile {
+  background: #ef4444;
+  color: white;
+}
+
+.disconnect-btn-mobile:hover {
+  background: #dc2626;
+}
+
+body.weather-stormy .connect-btn-mobile {
+  background: #0284c7;
+}
+
+body.weather-stormy .connect-btn-mobile:hover {
+  background: #0369a1;
+}
+
+body.weather-stormy .disconnect-btn-mobile {
+  background: #dc2626;
+}
+
+body.weather-stormy .disconnect-btn-mobile:hover {
+  background: #b91c1c;
 }
 
 /* Print styles */
