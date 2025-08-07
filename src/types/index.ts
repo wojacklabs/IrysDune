@@ -35,6 +35,14 @@ export interface CustomQuery {
   color: string;
   isGroup?: boolean;
   groupName?: string;
+  isOnChain?: boolean;
+  onChainConfig?: {
+    network: string;
+    contractAddress: string;
+    rpcUrl: string;
+    abis: AbiFunction[];
+    displayMode: 'combined' | 'separated';
+  };
 }
 
 export type ChartType = 'line' | 'stacked' | 'treemap';
@@ -77,6 +85,7 @@ export interface OnChainPreset {
   rpcUrl: string;
   description: string;
   abis?: AbiFunction[];
+  color?: string;
 }
 
 // 온체인 쿼리 결과

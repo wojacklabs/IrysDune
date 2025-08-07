@@ -364,6 +364,7 @@ export const ON_CHAIN_PRESETS = [
     network: 'irys-testnet',
     rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
     description: 'IrysFlip Game Contract',
+    color: '#ff6b6b',
     abis: [
       {
         name: 'BetPlaced',
@@ -384,6 +385,7 @@ export const ON_CHAIN_PRESETS = [
     network: 'irys-testnet',
     rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
     description: 'IrysCrush Game Contract',
+    color: '#4ecdc4',
     abis: [
       {
         name: 'PlayerRegistered',

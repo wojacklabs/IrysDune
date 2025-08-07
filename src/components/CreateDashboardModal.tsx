@@ -91,6 +91,9 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [groupTags, setGroupTags] = useState<Tag[]>([]);
   const [currentGroupTag, setCurrentGroupTag] = useState({ name: '', value: '' });
   
+  // State for custom query options
+  const [showCustomOptions, setShowCustomOptions] = useState(false);
+  
   // Chart preview state
   const [showPreview, setShowPreview] = useState<{ [chartId: string]: boolean }>({});
 
@@ -665,24 +668,44 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
       }
     } catch (err) {
       console.error('[CreateDashboard] Error creating dashboard:', err);
+      console.error('[CreateDashboard] Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+      
       if (err instanceof Error && err.message.includes('Ethereum provider')) {
         setError('Wallet connection error. Please make sure your wallet is connected and try again.');
+      } else if (err instanceof Error && err.message.includes('User rejected')) {
+        setError('Transaction cancelled by user.');
       } else {
         setError(err instanceof Error ? err.message : 'An error occurred while creating the dashboard');
       }
-    } finally {
-      setIsCreating(false);
+      
+      // Don't close modal on error
       setTransactionStatus('');
       setTxHash(null);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Don't close if creating or there's an error
+    if (!isCreating && !error) {
+      onClose();
+    }
+  };
+
+  const handleCloseClick = () => {
+    // Don't close if creating
+    if (!isCreating) {
+      onClose();
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content large-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{existingDashboard ? 'Edit Dashboard' : 'Create New Dashboard'}</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button className="close-btn" onClick={handleCloseClick} disabled={isCreating}>×</button>
         </div>
         
         <div className="modal-body">
@@ -751,51 +774,103 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 />
               </div>
 
-              {/* 쿼리 모드 선택 */}
+              {/* Data source selection */}
               <div className="form-group">
-                <label>Query Type</label>
-                <div className="query-mode-selector">
-                  <button
-                    type="button"
-                    className={`mode-btn ${queryMode === 'storage' ? 'active' : ''}`}
-                    onClick={() => setQueryMode('storage')}
+                <label>Select Data Sources</label>
+                <div className="data-sources-grid">
+                  {/* Storage presets */}
+                  {APP_PRESETS.map(preset => (
+                    <div 
+                      key={preset.id} 
+                      className={`data-source-card ${selectedQueries.some(q => q.id === preset.id) ? 'selected' : ''}`}
+                      onClick={() => togglePreset(preset.id)}
+                    >
+                      {preset.icon && (
+                        <img src={preset.icon} alt={preset.name} className="source-icon" />
+                      )}
+                      <div className="source-name">{preset.name}</div>
+                      <div className="source-type">Storage</div>
+                      <div className="source-check">
+                        {selectedQueries.some(q => q.id === preset.id) && '✓'}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* On-chain presets */}
+                  {ON_CHAIN_PRESETS.map(preset => (
+                    <div 
+                      key={`onchain-${preset.id}`} 
+                      className={`data-source-card ${selectedQueries.some(q => q.id === `onchain-${preset.id}`) ? 'selected' : ''}`}
+                      onClick={() => {
+                        const queryId = `onchain-${preset.id}`;
+                        const existingQuery = selectedQueries.find(q => q.id === queryId);
+                        if (existingQuery) {
+                          setSelectedQueries(selectedQueries.filter(q => q.id !== queryId));
+                        } else {
+                          const newQuery = {
+                            id: queryId,
+                            name: preset.name,
+                            tags: [],
+                            color: preset.color || '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+                            isOnChain: true,
+                            onChainConfig: {
+                              network: preset.network || 'mainnet',
+                              contractAddress: preset.contractAddress,
+                              rpcUrl: preset.rpcUrl || '',
+                              abis: preset.abis || [],
+                              displayMode: 'combined' as const
+                            }
+                          };
+                          setSelectedQueries([...selectedQueries, newQuery]);
+                        }
+                      }}
+                    >
+                      <div className="source-name">{preset.name}</div>
+                      <div className="source-type">On-chain</div>
+                      <div className="source-check">
+                        {selectedQueries.some(q => q.id === `onchain-${preset.id}`) && '✓'}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Custom option */}
+                  <div 
+                    className={`data-source-card custom-card ${showCustomOptions ? 'selected' : ''}`}
+                    onClick={() => setShowCustomOptions(!showCustomOptions)}
                   >
-                    📦 Storage Query
-                  </button>
-                  <button
-                    type="button"
-                    className={`mode-btn ${queryMode === 'onchain' ? 'active' : ''}`}
-                    onClick={() => setQueryMode('onchain')}
-                  >
-                    ⛓️ On-chain Query
-                  </button>
+                    <div className="source-name">➕ Custom</div>
+                    <div className="source-type">Configure</div>
+                    <div className="source-check">
+                      {showCustomOptions && '✓'}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {queryMode === 'storage' ? (
+              {/* Custom options (only show when custom is selected) */}
+              {showCustomOptions && (
                 <>
                   <div className="form-group">
-                    <label>Select Data Sources</label>
-                    <div className="data-sources-grid">
-                      {APP_PRESETS.map(preset => (
-                        <div 
-                          key={preset.id} 
-                          className={`data-source-card ${selectedQueries.some(q => q.id === preset.id) ? 'selected' : ''}`}
-                          onClick={() => togglePreset(preset.id)}
-                        >
-                          {preset.icon && (
-                            <img src={preset.icon} alt={preset.name} className="source-icon" />
-                          )}
-                          <div className="source-name">{preset.name}</div>
-                          <div className="source-check">
-                            {selectedQueries.some(q => q.id === preset.id) && '✓'}
-                          </div>
-                        </div>
-                      ))}
+                    <label>Custom Query Type</label>
+                    <div className="query-mode-selector">
+                      <button
+                        type="button"
+                        className={`mode-btn ${queryMode === 'storage' ? 'active' : ''}`}
+                        onClick={() => setQueryMode('storage')}
+                      >
+                        📦 Storage Query
+                      </button>
+                      <button
+                        type="button"
+                        className={`mode-btn ${queryMode === 'onchain' ? 'active' : ''}`}
+                        onClick={() => setQueryMode('onchain')}
+                      >
+                        ⛓️ On-chain Query
+                      </button>
                     </div>
                   </div>
-                </>
-              ) : (
+
+                  {queryMode === 'onchain' && (
                 <>
                   {/* On-chain preset selection */}
                   <div className="form-group">
@@ -957,7 +1032,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 </>
               )}
 
-              {queryMode === 'storage' && selectedQueries.length > 0 && (
+              {selectedQueries.length > 0 && (
                 <div className="form-group">
                   <label>Selected Data Sources</label>
                   <div className="selected-queries">
@@ -975,7 +1050,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 </div>
               )}
 
-              {(true) && (
+              {showCustomOptions && queryMode === 'storage' && (
                 <div className="form-group">
                   <label>Custom Tags</label>
                   <div className="custom-tags">

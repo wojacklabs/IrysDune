@@ -3417,6 +3417,53 @@ body.weather-stormy .header-nav .nav-button.active {
   color: #1f2937;
 }
 
+.source-type {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.data-source-card.custom-card {
+  border-style: dashed;
+  background-color: #f9fafb;
+}
+
+.data-source-card.custom-card:hover {
+  background-color: #f3f4f6;
+}
+
+/* Dark mode data source cards */
+body.weather-stormy .data-source-card {
+  background-color: rgba(30, 41, 59, 0.8);
+  border-color: rgba(100, 116, 139, 0.5);
+}
+
+body.weather-stormy .data-source-card:hover {
+  background-color: rgba(51, 65, 85, 0.8);
+  border-color: #60a5fa;
+}
+
+body.weather-stormy .data-source-card.selected {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-color: #60a5fa;
+}
+
+body.weather-stormy .data-source-card.custom-card {
+  background-color: rgba(30, 41, 59, 0.6);
+}
+
+body.weather-stormy .data-source-card.custom-card:hover {
+  background-color: rgba(51, 65, 85, 0.6);
+}
+
+body.weather-stormy .source-type {
+  color: #9ca3af;
+}
+
+body.weather-stormy .source-name {
+  color: #e5e7eb;
+}
+
 .source-check {
   position: absolute;
   top: 0.5rem;
