@@ -69,7 +69,7 @@ const BADGES: Badge[] = [
   {
     id: 'the-watcher',
     name: 'The Watcher',
-    description: 'The One who see everything through data',
+    description: 'The One who sees everything through data',
     image: 'https://uploader.irys.xyz/HATrjaWtkmSGfz28JeEkkDxnBKGHsMSo97yv1WWCrsyc', 
     requirements: 'Create at least 10 dashboard',
     project: 'IrysDune',
