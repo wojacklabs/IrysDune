@@ -3109,6 +3109,28 @@ body.weather-stormy .header-nav .nav-button.active {
   color: #1f2937;
 }
 
+.dashboard-project-logos {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.dashboard-project-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: white;
+  padding: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+body.weather-stormy .dashboard-project-logo {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .dashboard-card p {
   font-size: 0.875rem;
   color: #6b7280;

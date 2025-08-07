@@ -19,6 +19,8 @@ import { queryTagCounts, fetchIrysNames } from '../services/irysService';
 import LoadingProgress from './LoadingProgress';
 import { CreateDashboardModal } from './CreateDashboardModal';
 import { Share2, Download } from 'lucide-react';
+import { APP_PRESETS } from '../constants/appPresets';
+import { ON_CHAIN_PRESETS } from '../services/onChainService';
 
 interface DashboardsSectionProps {
   walletAddress: string | null;
@@ -221,6 +223,37 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     const getFormattedAuthor = (dashboard: Dashboard) => {
     const name = irysNames.get(dashboard.authorAddress) || dashboard.author;
     return name || `${dashboard.authorAddress.slice(0, 6)}...${dashboard.authorAddress.slice(-4)}`;
+  };
+  
+  // Extract unique project logos from dashboard
+  const getProjectLogos = (dashboard: Dashboard): string[] => {
+    const logos = new Set<string>();
+    
+    if (dashboard.charts && dashboard.charts.length > 0) {
+      dashboard.charts.forEach(chart => {
+        // Check queries in chart
+        if (chart.queries && chart.queries.length > 0) {
+          chart.queries.forEach(query => {
+            // Check if it's a storage preset
+            const storagePreset = APP_PRESETS.find(p => p.id === query.id);
+            if (storagePreset && storagePreset.icon) {
+              logos.add(storagePreset.icon);
+            }
+            
+            // Check if it's an on-chain preset
+            if (query.id.startsWith('onchain-')) {
+              const onChainId = query.id.replace('onchain-', '');
+              const onChainPreset = ON_CHAIN_PRESETS.find(p => p.id === onChainId);
+              if (onChainPreset && onChainPreset.icon) {
+                logos.add(onChainPreset.icon);
+              }
+            }
+          });
+        }
+      });
+    }
+    
+    return Array.from(logos).slice(0, 4); // Limit to 4 logos for space
   };
   
   // Calculate paginated dashboards
@@ -721,6 +754,22 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 onClick={() => handleDashboardClick(dashboard)}
               >
                 <h3>{dashboard.name}</h3>
+                {/* Project logos */}
+                {(() => {
+                  const logos = getProjectLogos(dashboard);
+                  return logos.length > 0 ? (
+                    <div className="dashboard-project-logos">
+                      {logos.map((logo, index) => (
+                        <img 
+                          key={index} 
+                          src={logo} 
+                          alt="Project logo" 
+                          className="dashboard-project-logo"
+                        />
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
                 <p>{dashboard.description}</p>
                 <div className="dashboard-stats">
                   <span>📊 {dashboard.charts?.length || 0} charts</span>
