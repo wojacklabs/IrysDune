@@ -43,6 +43,10 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     sortBy: 'recent'
   });
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   // Helper function to calculate dateRange for dashboard charts
   const processDashboardDateRanges = (dashboard: Dashboard): Dashboard => {
@@ -214,20 +218,22 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     }
   };
 
-  const getDisplayName = (address: string) => {
-    return irysNames.get(address) || address;
+    const getFormattedAuthor = (dashboard: Dashboard) => {
+    const name = irysNames.get(dashboard.authorAddress) || dashboard.author;
+    return name || `${dashboard.authorAddress.slice(0, 6)}...${dashboard.authorAddress.slice(-4)}`;
   };
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const getFormattedAuthor = (dashboard: Dashboard) => {
-    const name = getDisplayName(dashboard.authorAddress);
-    if (name === dashboard.authorAddress) {
-      return formatAddress(dashboard.authorAddress);
-    }
-    return name + '.irys';
+  
+  // Calculate paginated dashboards
+  const totalPages = Math.ceil(filteredDashboards.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDashboards = filteredDashboards.slice(startIndex, endIndex);
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of dashboard section
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const filterDashboards = () => {
@@ -258,6 +264,8 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     }
 
     setFilteredDashboards(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const loadDashboardData = async (dashboard: Dashboard) => {
@@ -706,7 +714,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
         </div>
       ) : (
         <div className="dashboards-grid">
-          {filteredDashboards.map(dashboard => (
+          {paginatedDashboards.map(dashboard => (
             <div key={dashboard.id} className="dashboard-card">
               <div 
                 className="dashboard-clickable"
@@ -739,6 +747,54 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               )}
             </div>
           ))}
+        </div>
+      )}
+      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          
+          <div className="pagination-numbers">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+              // Show only a range of pages
+              if (
+                page === 1 || // Always show first page
+                page === totalPages || // Always show last page
+                (page >= currentPage - 2 && page <= currentPage + 2) // Show 2 pages before and after current
+              ) {
+                return (
+                  <button
+                    key={page}
+                    className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </button>
+                );
+              } else if (
+                page === currentPage - 3 || // Show ellipsis before range
+                page === currentPage + 3 // Show ellipsis after range
+              ) {
+                return <span key={page} className="pagination-ellipsis">...</span>;
+              }
+              return null;
+            }).filter(Boolean)}
+          </div>
+          
+          <button 
+            className="pagination-btn"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
         </div>
       )}
 
