@@ -223,6 +223,48 @@ function App() {
               
               {dropdownOpen && (
                 <div className="dropdown-menu">
+                  {/* Mobile Navigation Section */}
+                  <div className="mobile-nav-section">
+                    <button
+                      onClick={() => {
+                        setActiveTab('trends');
+                        setDropdownOpen(false);
+                      }}
+                      className={`mobile-nav-item ${activeTab === 'trends' ? 'active' : ''}`}
+                    >
+                      📈 Trends
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('dashboards');
+                        setDropdownOpen(false);
+                      }}
+                      className={`mobile-nav-item ${activeTab === 'dashboards' ? 'active' : ''}`}
+                    >
+                      📊 Dashboards
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('badges');
+                        setDropdownOpen(false);
+                      }}
+                      className={`mobile-nav-item ${activeTab === 'badges' ? 'active' : ''}`}
+                    >
+                      🏅 Badges
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('my-history');
+                        setDropdownOpen(false);
+                      }}
+                      className={`mobile-nav-item ${activeTab === 'my-history' ? 'active' : ''}`}
+                    >
+                      📜 My History
+                    </button>
+                  </div>
+                  
+                  <div className="dropdown-divider"></div>
+                  
                   <div className="dropdown-item">
                     <span>DarkMode</span>
                     <label className="toggle-switch">

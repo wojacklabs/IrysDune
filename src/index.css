@@ -6390,3 +6390,556 @@ body.weather-stormy .pagination-number.active {
     margin-top: 0.5rem;
   }
 }
+
+/* ========================================
+   COMPREHENSIVE RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  /* Header adjustments */
+  .header-nav {
+    gap: 0.5rem;
+  }
+  
+  .header-nav .nav-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Dashboard grid */
+  .dashboards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Badge grid */
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Modal adjustments */
+  .modal {
+    margin: 1rem;
+  }
+  
+  .modal-content {
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+/* Mobile Large (640px - 768px) */
+@media (max-width: 768px) {
+  /* Base adjustments */
+  body {
+    font-size: 14px;
+  }
+  
+  /* Header responsive */
+  .header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .header-content {
+    gap: 0.75rem;
+  }
+  
+  .logo {
+    font-size: 1.25rem;
+  }
+  
+  /* Hide navigation text on mobile, show only on larger screens */
+  .header-nav {
+    display: none !important;
+  }
+  
+  /* Dropdown adjustments */
+  .dropdown-menu {
+    right: -1rem;
+    width: 200px;
+  }
+  
+  /* Main content padding */
+  .main {
+    padding: 1rem;
+  }
+  
+  /* Section headers */
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Grids to single column */
+  .dashboards-grid,
+  .badges-grid,
+  .trends-grid,
+  .history-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
+  
+  /* Card adjustments */
+  .dashboard-card,
+  .badge-card,
+  .trend-card,
+  .history-card {
+    padding: 1rem;
+  }
+  
+  .dashboard-card h3,
+  .badge-card h3,
+  .trend-card h3 {
+    font-size: 1.125rem;
+  }
+  
+  /* Chart container */
+  .chart-container {
+    height: 250px;
+  }
+  
+  /* Trends grid specific */
+  .trends-grid {
+    gap: 1rem;
+  }
+  
+  .trend-card {
+    min-height: auto;
+  }
+  
+  /* History section */
+  .history-content {
+    gap: 1rem;
+  }
+  
+  .query-history-item {
+    padding: 0.75rem;
+  }
+  
+  .query-details {
+    font-size: 0.75rem;
+  }
+  
+  .query-timestamp {
+    font-size: 0.625rem;
+  }
+  
+  /* Wallet address truncation */
+  .wallet-address {
+    max-width: 150px;
+  }
+  
+  /* Modal fullscreen on mobile */
+  .modal {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .modal-content {
+    margin: 0;
+    border-radius: 0;
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    max-width: 100%;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  body.weather-stormy .modal-header {
+    background: rgba(30, 41, 59, 0.95);
+    border-bottom-color: rgba(71, 85, 105, 0.3);
+  }
+  
+  .modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  
+  /* Form adjustments */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  /* Button adjustments */
+  .btn-primary,
+  .btn-secondary,
+  .connect-wallet-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    width: 100%;
+  }
+  
+  /* Tags input */
+  .tags-container {
+    gap: 0.5rem;
+  }
+  
+  .tag {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Data source cards */
+  .data-sources-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .data-source-card {
+    padding: 0.75rem;
+  }
+  
+  .source-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  /* Badge details modal */
+  .badge-details-content {
+    flex-direction: column;
+  }
+  
+  .badge-preview-section,
+  .badge-info-section {
+    width: 100%;
+  }
+  
+  /* Pagination mobile */
+  .pagination-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .pagination-number {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Footer */
+  .footer {
+    padding: 1.5rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Toggle switches */
+  .toggle-switch {
+    width: 56px;
+    height: 28px;
+  }
+  
+  .toggle-icon {
+    font-size: 14px;
+  }
+  
+  /* Alert/Success messages */
+  .success-message,
+  .error-message {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Loading states */
+  .loading-spinner {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  /* Project headers in badges */
+  .project-header h3 {
+    font-size: 1.125rem;
+  }
+  
+  .badge-mint-count {
+    font-size: 0.75rem;
+  }
+  
+  /* Dashboard footer */
+  .dashboard-footer {
+    font-size: 0.875rem;
+  }
+  
+  .dashboard-author {
+    font-size: 0.75rem;
+  }
+  
+  /* Edit button */
+  .edit-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Mobile Small (480px and below) */
+@media (max-width: 480px) {
+  /* Even smaller adjustments */
+  .header {
+    padding: 0.5rem;
+  }
+  
+  .logo {
+    font-size: 1.125rem;
+  }
+  
+  .dropdown-toggle {
+    padding: 0.5rem;
+  }
+  
+  /* Main content */
+  .main {
+    padding: 0.75rem;
+  }
+  
+  /* Section headers */
+  .section-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  /* Cards with less padding */
+  .dashboard-card,
+  .badge-card,
+  .trend-card,
+  .history-card {
+    padding: 0.75rem;
+  }
+  
+  /* Data source grid single column */
+  .data-sources-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Chart container smaller */
+  .chart-container {
+    height: 200px;
+  }
+  
+  /* Modal close button position */
+  .modal-close {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  /* Smaller text */
+  .dashboard-card p,
+  .badge-card p,
+  .trend-description {
+    font-size: 0.875rem;
+  }
+  
+  /* Project logos smaller */
+  .dashboard-project-logo {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  /* Pagination adjustments */
+  .pagination {
+    gap: 0.25rem;
+  }
+  
+  .pagination-btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .pagination-number {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Footer smaller */
+  .footer {
+    padding: 1rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Very small devices (320px and below) */
+@media (max-width: 320px) {
+  /* Minimum viable layout */
+  .header {
+    padding: 0.5rem;
+  }
+  
+  .logo {
+    font-size: 1rem;
+  }
+  
+  .main {
+    padding: 0.5rem;
+  }
+  
+  .dashboard-card,
+  .badge-card,
+  .trend-card,
+  .history-card {
+    padding: 0.5rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.125rem;
+  }
+  
+  /* Hide non-essential elements */
+  .badge-status:not(.minted) {
+    display: none;
+  }
+  
+  .dashboard-likes {
+    display: none;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-content {
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .modal-body {
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure crisp borders and shadows */
+  .card,
+  .dashboard-card,
+  .badge-card,
+  .trend-card,
+  .history-card {
+    border-width: 0.5px;
+  }
+  
+  .modal-content {
+    border-width: 0.5px;
+  }
+}
+
+/* Mobile Navigation Styles */
+.mobile-nav-section {
+  display: none;
+  padding: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobile-nav-item:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.mobile-nav-item.active {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+body.weather-stormy .mobile-nav-item {
+  color: #cbd5e1;
+}
+
+body.weather-stormy .mobile-nav-item:hover {
+  background: rgba(71, 85, 105, 0.2);
+  color: #f1f5f9;
+}
+
+body.weather-stormy .mobile-nav-item.active {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+body.weather-stormy .dropdown-divider {
+  background: rgba(71, 85, 105, 0.3);
+}
+
+/* Print styles */
+@media print {
+  /* Hide interactive elements */
+  .header,
+  .footer,
+  .weather-toggle,
+  .background-toggle,
+  .dropdown,
+  .pagination,
+  .edit-btn,
+  .connect-wallet-btn {
+    display: none !important;
+  }
+  
+  /* Adjust layout for print */
+  .main {
+    padding: 0;
+  }
+  
+  .dashboards-grid,
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Remove shadows and backgrounds */
+  .card,
+  .dashboard-card,
+  .badge-card {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    background: white;
+  }
+}
