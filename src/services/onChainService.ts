@@ -304,10 +304,14 @@ export async function queryOnChainEvents(
           try {
             // Create filter with wallet address if provided
             let filter;
+            let addressFieldIndex = -1;
+            
             if (walletAddress && abi.inputs && abi.inputs.length > 0) {
-              // Find the player/address field in the event
-              const addressFieldIndex = abi.inputs.findIndex(input => 
-                input.type === 'address' && (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter')
+              // Find the player/address field in the event that is indexed
+              addressFieldIndex = abi.inputs.findIndex(input => 
+                input.type === 'address' && 
+                (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter') &&
+                input.indexed !== false // Only use indexed parameters for filtering
               );
               
               if (addressFieldIndex !== -1) {
@@ -317,8 +321,9 @@ export async function queryOnChainEvents(
                 filter = contract.filters[abi.name]?.(...filterParams);
                 console.log(`[OnChainService] Created filter for ${abi.name} with wallet ${ethers.getAddress(walletAddress)}`);
               } else {
+                // Cannot filter by wallet, will need to filter results manually
                 filter = contract.filters[abi.name]?.();
-                console.log(`[OnChainService] Created filter for ${abi.name} without wallet filter`);
+                console.log(`[OnChainService] Created filter for ${abi.name} without wallet filter (no indexed address field)`);
               }
             } else {
               filter = contract.filters[abi.name]?.();
@@ -327,8 +332,30 @@ export async function queryOnChainEvents(
             if (filter) {
               const events = await contract.queryFilter(filter, fromBlock, latestBlock);
               
-              // 이미 필터에 walletAddress가 포함되어 있으므로 추가 필터링 불필요
-              const filteredEvents = events;
+              // If we couldn't filter by wallet address in the query, filter manually
+              let filteredEvents = events;
+              if (walletAddress && addressFieldIndex === -1) {
+                // Find address field for manual filtering
+                const addressField = abi.inputs?.find(input => 
+                  input.type === 'address' && 
+                  (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter')
+                );
+                
+                if (addressField) {
+                  const fieldIndex = abi.inputs.indexOf(addressField);
+                  filteredEvents = events.filter(event => {
+                    if ('args' in event && event.args && event.args[fieldIndex]) {
+                      try {
+                        return ethers.getAddress(event.args[fieldIndex]) === ethers.getAddress(walletAddress);
+                      } catch {
+                        return false;
+                      }
+                    }
+                    return false;
+                  });
+                  console.log(`[OnChainService] Manually filtered ${events.length} events to ${filteredEvents.length} for wallet ${walletAddress}`);
+                }
+              }
               
               for (const event of filteredEvents) {
                 const block = await provider.getBlock(event.blockNumber);
@@ -407,17 +434,17 @@ export const ON_CHAIN_PRESETS = [
         name: 'PlayerRegistered',
         type: 'event' as const,
         inputs: [
-          { name: 'player', type: 'address' },
-          { name: 'nickname', type: 'string' }
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'nickname', type: 'string', indexed: false }
         ]
       },
       {
         name: 'ScoreUpdated',
         type: 'event' as const,
         inputs: [
-          { name: 'player', type: 'address' },
-          { name: 'newScore', type: 'uint256' },
-          { name: 'oldScore', type: 'uint256' }
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'newScore', type: 'uint256', indexed: false },
+          { name: 'oldScore', type: 'uint256', indexed: false }
         ]
       },
       {
@@ -434,8 +461,8 @@ export const ON_CHAIN_PRESETS = [
         name: 'PlayerJoinedRoom',
         type: 'event' as const,
         inputs: [
-          { name: 'roomId', type: 'uint256' },
-          { name: 'player', type: 'address' }
+          { name: 'roomId', type: 'uint256', indexed: true },
+          { name: 'player', type: 'address', indexed: true }
         ]
       },
       {

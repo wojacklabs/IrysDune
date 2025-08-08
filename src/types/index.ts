@@ -67,6 +67,7 @@ export interface AbiFunction {
   inputs: Array<{
     name: string;
     type: string;
+    indexed?: boolean;
   }>;
   outputs?: Array<{
     name: string;
