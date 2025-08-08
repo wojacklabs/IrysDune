@@ -9,6 +9,7 @@ import irysflipIcon from '../assets/irysflip.png';
 import irysCrushIcon from '../assets/irys-crush.png';
 import irysMemoryIcon from '../assets/irysmemoryicon.jpg';
 import irysPfpIcon from '../assets/iryspfp.jpg';
+import playHirysIcon from '../assets/playhirys.jpg';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -91,6 +92,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#ff8a00',
     icon: irysCrushIcon
+  },
+  {
+    id: 'play-hirys',
+    name: 'PlayHirys',
+    tags: [
+      { name: 'App', value: 'PlayHirys' }
+    ],
+    color: '#303a4d',
+    icon: playHirysIcon
   },
   {
     id: 'irys-memory',

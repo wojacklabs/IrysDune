@@ -6722,7 +6722,6 @@ body.weather-stormy .pagination-number.active {
   .data-sources-grid {
     grid-template-columns: 1fr;
   }
-  
   /* Modal close button position */
   .modal-close {
     top: 0.75rem;

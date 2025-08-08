@@ -79,6 +79,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [parsedAbis, setParsedAbis] = useState<AbiFunction[]>([]);
   const [onChainDisplayMode, setOnChainDisplayMode] = useState<'combined' | 'separated'>('separated');
   const [selectedOnChainPreset, setSelectedOnChainPreset] = useState<string>('');
+  const [selectedPlayHirysGame, setSelectedPlayHirysGame] = useState<string>('');
 
   // State for custom tag input
   const [newTagName, setNewTagName] = useState('');
@@ -886,16 +887,28 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                             const preset = ON_CHAIN_PRESETS.find(p => p.id === e.target.value);
                             if (preset) {
                               setSelectedOnChainPreset(preset.id);
-                              setContractAddress(preset.contractAddress);
-                              setSelectedNetwork(preset.network || 'mainnet');
-                              setRpcUrl(preset.rpcUrl || '');
-                              // 프리셋의 ABI 설정
-                              if (preset.abis) {
-                                setAbiInputs(preset.abis.map(abi => JSON.stringify(abi, null, 2)));
-                                setParsedAbis(preset.abis);
+                              
+                              // Handle PlayHirys multiple contracts
+                              if (preset.multipleContracts) {
+                                setSelectedPlayHirysGame(''); // Reset game selection
+                                setContractAddress(''); // Clear contract address until game is selected
+                                setSelectedNetwork(preset.network || 'mainnet');
+                                setRpcUrl(preset.rpcUrl || '');
+                                setAbiInputs(['']);
+                                setParsedAbis([]);
+                              } else {
+                                setContractAddress(preset.contractAddress);
+                                setSelectedNetwork(preset.network || 'mainnet');
+                                setRpcUrl(preset.rpcUrl || '');
+                                // 프리셋의 ABI 설정
+                                if (preset.abis) {
+                                  setAbiInputs(preset.abis.map(abi => JSON.stringify(abi, null, 2)));
+                                  setParsedAbis(preset.abis);
+                                }
                               }
                             } else {
                               setSelectedOnChainPreset('');
+                              setSelectedPlayHirysGame('');
                               setAbiInputs(['']);
                               setParsedAbis([]);
                               setRpcUrl('');
@@ -910,6 +923,36 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                           ))}
                         </select>
                       </div>
+
+                      {/* PlayHirys game selection */}
+                      {selectedOnChainPreset === 'play-hirys' && (
+                        <div className="form-group">
+                          <label>Select Game</label>
+                          <select 
+                            value={selectedPlayHirysGame}
+                            onChange={(e) => {
+                              const gameAddress = e.target.value;
+                              setSelectedPlayHirysGame(gameAddress);
+                              
+                              const preset = ON_CHAIN_PRESETS.find(p => p.id === 'play-hirys');
+                              const game = preset?.multipleContracts?.find(g => g.contractAddress === gameAddress);
+                              
+                              if (game) {
+                                setContractAddress(game.contractAddress);
+                                setAbiInputs(game.abis.map(abi => JSON.stringify(abi, null, 2)));
+                                setParsedAbis(game.abis);
+                              }
+                            }}
+                          >
+                            <option value="">Select a game</option>
+                            {ON_CHAIN_PRESETS.find(p => p.id === 'play-hirys')?.multipleContracts?.map(game => (
+                              <option key={game.contractAddress} value={game.contractAddress}>
+                                {game.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
 
                       {/* Only show input fields when no preset is selected */}
                       {!selectedOnChainPreset && (

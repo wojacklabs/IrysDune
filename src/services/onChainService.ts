@@ -3,6 +3,7 @@ import type { OnChainQuery, OnChainQueryResult, LoadingProgress } from '../types
 import { getCacheKey, getFromCache, setCache } from '../utils/queryUtils';
 import irysflipIcon from '../assets/irysflip.png';
 import irysCrushIcon from '../assets/irys-crush.png';
+import playHirysIcon from '../assets/playhirys.jpg';
 
 // 네트워크별 블록 생성 시간 (초)
 const BLOCK_TIME: { [key: string]: number } = {
@@ -449,6 +450,129 @@ export const ON_CHAIN_PRESETS = [
         inputs: [
           { name: 'roomId', type: 'uint256' },
           { name: 'winner', type: 'address' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'play-hirys',
+    name: 'PlayHirys',
+    contractAddress: '', // Multiple contracts
+    network: 'irys-testnet',
+    rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
+    description: 'PlayHirys Games',
+    color: '#303a4d',
+    icon: playHirysIcon,
+    // Multiple game contracts
+    multipleContracts: [
+      {
+        name: 'Picnic with Sprite',
+        contractAddress: '0x1B9dD6EB6F54C31a2aE886e4341e02eD6AE2D77C',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'newScore', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address' },
+              { name: 'score', type: 'uint256' },
+              { name: 'timestamp', type: 'uint256' }
+            ]
+          }
+        ]
+      },
+      {
+        name: '100 NAs vs 1 Sprite (Easy)',
+        contractAddress: '0x885252F2f4CA67c577F521221642Fc3c6e8a1Ac7',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'score', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address' },
+              { name: 'score', type: 'uint256' },
+              { name: 'timestamp', type: 'uint256' }
+            ]
+          }
+        ]
+      },
+      {
+        name: '100 NAs vs 1 Sprite (Hard)',
+        contractAddress: '0x97fB70fa421a5d2010dD93Fd1cfB5c2A2670bA86',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'score', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address' },
+              { name: 'score', type: 'uint256' },
+              { name: 'timestamp', type: 'uint256' }
+            ]
+          }
+        ]
+      },
+      {
+        name: '100 NAs vs 1 Sprite (Super Hard)',
+        contractAddress: '0xF41CFa950FDA43d0D06f64017840BFf0010B09d6',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'score', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address' },
+              { name: 'score', type: 'uint256' },
+              { name: 'timestamp', type: 'uint256' }
+            ]
+          }
+        ]
+      },
+      {
+        name: 'Bubble Sprite',
+        contractAddress: '0x2023B787cB13A538E93FE58d57eA661760666efe',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'score', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address' },
+              { name: 'score', type: 'uint256' },
+              { name: 'timestamp', type: 'uint256' }
+            ]
+          }
         ]
       }
     ]

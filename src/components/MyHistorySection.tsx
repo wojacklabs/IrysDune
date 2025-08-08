@@ -78,6 +78,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       network: string;
       count: number;
       color: string;
+      gameBreakdown?: Array<{ game: string; count: number }>;
     }
 
     interface OnChainTransaction {
@@ -134,30 +135,121 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
             try {
               console.log(`[MyHistory] Querying ${preset.name}...`);
               
-              const results = await queryUserOnChainData(
-                {
-                  contractAddress: preset.contractAddress,
-                  network: preset.network,
-                  rpcUrl: preset.rpcUrl,
-                  abis: preset.abis
-                },
-                walletAddress,
-                undefined,
-                { days: periodMap[timePeriod] }
-              );
+              // Handle multiple contracts (e.g., PlayHirys)
+              if (preset.multipleContracts) {
+                let totalPresetCount = 0;
+                const gameResults: Array<{ game: string; count: number }> = [];
+                
+                // Query each game contract
+                await Promise.all(preset.multipleContracts.map(async (gameContract) => {
+                  const results = await queryUserOnChainData(
+                    {
+                      contractAddress: gameContract.contractAddress,
+                      network: preset.network,
+                      rpcUrl: preset.rpcUrl,
+                      abis: gameContract.abis
+                    },
+                    walletAddress,
+                    undefined,
+                    { days: periodMap[timePeriod] }
+                  );
+                  
+                  const gameCount = results.reduce((sum, r) => sum + r.count, 0);
+                  if (gameCount > 0) {
+                    totalPresetCount += gameCount;
+                    gameResults.push({ game: gameContract.name, count: gameCount });
+                  }
+                }));
+                
+                if (totalPresetCount > 0) {
+                  allOnChainData.push({
+                    contractName: preset.name,
+                    contractAddress: preset.contractAddress || 'Multiple',
+                    network: preset.network,
+                    count: totalPresetCount,
+                    color: colors[index % colors.length],
+                    gameBreakdown: gameResults
+                  });
+                }
+              } else {
+                // Single contract
+                const results = await queryUserOnChainData(
+                  {
+                    contractAddress: preset.contractAddress,
+                    network: preset.network,
+                    rpcUrl: preset.rpcUrl,
+                    abis: preset.abis
+                  },
+                  walletAddress,
+                  undefined,
+                  { days: periodMap[timePeriod] }
+                );
 
-              const totalCount = results.reduce((sum, r) => sum + r.count, 0);
-              
-              if (totalCount > 0) {
-                allOnChainData.push({
-                  contractName: preset.name,
-                  contractAddress: preset.contractAddress,
-                  network: preset.network,
-                  count: totalCount,
-                  color: colors[index % colors.length]
-                });
+                const totalCount = results.reduce((sum, r) => sum + r.count, 0);
+                
+                if (totalCount > 0) {
+                  allOnChainData.push({
+                    contractName: preset.name,
+                    contractAddress: preset.contractAddress,
+                    network: preset.network,
+                    count: totalCount,
+                    color: colors[index % colors.length]
+                  });
+                }
+              }
 
-                // 이벤트 상세 조회
+              // 이벤트 상세 조회
+              if (preset.multipleContracts) {
+                // Query events for each game contract
+                await Promise.all(preset.multipleContracts.map(async (gameContract) => {
+                  const events = await queryOnChainEvents({
+                    contractAddress: gameContract.contractAddress,
+                    network: preset.network,
+                    rpcUrl: preset.rpcUrl,
+                    abis: gameContract.abis
+                  }, 20, walletAddress);
+                  
+                  // 이벤트를 트랜잭션 형태로 변환
+                  const gameTransactions = events.map(event => {
+                  // 네트워크별 익스플로러 URL 매핑
+                  let explorerUrl = '';
+                  switch (preset.network) {
+                    case 'mainnet':
+                      explorerUrl = `https://etherscan.io/tx/${event.transactionHash}`;
+                      break;
+                    case 'polygon':
+                      explorerUrl = `https://polygonscan.com/tx/${event.transactionHash}`;
+                      break;
+                    case 'arbitrum':
+                      explorerUrl = `https://arbiscan.io/tx/${event.transactionHash}`;
+                      break;
+                    case 'avalanche':
+                      explorerUrl = `https://snowtrace.io/tx/${event.transactionHash}`;
+                      break;
+                    case 'base':
+                      explorerUrl = `https://basescan.org/tx/${event.transactionHash}`;
+                      break;
+                    case 'irys-testnet':
+                      explorerUrl = `https://testnet-explorer.irys.xyz/tx/${event.transactionHash}`;
+                      break;
+                    default:
+                      explorerUrl = `https://etherscan.io/tx/${event.transactionHash}`;
+                  }
+                  
+                  return {
+                      id: event.transactionHash,
+                      timestamp: event.timestamp,
+                      eventName: event.eventName,
+                      contractName: `${preset.name} - ${gameContract.name}`,
+                      network: preset.network,
+                      url: explorerUrl
+                    };
+                  });
+                  
+                  allTransactions.push(...gameTransactions);
+                }));
+              } else {
+                // Single contract
                 const events = await queryOnChainEvents({
                   contractAddress: preset.contractAddress,
                   network: preset.network,

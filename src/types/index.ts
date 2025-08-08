@@ -87,6 +87,12 @@ export interface OnChainPreset {
   abis?: AbiFunction[];
   color?: string;
   icon?: string;
+  // For multiple contracts (e.g., PlayHirys)
+  multipleContracts?: {
+    name: string;
+    contractAddress: string;
+    abis: AbiFunction[];
+  }[];
 }
 
 // 온체인 쿼리 결과
