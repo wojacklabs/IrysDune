@@ -86,6 +86,13 @@ const PROJECT_SECTIONS = [
     hasBadges: true
   },
   {
+    project: 'PlayHirys',
+    description: 'Korean Irys fan made game platform',
+    url: 'https://playhirys.netlify.app',
+    hasBadges: false,
+    comingSoon: true
+  },
+  {
     project: 'GitHirys',
     description: 'Decentralized code repository platform',
     url: 'https://githirys.xyz',
