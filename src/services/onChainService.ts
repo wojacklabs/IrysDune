@@ -391,10 +391,10 @@ export const ON_CHAIN_PRESETS = [
         name: 'BetPlaced',
         type: 'event' as const,
         inputs: [
-          { name: 'player', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'guess', type: 'bool' },
-          { name: 'win', type: 'bool' }
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'amount', type: 'uint256', indexed: false },
+          { name: 'guess', type: 'bool', indexed: false },
+          { name: 'win', type: 'bool', indexed: false }
         ]
       }
     ]
@@ -430,10 +430,10 @@ export const ON_CHAIN_PRESETS = [
         name: 'RoomCreated',
         type: 'event' as const,
         inputs: [
-          { name: 'roomId', type: 'uint256' },
-          { name: 'host', type: 'address' },
-          { name: 'entryFee', type: 'uint256' },
-          { name: 'gameTime', type: 'uint256' }
+          { name: 'roomId', type: 'uint256', indexed: true },
+          { name: 'host', type: 'address', indexed: true },
+          { name: 'entryFee', type: 'uint256', indexed: false },
+          { name: 'gameTime', type: 'uint256', indexed: false }
         ]
       },
       {
@@ -448,25 +448,25 @@ export const ON_CHAIN_PRESETS = [
         name: 'GameStarted',
         type: 'event' as const,
         inputs: [
-          { name: 'roomId', type: 'uint256' },
-          { name: 'host', type: 'address' }
+          { name: 'roomId', type: 'uint256', indexed: true },
+          { name: 'host', type: 'address', indexed: false }
         ]
       },
       {
         name: 'GameFinished',
         type: 'event' as const,
         inputs: [
-          { name: 'roomId', type: 'uint256' },
-          { name: 'winner', type: 'address' },
-          { name: 'prize', type: 'uint256' }
+          { name: 'roomId', type: 'uint256', indexed: true },
+          { name: 'winner', type: 'address', indexed: true },
+          { name: 'prize', type: 'uint256', indexed: false }
         ]
       },
       {
         name: 'PvPGameFinished',
         type: 'event' as const,
         inputs: [
-          { name: 'roomId', type: 'uint256' },
-          { name: 'winner', type: 'address' }
+          { name: 'roomId', type: 'uint256', indexed: true },
+          { name: 'winner', type: 'address', indexed: true }
         ]
       }
     ]
