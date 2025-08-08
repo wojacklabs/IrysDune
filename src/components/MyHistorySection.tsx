@@ -155,6 +155,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                   );
                   
                   const gameCount = results.reduce((sum, r) => sum + r.count, 0);
+                  console.log(`[MyHistory] ${gameContract.name} results:`, results.length, 'total count:', gameCount);
                   if (gameCount > 0) {
                     totalPresetCount += gameCount;
                     gameResults.push({ game: gameContract.name, count: gameCount });
@@ -448,6 +449,9 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       const limitedTransactions = allUnifiedTransactions.slice(0, 100);
 
       // 상태 업데이트
+      console.log('[MyHistory] Setting project data:', projects);
+      console.log('[MyHistory] On-chain data contracts:', onchainData.contracts);
+      console.log('[MyHistory] On-chain transactions:', onchainData.transactions.length);
       setProjectData(projects);
       setUnifiedTransactions(limitedTransactions);
       setTotalTransactions(totalCount);
