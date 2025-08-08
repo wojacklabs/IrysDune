@@ -442,6 +442,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           timestamp: tx.timestamp,
           source: 'onchain',
           project: preset?.name || 'Others',
+          projectIcon: preset?.icon,
           activity: category.name,
           activityIcon: category.icon,
           detail: tx.eventName,
@@ -899,7 +900,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                       )}
                     </td>
                     <td>
-                      {tx.source === 'storage' && tx.projectIcon ? (
+                      {tx.projectIcon ? (
                         <div className="project-cell">
                           <img 
                             src={tx.projectIcon} 
@@ -908,14 +909,12 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
                             title={tx.project || 'Others'}
                           />
                         </div>
-                      ) : tx.source === 'storage' ? (
+                      ) : (
                         <div className="project-cell">
-                          <div className="project-icon-placeholder" title="Others">
+                          <div className="project-icon-placeholder" title={tx.project || 'Others'}>
                             <Package size={20} />
                           </div>
                         </div>
-                      ) : (
-                        <span className="contract-name">{tx.project}</span>
                       )}
                     </td>
                     <td>
