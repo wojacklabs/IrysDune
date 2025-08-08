@@ -313,10 +313,12 @@ export async function queryOnChainEvents(
               if (addressFieldIndex !== -1) {
                 // Create an array of filter parameters
                 const filterParams = new Array(abi.inputs.length).fill(null);
-                filterParams[addressFieldIndex] = walletAddress;
+                filterParams[addressFieldIndex] = ethers.getAddress(walletAddress);
                 filter = contract.filters[abi.name]?.(...filterParams);
+                console.log(`[OnChainService] Created filter for ${abi.name} with wallet ${ethers.getAddress(walletAddress)}`);
               } else {
                 filter = contract.filters[abi.name]?.();
+                console.log(`[OnChainService] Created filter for ${abi.name} without wallet filter`);
               }
             } else {
               filter = contract.filters[abi.name]?.();
@@ -331,10 +333,17 @@ export async function queryOnChainEvents(
               for (const event of filteredEvents) {
                 const block = await provider.getBlock(event.blockNumber);
                 if (block) {
+                  // For ScoreSubmitted events, use the event's timestamp if available
+                  let timestamp = Number(block.timestamp) * 1000;
+                  if (abi.name === 'ScoreSubmitted' && 'args' in event && event.args && event.args[2]) {
+                    // ScoreSubmitted has timestamp as third parameter (already in seconds)
+                    timestamp = Number(event.args[2]) * 1000;
+                  }
+                  
                   eventDetails.push({
                     transactionHash: event.transactionHash,
                     blockNumber: event.blockNumber,
-                    timestamp: Number(block.timestamp) * 1000,
+                    timestamp,
                     eventName: abi.name,
                     contractAddress: query.contractAddress,
                     network: network,
