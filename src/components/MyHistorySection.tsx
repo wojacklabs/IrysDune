@@ -430,7 +430,12 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
       onchainData.transactions.forEach(tx => {
         const activityId = getActivityFromEvent(tx.eventName);
         const category = ACTIVITY_CATEGORIES[activityId];
-        const preset = ON_CHAIN_PRESETS.find(p => p.name === tx.contractName);
+        
+        // For multipleContracts, contractName is "PlayHirys - Game Name", so we need to extract the preset name
+        const contractBaseName = tx.contractName.includes(' - ') 
+          ? tx.contractName.split(' - ')[0] 
+          : tx.contractName;
+        const preset = ON_CHAIN_PRESETS.find(p => p.name === contractBaseName);
         
         allUnifiedTransactions.push({
           id: tx.id,
