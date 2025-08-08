@@ -584,10 +584,11 @@ export const ON_CHAIN_PRESETS = [
           {
             name: 'ScoreSubmitted',
             type: 'event' as const,
+            anonymous: false,
             inputs: [
-              { name: 'player', type: 'address' },
-              { name: 'score', type: 'uint256' },
-              { name: 'timestamp', type: 'uint256' }
+              { name: 'player', type: 'address', indexed: false },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
         ]
