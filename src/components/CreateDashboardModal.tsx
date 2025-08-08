@@ -781,8 +781,10 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
               <div className="form-group">
                 <label>Select Data Sources</label>
                 <div className="data-sources-grid">
-                  {/* Storage presets */}
-                  {APP_PRESETS.map(preset => (
+                  {/* Storage presets (excluding on-chain only projects) */}
+                  {APP_PRESETS.filter(preset => 
+                    !['irysflip', 'irys-crush', 'play-hirys'].includes(preset.id)
+                  ).map(preset => (
                     <div 
                       key={preset.id} 
                       className={`data-source-card ${selectedQueries.some(q => q.id === preset.id) ? 'selected' : ''}`}

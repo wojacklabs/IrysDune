@@ -249,7 +249,7 @@ export async function queryOnChainEvents(
   try {
     const provider = new JsonRpcProvider(rpcUrl);
     const latestBlock = await provider.getBlockNumber();
-    const fromBlock = Math.max(0, latestBlock - 10000); // 최근 10000 블록
+    const fromBlock = Math.max(0, latestBlock - 100000); // 최근 100000 블록
     
     const eventDetails: OnChainEventDetail[] = [];
     
@@ -302,29 +302,31 @@ export async function queryOnChainEvents(
       for (const abi of query.abis) {
         if (abi.type === 'event') {
           try {
-            const filter = contract.filters[abi.name]?.();
+            // Create filter with wallet address if provided
+            let filter;
+            if (walletAddress && abi.inputs && abi.inputs.length > 0) {
+              // Find the player/address field in the event
+              const addressFieldIndex = abi.inputs.findIndex(input => 
+                input.type === 'address' && (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter')
+              );
+              
+              if (addressFieldIndex !== -1) {
+                // Create an array of filter parameters
+                const filterParams = new Array(abi.inputs.length).fill(null);
+                filterParams[addressFieldIndex] = walletAddress;
+                filter = contract.filters[abi.name]?.(...filterParams);
+              } else {
+                filter = contract.filters[abi.name]?.();
+              }
+            } else {
+              filter = contract.filters[abi.name]?.();
+            }
+            
             if (filter) {
               const events = await contract.queryFilter(filter, fromBlock, latestBlock);
               
-              // walletAddress로 필터링
-              const filteredEvents = walletAddress ? events.filter(event => {
-                // 이벤트 args에서 address 타입 필드를 찾아서 확인
-                if ('args' in event && event.args) {
-                  const userAddress = ethers.getAddress(walletAddress);
-                  // args의 모든 값을 확인하여 walletAddress와 일치하는지 확인
-                  return Object.values(event.args).some(arg => {
-                    if (typeof arg === 'string') {
-                      try {
-                        return ethers.getAddress(arg) === userAddress;
-                      } catch {
-                        return false;
-                      }
-                    }
-                    return false;
-                  });
-                }
-                return false;
-              }) : events;
+              // 이미 필터에 walletAddress가 포함되어 있으므로 추가 필터링 불필요
+              const filteredEvents = events;
               
               for (const event of filteredEvents) {
                 const block = await provider.getBlock(event.blockNumber);
@@ -640,6 +642,8 @@ export async function queryUserOnChainData(
 
     // walletAddress로 필터링된 이벤트 조회
     const events = await queryOnChainEvents(query, 10000, walletAddress);
+    
+    console.log(`[OnChainService] Found ${events.length} events for ${walletAddress} on ${query.contractAddress}`);
     
     // 날짜별 집계
     const dailyCounts: { [key: string]: { [functionName: string]: number } } = {};
