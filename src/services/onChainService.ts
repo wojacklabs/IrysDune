@@ -302,41 +302,18 @@ export async function queryOnChainEvents(
       for (const abi of query.abis) {
         if (abi.type === 'event') {
           try {
-            // Create filter with wallet address if provided
-            let filter;
-            let addressFieldIndex = -1;
-            
-            if (walletAddress && abi.inputs && abi.inputs.length > 0) {
-              // Find the player/address field in the event that is indexed
-              addressFieldIndex = abi.inputs.findIndex(input => 
-                input.type === 'address' && 
-                (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter') &&
-                input.indexed !== false // Only use indexed parameters for filtering
-              );
-              
-              if (addressFieldIndex !== -1) {
-                // Create an array of filter parameters
-                const filterParams = new Array(abi.inputs.length).fill(null);
-                filterParams[addressFieldIndex] = ethers.getAddress(walletAddress);
-                filter = contract.filters[abi.name]?.(...filterParams);
-                console.log(`[OnChainService] Created filter for ${abi.name} with wallet ${ethers.getAddress(walletAddress)}`);
-              } else {
-                // Cannot filter by wallet, will need to filter results manually
-                filter = contract.filters[abi.name]?.();
-                console.log(`[OnChainService] Created filter for ${abi.name} without wallet filter (no indexed address field)`);
-              }
-            } else {
-              filter = contract.filters[abi.name]?.();
-            }
+            // Always get all events and filter manually
+            const filter = contract.filters[abi.name]?.();
+            console.log(`[OnChainService] Querying ${abi.name} events`);
             
             if (filter) {
               const events = await contract.queryFilter(filter, fromBlock, latestBlock);
               
-              // If we couldn't filter by wallet address in the query, filter manually
+              // Filter by wallet address if provided
               let filteredEvents = events;
-              if (walletAddress && addressFieldIndex === -1) {
-                // Find address field for manual filtering
-                const addressField = abi.inputs?.find(input => 
+              if (walletAddress && abi.inputs) {
+                // Find address field
+                const addressField = abi.inputs.find(input => 
                   input.type === 'address' && 
                   (input.name === 'player' || input.name === 'from' || input.name === 'to' || input.name === 'minter')
                 );
@@ -353,7 +330,7 @@ export async function queryOnChainEvents(
                     }
                     return false;
                   });
-                  console.log(`[OnChainService] Manually filtered ${events.length} events to ${filteredEvents.length} for wallet ${walletAddress}`);
+                  console.log(`[OnChainService] Filtered ${events.length} events to ${filteredEvents.length} for wallet ${walletAddress}`);
                 }
               }
               
