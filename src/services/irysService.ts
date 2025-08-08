@@ -531,11 +531,6 @@ const IRYS_ENDPOINTS = [
     base: 'https://devnet.irys.xyz',
     name: 'DevNet'
   },
-  { 
-    graphql: 'https://node1.testnet.irys.xyz/graphql',
-    base: 'https://node1.testnet.irys.xyz',
-    name: 'TestNet Node1'
-  }
 ];
 
 // Get user transactions from all endpoints

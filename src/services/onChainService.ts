@@ -323,8 +323,10 @@ export async function queryOnChainEvents(
                   filteredEvents = events.filter(event => {
                     if ('args' in event && event.args && event.args[fieldIndex]) {
                       try {
-                        return ethers.getAddress(event.args[fieldIndex]) === ethers.getAddress(walletAddress);
-                      } catch {
+                        const eventAddress = ethers.getAddress(event.args[fieldIndex]);
+                        const targetAddress = ethers.getAddress(walletAddress);
+                        return eventAddress === targetAddress;
+                      } catch (error) {
                         return false;
                       }
                     }
@@ -495,9 +497,9 @@ export const ON_CHAIN_PRESETS = [
             name: 'ScoreSubmitted',
             type: 'event' as const,
             inputs: [
-              { name: 'player', type: 'address' },
-              { name: 'score', type: 'uint256' },
-              { name: 'timestamp', type: 'uint256' }
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
         ]
@@ -517,9 +519,9 @@ export const ON_CHAIN_PRESETS = [
             name: 'ScoreSubmitted',
             type: 'event' as const,
             inputs: [
-              { name: 'player', type: 'address' },
-              { name: 'score', type: 'uint256' },
-              { name: 'timestamp', type: 'uint256' }
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
         ]
@@ -539,9 +541,9 @@ export const ON_CHAIN_PRESETS = [
             name: 'ScoreSubmitted',
             type: 'event' as const,
             inputs: [
-              { name: 'player', type: 'address' },
-              { name: 'score', type: 'uint256' },
-              { name: 'timestamp', type: 'uint256' }
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
         ]
@@ -561,9 +563,9 @@ export const ON_CHAIN_PRESETS = [
             name: 'ScoreSubmitted',
             type: 'event' as const,
             inputs: [
-              { name: 'player', type: 'address' },
-              { name: 'score', type: 'uint256' },
-              { name: 'timestamp', type: 'uint256' }
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
         ]
