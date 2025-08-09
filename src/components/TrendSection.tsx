@@ -166,8 +166,13 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     
     // Set up 30-minute interval for auto-refresh
     intervalRef.current = setInterval(() => {
-      console.log('[TrendSection] Auto-refreshing data (30-minute interval)...');
-      loadEcosystemData(true);
+      // Only refresh if the page is visible
+      if (!document.hidden) {
+        console.log('[TrendSection] Auto-refreshing data (30-minute interval)...');
+        loadEcosystemData(true);
+      } else {
+        console.log('[TrendSection] Page is hidden, skipping auto-refresh');
+      }
     }, 30 * 60 * 1000); // 30 minutes
     
     // Set up 1-minute interval for cache age update

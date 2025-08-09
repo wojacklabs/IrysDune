@@ -52,6 +52,12 @@ function App() {
   // Background data loading on app mount
   useEffect(() => {
     const loadBackgroundData = async () => {
+      // Only load data if the page is visible
+      if (document.hidden) {
+        console.log('[App] Page is hidden, skipping background data load');
+        return;
+      }
+      
       console.log('[App] Checking for background data update...');
       
       // Check if cache exists and is valid
@@ -83,7 +89,25 @@ function App() {
       }
     };
     
+    // Load data on mount
     loadBackgroundData();
+    
+    // Reload data when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('[App] Page became visible, checking if data needs refresh...');
+        const cacheValid = isCacheValid();
+        if (!cacheValid) {
+          loadBackgroundData();
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const handleWalletConnect = async (address: string) => {
