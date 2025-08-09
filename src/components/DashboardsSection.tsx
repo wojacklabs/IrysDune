@@ -22,6 +22,7 @@ import { CreateDashboardModal } from './CreateDashboardModal';
 import { Share2, Download } from 'lucide-react';
 import { APP_PRESETS } from '../constants/appPresets';
 import { ON_CHAIN_PRESETS } from '../services/onChainService';
+import { fetchProjectData } from '../services/dataService';
 
 interface DashboardsSectionProps {
   walletAddress: string | null;
@@ -438,26 +439,21 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 };
                 setLoadingProgress(overallProgress);
               } else {
-                // Fallback: fetch preset data via GraphQL when cache is missing
-                console.log(`[DashboardsSection] No cached data for preset: ${query.name}. Fetching via GraphQL fallback...`);
+                // Fallback: fetch preset data from mutable address (no GraphQL)
+                console.log(`[DashboardsSection] No cached data for preset: ${query.name}. Fetching from mutable address...`);
                 
-                // Determine months from chart's dateRange or timePeriod
-                const monthsMap: Record<string, number> = { week: 0.25, month: 1, quarter: 3, year: 12 };
-                const months = chart.dateRange
-                  ? calculateMonthsFromDateRange(chart.dateRange)
-                  : (monthsMap[chart.timePeriod] || 6);
-                
-                const data = await queryTagCounts(query.tags || [], (progress) => {
-                  const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
-                  const overallProgress = {
-                    current: chartProgress,
-                    total: dashboard.charts.length,
-                    percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
-                  };
-                  setLoadingProgress(overallProgress);
-                }, { months });
-                
+                // Use trends' data source directly
+                const data = await fetchProjectData(query.id);
                 allChartData[chart.id][query.id] = data;
+                
+                // Update progress
+                const chartProgress = i + (j + 1) / chart.queries.length;
+                const overallProgress = {
+                  current: chartProgress,
+                  total: dashboard.charts.length,
+                  percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
               }
             }
           } else {
@@ -482,23 +478,38 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 };
                 setLoadingProgress(overallProgress);
               } else {
-                // Query new data if not a preset or not in cache
-                if (!query.tags || query.tags.length === 0) {
-                  console.warn('[DashboardsSection] Skipping query with empty tags:', query);
-                } else {
-                  const data = await queryTagCounts(query.tags, (progress) => {
-                    const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
-                    const overallProgress = {
-                      current: chartProgress,
-                      total: dashboard.charts.length,
-                      percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
-                    };
-                    setLoadingProgress(overallProgress);
-                  }, chart.dateRange ? {
-                    months: calculateMonthsFromDateRange(chart.dateRange)
-                  } : undefined);
-                  
+                // If this query is a preset, always fetch via mutable address (no GraphQL)
+                if (isPreset) {
+                  console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name}`);
+                  const data = await fetchProjectData(query.id);
                   allChartData[chart.id][query.id] = data;
+                  
+                  const chartProgress = i + (j + 1) / chart.queries.length;
+                  const overallProgress = {
+                    current: chartProgress,
+                    total: dashboard.charts.length,
+                    percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                  };
+                  setLoadingProgress(overallProgress);
+                } else {
+                  // Non-preset custom query: only then use GraphQL (guarded)
+                  if (!query.tags || query.tags.length === 0) {
+                    console.warn('[DashboardsSection] Skipping query with empty tags:', query);
+                  } else {
+                    const data = await queryTagCounts(query.tags, (progress) => {
+                      const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
+                      const overallProgress = {
+                        current: chartProgress,
+                        total: dashboard.charts.length,
+                        percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                      };
+                      setLoadingProgress(overallProgress);
+                    }, chart.dateRange ? {
+                      months: calculateMonthsFromDateRange(chart.dateRange)
+                    } : undefined);
+                    
+                    allChartData[chart.id][query.id] = data;
+                  }
                 }
               }
             }
