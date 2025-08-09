@@ -16,6 +16,7 @@ import {
   getCachedDashboards 
 } from '../services/storageService';
 import { queryTagCounts, fetchIrysNames } from '../services/irysService';
+import { queryOnChainData } from '../services/onChainService';
 import LoadingProgress from './LoadingProgress';
 import { CreateDashboardModal } from './CreateDashboardModal';
 import { Share2, Download } from 'lucide-react';
@@ -348,16 +349,78 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
         
         allChartData[chart.id] = {};
         
-        // Check if chart has queries (new format) or tags (legacy format)
-        if (chart.queries && chart.queries.length > 0) {
-          // New format with multiple queries
-          for (let j = 0; j < chart.queries.length; j++) {
-            const query = chart.queries[j];
+        // Check if this is an on-chain query
+        if (chart.onChainQuery) {
+          console.log(`[DashboardsSection] Processing on-chain query for chart: ${chart.title}`);
+          
+          // Check if it's a preset on-chain query
+          const presetId = chart.queries?.[0]?.id;
+          const isPreset = presetId && ON_CHAIN_PRESETS.some(p => p.id === presetId);
+          
+          if (isPreset && availableData[presetId]) {
+            // Use trend data for preset on-chain projects
+            console.log(`[DashboardsSection] Using cached trend data for on-chain preset: ${presetId}`);
+            allChartData[chart.id][presetId] = availableData[presetId];
             
-            // Check if data exists in availableData first
-            if (availableData[query.id]) {
-              console.log(`[DashboardsSection] Using cached data for ${query.name}`);
-              allChartData[chart.id][query.id] = availableData[query.id];
+            // Update progress
+            const overallProgress = {
+              current: i + 1,
+              total: dashboard.charts.length,
+              percentage: Math.round(((i + 1) / dashboard.charts.length) * 100)
+            };
+            setLoadingProgress(overallProgress);
+          } else {
+            // Only query on-chain data if it's not a preset or not in cache
+            console.log(`[DashboardsSection] Querying on-chain data for chart: ${chart.title}`);
+            
+            const monthsMap = {
+              'week': 0.25,
+              'month': 1,
+              'quarter': 3,
+              'year': 12
+            };
+            const months = monthsMap[chart.timePeriod] || 6;
+            
+            const data = await queryOnChainData(
+              {
+                ...chart.onChainQuery,
+                rpcUrl: chart.onChainQuery.rpcUrl || ''
+              },
+              (progress) => {
+                const overallProgress = {
+                  current: i + (progress.percentage / 100),
+                  total: dashboard.charts.length,
+                  percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
+              },
+              { months }
+            );
+            
+            // Store on-chain data as is (not as QueryResult[])
+            allChartData[chart.id][chart.id] = data as any;
+          }
+        }
+        // Check if chart has queries (new format) or tags (legacy format)
+        else if (chart.queries && chart.queries.length > 0) {
+          // Check if all queries are presets
+          const allPresets = chart.queries.every(q => 
+            APP_PRESETS.some(p => p.id === q.id) || 
+            ON_CHAIN_PRESETS.some(p => p.id === q.id)
+          );
+          
+          if (allPresets) {
+            console.log(`[DashboardsSection] All queries are presets for chart: ${chart.title}`);
+            // Use cached/trend data for all preset queries
+            for (let j = 0; j < chart.queries.length; j++) {
+              const query = chart.queries[j];
+              
+              if (availableData[query.id]) {
+                console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
+                allChartData[chart.id][query.id] = availableData[query.id];
+              } else {
+                console.log(`[DashboardsSection] Warning: No cached data for preset: ${query.name}`);
+              }
               
               // Update progress
               const chartProgress = i + (j + 1) / chart.queries.length;
@@ -367,19 +430,42 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
               };
               setLoadingProgress(overallProgress);
-            } else {
-              // Query new data if not in trendData
-              const data = await queryTagCounts(query.tags, (progress) => {
-                const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
+            }
+          } else {
+            // Mixed or custom queries - process individually
+            for (let j = 0; j < chart.queries.length; j++) {
+              const query = chart.queries[j];
+              
+              // Check if this specific query is a preset
+              const isPreset = APP_PRESETS.some(p => p.id === query.id) || 
+                              ON_CHAIN_PRESETS.some(p => p.id === query.id);
+              
+              if (isPreset && availableData[query.id]) {
+                console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
+                allChartData[chart.id][query.id] = availableData[query.id];
+                
+                // Update progress
+                const chartProgress = i + (j + 1) / chart.queries.length;
                 const overallProgress = {
                   current: chartProgress,
                   total: dashboard.charts.length,
                   percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
                 };
                 setLoadingProgress(overallProgress);
-              });
-              
-              allChartData[chart.id][query.id] = data;
+              } else {
+                // Query new data if not a preset or not in cache
+                const data = await queryTagCounts(query.tags, (progress) => {
+                  const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
+                  const overallProgress = {
+                    current: chartProgress,
+                    total: dashboard.charts.length,
+                    percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                  };
+                  setLoadingProgress(overallProgress);
+                });
+                
+                allChartData[chart.id][query.id] = data;
+              }
             }
           }
         } else if (chart.tags && chart.tags.length > 0) {
