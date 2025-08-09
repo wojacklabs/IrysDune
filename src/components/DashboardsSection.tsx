@@ -532,9 +532,16 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
             }
           }
           
-          if (isPreset && presetId && availableData[presetId]) {
-            console.log(`[DashboardsSection] Legacy chart matches preset: ${presetId}, using cached data`);
-            allChartData[chart.id][chart.id] = availableData[presetId];
+          if (isPreset && presetId) {
+            if (availableData[presetId]) {
+              console.log(`[DashboardsSection] Legacy chart matches preset: ${presetId}, using cached data`);
+              allChartData[chart.id][chart.id] = availableData[presetId];
+            } else {
+              // For preset legacy charts without cache, fetch via mutable address (no GraphQL)
+              console.log(`[DashboardsSection] Legacy preset without cache: ${presetId}. Fetching from mutable address...`);
+              const data = await fetchProjectData(presetId);
+              allChartData[chart.id][chart.id] = data;
+            }
             
             // Update progress
             const overallProgress = {
@@ -544,8 +551,8 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
             };
             setLoadingProgress(overallProgress);
           } else {
-            // Only query if not a preset or no cached data
-            console.log(`[DashboardsSection] Legacy chart not preset or no cached data, querying...`);
+            // Non-preset legacy chart: fallback to GraphQL (guarded)
+            console.log(`[DashboardsSection] Legacy chart (non-preset), querying via GraphQL...`);
             if (!chart.tags || chart.tags.length === 0) {
               console.warn('[DashboardsSection] Skipping legacy chart with empty tags:', chart);
             } else {
