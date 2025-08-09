@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction, IrysUploader } from '../types';
+import type { Dashboard, Tag, ChartType, ChartConfig, QueryResult, AbiFunction, IrysUploader, LoadingProgress as LoadingProgressType } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
 import { uploadDashboard, initializeIrysUploader } from '../services/irysUploadService';
 import { queryTagCounts } from '../services/irysService';
-import { queryOnChainData, ON_CHAIN_PRESETS } from '../services/onChainService';
-import { generateChartData } from '../utils/chartUtils';
+import { ON_CHAIN_PRESETS, queryOnChainData } from '../services/onChainService';
+import { generateChartData, filterDataByPeriod } from '../utils/chartUtils';
 import { getCachedData, waitForCache } from '../services/storageService';
 import Chart from './Chart';
 import LoadingProgress from './LoadingProgress';
@@ -47,7 +47,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
   const [error, setError] = useState('');
   const [loadingChartId, setLoadingChartId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<{ [chartId: string]: any }>({});
-  const [loadingProgress, setLoadingProgress] = useState<{ current: number; total: number; percentage: number } | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState<LoadingProgressType | null>(null);
   const [transactionStatus, setTransactionStatus] = useState<string>('');
   const [txHash, setTxHash] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -383,90 +383,181 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
           [chart.id]: processedData
         }));
       } else {
-        // 기존 스토리지 쿼리 로직
-        // First try to get cached data or wait for it if being loaded
-        let cachedData = getCachedData();
-        if (!cachedData && !trendData) {
-          console.log('[CreateDashboard] No cached data available, waiting for cache...');
-          cachedData = await waitForCache(5000); // Wait up to 5 seconds
-        }
-        
-        // Use either cached data or trendData
-        const availableData = cachedData || trendData || {};
-        
+        // Storage query logic
         const allData: { [queryId: string]: QueryResult[] } = {};
         const queries = chart.queries || [];
         
-        // If no queries, try legacy tags
-        if (queries.length === 0 && chart.tags && chart.tags.length > 0) {
-          const monthsMap = {
-            'week': 0.25,
-            'month': 1,
-            'quarter': 3,
-            'year': 12
-          };
-          const months = monthsMap[chart.timePeriod] || 6;
+        // Check if all queries are preset projects
+        const allPresets = queries.every(q => APP_PRESETS.some(p => p.id === q.id));
+        
+        if (allPresets && queries.length > 0) {
+          // For preset projects, always use trend data
+          console.log('[CreateDashboard] All queries are presets, using trend data');
           
-          const data = await queryTagCounts(chart.tags, (progress) => {
-            setLoadingProgress(progress);
-          }, { months });
-          allData[chart.id] = data;
-        } else {
-          // Load data for each query
-          for (let i = 0; i < queries.length; i++) {
-            const query = queries[i];
+          // Wait for trend data if not available
+          let availableData = trendData || getCachedData();
+          if (!availableData || Object.keys(availableData).length === 0) {
+            console.log('[CreateDashboard] No trend data available, waiting...');
             
-            // Check if data exists in availableData first
-            if (availableData[query.id]) {
-              console.log(`[CreateDashboard] Using cached data for ${query.name}`);
-              allData[query.id] = availableData[query.id];
+            // Show loading message
+            setLoadingProgress({ 
+              current: 0, 
+              total: 1, 
+              percentage: 0,
+              message: 'Waiting for trend data to load...'
+            });
+            
+            // Wait for trend data with timeout
+            const maxWaitTime = 30000; // 30 seconds
+            const checkInterval = 500; // Check every 500ms
+            let waited = 0;
+            
+            while (waited < maxWaitTime) {
+              availableData = trendData || getCachedData();
+              if (availableData && Object.keys(availableData).length > 0) {
+                console.log('[CreateDashboard] Trend data loaded after', waited, 'ms');
+                break;
+              }
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+              waited += checkInterval;
               
               // Update progress
-              const progress = {
-                current: i + 1,
-                total: queries.length,
-                percentage: Math.round(((i + 1) / queries.length) * 100)
-              };
+              setLoadingProgress({ 
+                current: waited, 
+                total: maxWaitTime, 
+                percentage: Math.round((waited / maxWaitTime) * 100),
+                message: `Waiting for trend data... ${Math.round(waited / 1000)}s`
+              });
+            }
+            
+            if (!availableData || Object.keys(availableData).length === 0) {
+              throw new Error('Trend data not available. Please refresh the page and try again.');
+            }
+          }
+          
+          // Process trend data for selected time period
+          const timePeriodMap = {
+            'week': '7d',
+            'month': '30d',
+            'quarter': '3M',
+            'year': '6M'
+          } as const;
+          
+          const period = timePeriodMap[chart.timePeriod] || '30d';
+          
+          // Filter trend data by selected time period
+          const filteredData = filterDataByPeriod(availableData, period);
+          
+          // Use filtered data for each query
+          queries.forEach((query, i) => {
+            if (filteredData[query.id]) {
+              allData[query.id] = filteredData[query.id];
+              console.log(`[CreateDashboard] Using filtered trend data for ${query.name}, period: ${period}`);
+            }
+            
+            // Update progress
+            const progress = {
+              current: i + 1,
+              total: queries.length,
+              percentage: Math.round(((i + 1) / queries.length) * 100)
+            };
+            setLoadingProgress(progress);
+          });
+          
+        } else {
+          // Mixed or custom queries - use existing logic
+          // First try to get cached data or wait for it if being loaded
+          let cachedData = getCachedData();
+          if (!cachedData && !trendData) {
+            console.log('[CreateDashboard] No cached data available, waiting for cache...');
+            cachedData = await waitForCache(5000); // Wait up to 5 seconds
+          }
+          
+          // Use either cached data or trendData
+          const availableData = cachedData || trendData || {};
+          
+          // If no queries, try legacy tags
+          if (queries.length === 0 && chart.tags && chart.tags.length > 0) {
+            const monthsMap = {
+              'week': 0.25,
+              'month': 1,
+              'quarter': 3,
+              'year': 12
+            };
+            const months = monthsMap[chart.timePeriod] || 6;
+            
+            const data = await queryTagCounts(chart.tags, (progress) => {
               setLoadingProgress(progress);
-            } else {
-              // Query new data if not in trendData
-              const progress = {
-                current: i,
-                total: queries.length,
-                percentage: Math.round((i / queries.length) * 100)
-              };
-              setLoadingProgress(progress);
+            }, { months });
+            allData[chart.id] = data;
+          } else {
+            // Load data for each query
+            for (let i = 0; i < queries.length; i++) {
+              const query = queries[i];
               
-              // Get date range from chart time period
-              const monthsMap = {
-                'week': 0.25,
-                'month': 1,
-                'quarter': 3,
-                'year': 12
-              };
-              const months = monthsMap[chart.timePeriod] || 6;
-              
-              const data = await queryTagCounts(query.tags, (subProgress) => {
-                const overallProgress = {
-                  current: i + (subProgress.percentage / 100),
+              // Check if data exists in availableData first
+              if (availableData[query.id]) {
+                console.log(`[CreateDashboard] Using cached data for ${query.name}`);
+                allData[query.id] = availableData[query.id];
+                
+                // Update progress
+                const progress = {
+                  current: i + 1,
                   total: queries.length,
-                  percentage: Math.round(((i + (subProgress.percentage / 100)) / queries.length) * 100)
+                  percentage: Math.round(((i + 1) / queries.length) * 100)
                 };
-                setLoadingProgress(overallProgress);
-              }, { months });
-              
-              allData[query.id] = data;
+                setLoadingProgress(progress);
+              } else {
+                // Query new data if not in trendData
+                const progress = {
+                  current: i,
+                  total: queries.length,
+                  percentage: Math.round((i / queries.length) * 100)
+                };
+                setLoadingProgress(progress);
+                
+                // Get date range from chart time period
+                const monthsMap = {
+                  'week': 0.25,
+                  'month': 1,
+                  'quarter': 3,
+                  'year': 12
+                };
+                const months = monthsMap[chart.timePeriod] || 6;
+                
+                const data = await queryTagCounts(query.tags, (subProgress) => {
+                  const overallProgress = {
+                    current: i + (subProgress.percentage / 100),
+                    total: queries.length,
+                    percentage: Math.round(((i + (subProgress.percentage / 100)) / queries.length) * 100)
+                  };
+                  setLoadingProgress(overallProgress);
+                }, { months });
+                
+                allData[query.id] = data;
+              }
             }
           }
         }
         
-        setChartData(prev => ({ ...prev, [chart.id]: allData }));
+        // Generate chart with filtered data
+        const processedData = generateChartData(
+          allData,
+          queries,
+          chart.chartType,
+          false
+        );
+        
+        setChartData(prev => ({
+          ...prev,
+          [chart.id]: processedData
+        }));
       }
     } catch (error) {
       console.error('Error loading chart data:', error);
+      setLoadingProgress({ current: 1, total: 1, percentage: 100, error: error instanceof Error ? error.message : 'Unknown error' });
     } finally {
       setLoadingChartId(null);
-      setLoadingProgress(null);
     }
   };
 

@@ -52,6 +52,7 @@ export interface LoadingProgress {
   total: number;
   percentage: number;
   message?: string;
+  error?: string;
 }
 
 // 온체인 쿼리 관련 타입
