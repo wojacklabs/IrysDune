@@ -301,38 +301,42 @@ export function generateChartData(
       };
     }
 
-    // 날짜별 데이터 그룹화
-    const dateMap: { [date: string]: { [functionName: string]: number } } = {};
+    // 날짜별 데이터 그룹화 및 타임스탬프 변환
+    const dateMap: { [timestamp: number]: { [functionName: string]: number } } = {};
     const functionNames = new Set<string>();
     
     results.forEach(result => {
-      const date = result.date;
+      // Convert date string to timestamp
+      const timestamp = new Date(result.date).getTime();
       const functionName = result.functionName || 'Total Transactions';
       
-      if (!dateMap[date]) {
-        dateMap[date] = {};
+      if (!dateMap[timestamp]) {
+        dateMap[timestamp] = {};
       }
       
-      dateMap[date][functionName] = (dateMap[date][functionName] || 0) + result.count;
+      dateMap[timestamp][functionName] = (dateMap[timestamp][functionName] || 0) + result.count;
       functionNames.add(functionName);
     });
     
-    const labels = Object.keys(dateMap).sort();
+    const timestamps = Object.keys(dateMap).map(Number).sort((a, b) => a - b);
     
     if (displayMode === 'combined' || functionNames.size === 1) {
       // 합쳐서 표시
-      const combinedData = labels.map(date => {
-        return Object.values(dateMap[date]).reduce((sum, count) => sum + count, 0);
+      const combinedData = timestamps.map(timestamp => {
+        return Object.values(dateMap[timestamp]).reduce((sum, count) => sum + count, 0);
       });
       
+      // Convert to {x, y} format
+      const data = timestamps.map((timestamp, index) => ({
+        x: timestamp,
+        y: cumulative ? combinedData.slice(0, index + 1).reduce((a, b) => a + b, 0) : combinedData[index]
+      }));
+      
       return {
-        labels,
+        labels: [],
         datasets: [{
           label: 'Total Activity',
-          data: cumulative ? combinedData.reduce((acc: number[], val, idx) => {
-            acc.push((acc[idx - 1] || 0) + val);
-            return acc;
-          }, []) : combinedData,
+          data,
           backgroundColor: 'transparent',
           borderColor: '#3b82f6',
           borderWidth: 2,
@@ -343,16 +347,19 @@ export function generateChartData(
     } else {
       // 함수별로 분리해서 표시
       const datasets = Array.from(functionNames).map((functionName, index) => {
-        const functionData = labels.map(date => dateMap[date][functionName] || 0);
+        const functionData = timestamps.map(timestamp => dateMap[timestamp][functionName] || 0);
         const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
         const color = colors[index % colors.length];
         
+        // Convert to {x, y} format
+        const data = timestamps.map((timestamp, idx) => ({
+          x: timestamp,
+          y: cumulative ? functionData.slice(0, idx + 1).reduce((a, b) => a + b, 0) : functionData[idx]
+        }));
+        
         return {
           label: functionName,
-          data: cumulative ? functionData.reduce((acc: number[], val, idx) => {
-            acc.push((acc[idx - 1] || 0) + val);
-            return acc;
-          }, []) : functionData,
+          data,
           backgroundColor: 'transparent',
           borderColor: color,
           borderWidth: 2,
@@ -361,7 +368,7 @@ export function generateChartData(
         };
       });
       
-      return { labels, datasets };
+      return { labels: [], datasets };
     }
   }
   
@@ -378,11 +385,10 @@ export function generateChartData(
   if (timestamps.length === 0) {
     const now = Date.now();
     const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now]; // Yesterday and today
-    const emptyLabels = emptyTimestamps.map(formatDate);
     
     const emptyDatasets = queries.map(preset => ({
       label: preset.name,
-      data: [0, 0],
+      data: emptyTimestamps.map(ts => ({ x: ts, y: 0 })),
       backgroundColor: 'transparent',
       borderColor: preset.color,
       borderWidth: 2,
@@ -391,11 +397,9 @@ export function generateChartData(
       yAxisID: chartType === 'stacked' ? 'cumulative' : 'absolute'
     }));
     
-    return { labels: emptyLabels, datasets: emptyDatasets };
+    return { labels: [], datasets: emptyDatasets };
   }
   
-  const labels = timestamps.map(formatDate);
-
   // Check if multiple datasets
   const isMultipleDatasets = queries.length > 1;
 
@@ -570,23 +574,26 @@ export function generateChartData(
       // Check if this dataset has any non-zero values
       const hasData = dataPoints.some(value => value > 0);
       
-      if (!hasData) {
-        console.log(`[GenerateChartData] Warning: ${preset?.name || 'Unknown'} has no data for stacked chart, all values are 0`);
-      }
+      // Convert to {x, y} format for time scale
+      const data = timestamps.map((timestamp, index) => ({
+        x: timestamp,
+        y: dataPoints[index]
+      }));
       
       return {
         label: preset?.name || 'Unknown',
-        data: dataPoints,
-        backgroundColor: 'transparent',
-        borderColor: preset?.color || '#94a3b8',
-        borderWidth: 2,
-        fill: false,
+        data,
+        backgroundColor: hasData ? preset?.color || '#0ea5e9' : 'transparent',
+        borderColor: preset?.color || '#0ea5e9',
+        borderWidth: hasData ? 3 : 2,
+        borderDash: hasData ? [] : [5, 5],
+        fill: hasData,
         tension: 0.1,
         yAxisID: 'cumulative'
       };
     });
 
-    return { labels, datasets };
+    return { labels: [], datasets };
   } else {
     // Line chart: daily values (not cumulative)
     if (isMultipleDatasets) {
@@ -604,9 +611,15 @@ export function generateChartData(
           return scaledValue;
         });
 
+        // Convert to {x, y} format for time scale
+        const data = timestamps.map((timestamp, index) => ({
+          x: timestamp,
+          y: scaledDataPoints[index]
+        }));
+
         return {
           label: `${preset?.name || 'Unknown'} (Relative)`,
-          data: scaledDataPoints,
+          data,
           backgroundColor: 'transparent',
           borderColor: preset?.color || '#94a3b8',
           fill: false,
@@ -615,14 +628,20 @@ export function generateChartData(
         };
       });
 
-      return { labels, datasets };
+      return { labels: [], datasets };
     } else {
       // Single dataset - absolute values
       const { preset, dataPoints } = rawDatasets[0] || { preset: null, dataPoints: [] };
       
+      // Convert to {x, y} format for time scale
+      const data = timestamps.map((timestamp, index) => ({
+        x: timestamp,
+        y: dataPoints[index]
+      }));
+      
       const datasets = [{
         label: `${preset?.name || 'Unknown'} (Daily)`,
-        data: dataPoints,
+        data,
         backgroundColor: 'transparent',
         borderColor: preset?.color || '#94a3b8',
         fill: false,
@@ -630,7 +649,7 @@ export function generateChartData(
         yAxisID: 'absolute'
       }];
 
-      return { labels, datasets };
+      return { labels: [], datasets };
     }
   }
 }
@@ -651,11 +670,10 @@ export function generateWholeEcosystemData(
   if (timestamps.length === 0) {
     const now = Date.now();
     const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now]; // Yesterday and today
-    const emptyLabels = emptyTimestamps.map(formatDate);
     
     const emptyDataset = [{
       label: 'Total Ecosystem Activity',
-      data: [0, 0],
+      data: emptyTimestamps.map(ts => ({ x: ts, y: 0 })),
       backgroundColor: 'transparent',
       borderColor: '#0ea5e9',
       borderWidth: 3,
@@ -664,11 +682,9 @@ export function generateWholeEcosystemData(
       yAxisID: chartType === 'stacked' ? 'cumulative' : 'absolute'
     }];
     
-    return { labels: emptyLabels, datasets: emptyDataset };
+    return { labels: [], datasets: emptyDataset };
   }
   
-  const labels = timestamps.map(formatDate);
-
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
     // For ecosystem treemap, group by project
@@ -744,9 +760,15 @@ export function generateWholeEcosystemData(
       hasNonZeroValues: totalCounts.some(v => v > 0)
     });
     
+    // Convert to {x, y} format for time scale
+    const data = timestamps.map((timestamp, index) => ({
+      x: timestamp,
+      y: totalCounts[index]
+    }));
+    
     const datasets = [{
       label: 'Total Ecosystem Activity (Cumulative)',
-      data: totalCounts,
+      data,
       backgroundColor: 'transparent',
       borderColor: '#0ea5e9',
       borderWidth: 3,
@@ -755,12 +777,18 @@ export function generateWholeEcosystemData(
       yAxisID: 'cumulative'
     }];
 
-    return { labels, datasets };
+    return { labels: [], datasets };
   } else {
     // Daily totals
+    // Convert to {x, y} format for time scale
+    const data = timestamps.map((timestamp, index) => ({
+      x: timestamp,
+      y: totalCounts[index]
+    }));
+    
     const datasets = [{
       label: 'Total Ecosystem Activity (Daily)',
-      data: totalCounts,
+      data,
       backgroundColor: 'transparent',
       borderColor: '#0ea5e9',
       borderWidth: 3,
@@ -769,7 +797,7 @@ export function generateWholeEcosystemData(
       yAxisID: 'absolute'
     }];
 
-    return { labels, datasets };
+    return { labels: [], datasets };
   }
 }
 
@@ -833,6 +861,16 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
     },
     scales: {
       x: {
+        type: 'time' as const,
+        time: {
+          unit: 'day' as const,
+          displayFormats: {
+            day: 'MMM d',
+            week: 'MMM d',
+            month: 'MMM yyyy'
+          },
+          tooltipFormat: 'MMM d, yyyy'
+        },
         display: true,
         title: {
           display: !isMobile, // Hide axis titles on mobile to save space
@@ -857,7 +895,8 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           color: '#64748b',
           maxRotation: isMobile ? 45 : 0, // Rotate labels on mobile if needed
           autoSkip: true,
-          maxTicksLimit: isMobile ? 6 : 12 // Show fewer ticks on mobile
+          maxTicksLimit: isMobile ? 6 : 12, // Show fewer ticks on mobile
+          source: 'auto' as const
         }
       },
       ...(isCumulative ? {

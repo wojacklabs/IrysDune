@@ -3,6 +3,8 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  TimeScale,
+  TimeSeriesScale,
   PointElement,
   LineElement,
   Title,
@@ -10,6 +12,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap';
 import { Line, Chart as ChartReact } from 'react-chartjs-2';
 import { Download, Share2 } from 'lucide-react';
@@ -20,6 +23,8 @@ import { getChartOptions } from '../utils/chartUtils';
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  TimeScale,
+  TimeSeriesScale,
   PointElement,
   LineElement,
   Title,
