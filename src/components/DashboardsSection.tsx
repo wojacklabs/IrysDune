@@ -464,19 +464,23 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 setLoadingProgress(overallProgress);
               } else {
                 // Query new data if not a preset or not in cache
-                const data = await queryTagCounts(query.tags, (progress) => {
-                  const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
-                  const overallProgress = {
-                    current: chartProgress,
-                    total: dashboard.charts.length,
-                    percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
-                  };
-                  setLoadingProgress(overallProgress);
-                }, chart.dateRange ? {
-                  months: calculateMonthsFromDateRange(chart.dateRange)
-                } : undefined);
-                
-                allChartData[chart.id][query.id] = data;
+                if (!query.tags || query.tags.length === 0) {
+                  console.warn('[DashboardsSection] Skipping query with empty tags:', query);
+                } else {
+                  const data = await queryTagCounts(query.tags, (progress) => {
+                    const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
+                    const overallProgress = {
+                      current: chartProgress,
+                      total: dashboard.charts.length,
+                      percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                    };
+                    setLoadingProgress(overallProgress);
+                  }, chart.dateRange ? {
+                    months: calculateMonthsFromDateRange(chart.dateRange)
+                  } : undefined);
+                  
+                  allChartData[chart.id][query.id] = data;
+                }
               }
             }
           }
@@ -512,18 +516,22 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
           } else {
             // Only query if not a preset or no cached data
             console.log(`[DashboardsSection] Legacy chart not preset or no cached data, querying...`);
-            const data = await queryTagCounts(chart.tags, (progress) => {
-              const overallProgress = {
-                current: i + (progress.percentage / 100),
-                total: dashboard.charts.length,
-                percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
-              };
-              setLoadingProgress(overallProgress);
-            }, chart.dateRange ? {
-              months: calculateMonthsFromDateRange(chart.dateRange)
-            } : undefined);
-            
-            allChartData[chart.id][chart.id] = data;
+            if (!chart.tags || chart.tags.length === 0) {
+              console.warn('[DashboardsSection] Skipping legacy chart with empty tags:', chart);
+            } else {
+              const data = await queryTagCounts(chart.tags, (progress) => {
+                const overallProgress = {
+                  current: i + (progress.percentage / 100),
+                  total: dashboard.charts.length,
+                  percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
+              }, chart.dateRange ? {
+                months: calculateMonthsFromDateRange(chart.dateRange)
+              } : undefined);
+              
+              allChartData[chart.id][chart.id] = data;
+            }
           }
         }
       }

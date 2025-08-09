@@ -10,6 +10,15 @@ export async function queryTagCounts(
   progressCallback?: (progress: LoadingProgress) => void,
   dateRange?: { months: number }
 ): Promise<QueryResult[]> {
+  // Guard: prevent empty-tag queries
+  if (!tags || tags.length === 0) {
+    console.warn('[IrysService] Skipping query: empty tags provided');
+    if (progressCallback) {
+      progressCallback({ current: 1, total: 1, percentage: 100 });
+    }
+    return [];
+  }
+
   // Check cache first
   const cacheKey = getCacheKey('query-tags', { 
     tags: tags.map(t => `${t.name}:${t.value}`).join(',') 
