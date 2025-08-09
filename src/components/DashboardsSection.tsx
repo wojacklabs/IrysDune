@@ -470,16 +470,47 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
           }
         } else if (chart.tags && chart.tags.length > 0) {
           // Legacy format with single tags array
-          const data = await queryTagCounts(chart.tags, (progress) => {
+          // Try to match with a preset based on tags
+          let isPreset = false;
+          let presetId: string | undefined;
+          
+          // Check if tags match any preset
+          for (const preset of APP_PRESETS) {
+            if (preset.tags.length === chart.tags.length &&
+                preset.tags.every(tag => 
+                  chart.tags?.some((t: any) => t.name === tag.name && t.value === tag.value)
+                )) {
+              isPreset = true;
+              presetId = preset.id;
+              break;
+            }
+          }
+          
+          if (isPreset && presetId && availableData[presetId]) {
+            console.log(`[DashboardsSection] Legacy chart matches preset: ${presetId}, using cached data`);
+            allChartData[chart.id][chart.id] = availableData[presetId];
+            
+            // Update progress
             const overallProgress = {
-              current: i + (progress.percentage / 100),
+              current: i + 1,
               total: dashboard.charts.length,
-              percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
+              percentage: Math.round(((i + 1) / dashboard.charts.length) * 100)
             };
             setLoadingProgress(overallProgress);
-          });
-          
-          allChartData[chart.id][chart.id] = data;
+          } else {
+            // Only query if not a preset or no cached data
+            console.log(`[DashboardsSection] Legacy chart not preset or no cached data, querying...`);
+            const data = await queryTagCounts(chart.tags, (progress) => {
+              const overallProgress = {
+                current: i + (progress.percentage / 100),
+                total: dashboard.charts.length,
+                percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
+              };
+              setLoadingProgress(overallProgress);
+            });
+            
+            allChartData[chart.id][chart.id] = data;
+          }
         }
       }
       
