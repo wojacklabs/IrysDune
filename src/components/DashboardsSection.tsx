@@ -803,14 +803,18 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 if (chart.queries && chart.queries.length > 0) {
                   // New format with multiple queries
                   chart.queries.forEach(query => {
-                    if (chartData[query.id]) {
-                      chartDataForDisplay[query.id] = chartData[query.id];
+                    const presetAppId = getAppPresetIdFromQuery(query);
+                    const dataKey = presetAppId || query.id;
+                    if (chartData[dataKey]) {
+                      chartDataForDisplay[dataKey] = chartData[dataKey];
                       queriesForDisplay.push({
-                        id: query.id,
+                        id: dataKey,
                         name: query.name,
                         tags: query.tags,
                         color: query.color
                       });
+                    } else {
+                      console.warn('[DashboardsSection] Missing data for query key:', dataKey, 'available keys:', Object.keys(chartData));
                     }
                   });
                 } else if (chartData[chart.id]) {
