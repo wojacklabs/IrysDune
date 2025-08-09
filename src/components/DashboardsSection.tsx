@@ -442,10 +442,13 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
             // Use cached/trend data for all preset queries
             for (let j = 0; j < chart.queries.length; j++) {
               const query = chart.queries[j];
+              const presetAppId = getAppPresetIdFromQuery(query);
               
-              if (availableData[query.id]) {
+              if (presetAppId && availableData[presetAppId]) {
                 console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
-                allChartData[chart.id][query.id] = availableData[query.id];
+                // Store data with BOTH keys for compatibility
+                allChartData[chart.id][presetAppId] = availableData[presetAppId];
+                allChartData[chart.id][query.id] = availableData[presetAppId];
                 
                 // Update progress
                 const chartProgress = i + (j + 1) / chart.queries.length;
@@ -455,13 +458,16 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
                 };
                 setLoadingProgress(overallProgress);
-              } else {
+              } else if (presetAppId) {
                 // Fallback: fetch preset data from mutable address (no GraphQL)
                 console.log(`[DashboardsSection] No cached data for preset: ${query.name}. Fetching from mutable address...`);
                 
                 // Use trends' data source directly
-                const data = await fetchProjectData(query.id);
+                const data = await fetchProjectData(presetAppId);
+                // Store data with BOTH keys for compatibility
+                allChartData[chart.id][presetAppId] = data;
                 allChartData[chart.id][query.id] = data;
+                console.log(`[DashboardsSection] Stored all-preset data for both keys - presetAppId: ${presetAppId}, query.id: ${query.id}, data points: ${data.length}`);
                 
                 // Update progress
                 const chartProgress = i + (j + 1) / chart.queries.length;
@@ -484,7 +490,9 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               
               if (isPreset && presetAppId && availableData[presetAppId]) {
                 console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
+                // Store data with BOTH keys for compatibility
                 allChartData[chart.id][presetAppId!] = availableData[presetAppId!];
+                allChartData[chart.id][query.id] = availableData[presetAppId!];
                 
                 // Update progress
                 const chartProgress = i + (j + 1) / chart.queries.length;
@@ -499,7 +507,10 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                               if (isPreset && presetAppId) {
                 console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name} (projectId=${presetAppId})`);
                 const data = await fetchProjectData(presetAppId);
+                // Store data with BOTH keys for compatibility
                 allChartData[chart.id][presetAppId] = data;
+                allChartData[chart.id][query.id] = data;
+                console.log(`[DashboardsSection] Stored data for both keys - presetAppId: ${presetAppId}, query.id: ${query.id}, data points: ${data.length}`);
                   
                   const chartProgress = i + (j + 1) / chart.queries.length;
                   const overallProgress = {
@@ -804,23 +815,19 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                   // New format with multiple queries
                   chart.queries.forEach(query => {
                     console.log('[DashboardsSection] Processing query for display:', query);
-                    const presetAppId = getAppPresetIdFromQuery(query);
-                    const dataKey = presetAppId || query.id;
-                    console.log('[DashboardsSection] Query id:', query.id, '→ dataKey:', dataKey);
                     
-                    // Check both the normalized key and the original key
-                    const dataFound = chartData[dataKey] || chartData[query.id];
-                    if (dataFound) {
-                      chartDataForDisplay[query.id] = dataFound; // Use original query.id for display
+                    // Simply use the data stored with the original query.id
+                    if (chartData[query.id]) {
+                      chartDataForDisplay[query.id] = chartData[query.id];
                       queriesForDisplay.push({
-                        id: query.id, // Keep original id for display
+                        id: query.id,
                         name: query.name,
                         tags: query.tags,
                         color: query.color
                       });
-                      console.log('[DashboardsSection] Found data for:', query.id, 'data length:', dataFound.length);
+                      console.log('[DashboardsSection] Found data for:', query.id, 'data length:', chartData[query.id].length);
                     } else {
-                      console.warn('[DashboardsSection] Missing data for query:', query.id, 'tried keys:', [dataKey, query.id], 'available keys:', Object.keys(chartData));
+                      console.warn('[DashboardsSection] Missing data for query:', query.id, 'available keys:', Object.keys(chartData));
                     }
                   });
                 } else if (chartData[chart.id]) {
