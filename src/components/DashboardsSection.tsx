@@ -101,6 +101,26 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     return Math.max(1, Math.ceil(diffInMonths));
   };
 
+  // Normalize query id to an App preset id (mutable-address backed)
+  const getAppPresetIdFromQuery = (query: any): string | null => {
+    if (!query) return null;
+    // Exact match by id
+    const exact = APP_PRESETS.find(p => p.id === query.id);
+    if (exact) return exact.id;
+    // onchain-<id> → <id>
+    if (typeof query.id === 'string' && query.id.startsWith('onchain-')) {
+      const candidate = query.id.replace(/^onchain-/, '');
+      const byCandidate = APP_PRESETS.find(p => p.id === candidate);
+      if (byCandidate) return byCandidate.id;
+    }
+    // Match by name (case-insensitive)
+    if (query.name) {
+      const byName = APP_PRESETS.find(p => p.name.toLowerCase() === String(query.name).toLowerCase());
+      if (byName) return byName.id;
+    }
+    return null;
+  };
+
   useEffect(() => {
     loadDashboards();
   }, []);
@@ -462,12 +482,12 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               const query = chart.queries[j];
               
               // Check if this specific query is a preset
-              const isPreset = APP_PRESETS.some(p => p.id === query.id) || 
-                              ON_CHAIN_PRESETS.some(p => p.id === query.id);
+              const presetAppId = getAppPresetIdFromQuery(query);
+              const isPreset = !!presetAppId;
               
-              if (isPreset && availableData[query.id]) {
+              if (isPreset && availableData[presetAppId!]) {
                 console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
-                allChartData[chart.id][query.id] = availableData[query.id];
+                allChartData[chart.id][presetAppId!] = availableData[presetAppId!];
                 
                 // Update progress
                 const chartProgress = i + (j + 1) / chart.queries.length;
@@ -480,9 +500,9 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               } else {
                 // If this query is a preset, always fetch via mutable address (no GraphQL)
                 if (isPreset) {
-                  console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name}`);
-                  const data = await fetchProjectData(query.id);
-                  allChartData[chart.id][query.id] = data;
+                  console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name} (projectId=${presetAppId})`);
+                  const data = await fetchProjectData(presetAppId!);
+                  allChartData[chart.id][presetAppId!] = data;
                   
                   const chartProgress = i + (j + 1) / chart.queries.length;
                   const overallProgress = {
