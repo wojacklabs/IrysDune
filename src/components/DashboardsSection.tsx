@@ -803,18 +803,24 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 if (chart.queries && chart.queries.length > 0) {
                   // New format with multiple queries
                   chart.queries.forEach(query => {
+                    console.log('[DashboardsSection] Processing query for display:', query);
                     const presetAppId = getAppPresetIdFromQuery(query);
                     const dataKey = presetAppId || query.id;
-                    if (chartData[dataKey]) {
-                      chartDataForDisplay[dataKey] = chartData[dataKey];
+                    console.log('[DashboardsSection] Query id:', query.id, '→ dataKey:', dataKey);
+                    
+                    // Check both the normalized key and the original key
+                    const dataFound = chartData[dataKey] || chartData[query.id];
+                    if (dataFound) {
+                      chartDataForDisplay[query.id] = dataFound; // Use original query.id for display
                       queriesForDisplay.push({
-                        id: dataKey,
+                        id: query.id, // Keep original id for display
                         name: query.name,
                         tags: query.tags,
                         color: query.color
                       });
+                      console.log('[DashboardsSection] Found data for:', query.id, 'data length:', dataFound.length);
                     } else {
-                      console.warn('[DashboardsSection] Missing data for query key:', dataKey, 'available keys:', Object.keys(chartData));
+                      console.warn('[DashboardsSection] Missing data for query:', query.id, 'tried keys:', [dataKey, query.id], 'available keys:', Object.keys(chartData));
                     }
                   });
                 } else if (chartData[chart.id]) {
