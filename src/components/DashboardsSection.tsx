@@ -434,11 +434,8 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
         }
         // Check if chart has queries (new format) or tags (legacy format)
         else if (chart.queries && chart.queries.length > 0) {
-          // Check if all queries are presets
-          const allPresets = chart.queries.every(q => 
-            APP_PRESETS.some(p => p.id === q.id) || 
-            ON_CHAIN_PRESETS.some(p => p.id === q.id)
-          );
+          // Check if all queries are presets (normalize ids like onchain-play-hirys -> play-hirys)
+          const allPresets = chart.queries.every(q => !!getAppPresetIdFromQuery(q));
           
           if (allPresets) {
             console.log(`[DashboardsSection] All queries are presets for chart: ${chart.title}`);
@@ -485,7 +482,7 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               const presetAppId = getAppPresetIdFromQuery(query);
               const isPreset = !!presetAppId;
               
-              if (isPreset && availableData[presetAppId!]) {
+              if (isPreset && presetAppId && availableData[presetAppId]) {
                 console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
                 allChartData[chart.id][presetAppId!] = availableData[presetAppId!];
                 
@@ -499,10 +496,10 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 setLoadingProgress(overallProgress);
               } else {
                 // If this query is a preset, always fetch via mutable address (no GraphQL)
-                if (isPreset) {
-                  console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name} (projectId=${presetAppId})`);
-                  const data = await fetchProjectData(presetAppId!);
-                  allChartData[chart.id][presetAppId!] = data;
+                              if (isPreset && presetAppId) {
+                console.log(`[DashboardsSection] Fetching preset via mutable address: ${query.name} (projectId=${presetAppId})`);
+                const data = await fetchProjectData(presetAppId);
+                allChartData[chart.id][presetAppId] = data;
                   
                   const chartProgress = i + (j + 1) / chart.queries.length;
                   const overallProgress = {
