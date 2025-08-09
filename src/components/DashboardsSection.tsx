@@ -428,18 +428,37 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
               if (availableData[query.id]) {
                 console.log(`[DashboardsSection] Using cached data for preset: ${query.name}`);
                 allChartData[chart.id][query.id] = availableData[query.id];
+                
+                // Update progress
+                const chartProgress = i + (j + 1) / chart.queries.length;
+                const overallProgress = {
+                  current: chartProgress,
+                  total: dashboard.charts.length,
+                  percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                };
+                setLoadingProgress(overallProgress);
               } else {
-                console.log(`[DashboardsSection] Warning: No cached data for preset: ${query.name}`);
+                // Fallback: fetch preset data via GraphQL when cache is missing
+                console.log(`[DashboardsSection] No cached data for preset: ${query.name}. Fetching via GraphQL fallback...`);
+                
+                // Determine months from chart's dateRange or timePeriod
+                const monthsMap: Record<string, number> = { week: 0.25, month: 1, quarter: 3, year: 12 };
+                const months = chart.dateRange
+                  ? calculateMonthsFromDateRange(chart.dateRange)
+                  : (monthsMap[chart.timePeriod] || 6);
+                
+                const data = await queryTagCounts(query.tags || [], (progress) => {
+                  const chartProgress = i + (j + progress.percentage / 100) / (chart.queries?.length || 1);
+                  const overallProgress = {
+                    current: chartProgress,
+                    total: dashboard.charts.length,
+                    percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
+                  };
+                  setLoadingProgress(overallProgress);
+                }, { months });
+                
+                allChartData[chart.id][query.id] = data;
               }
-              
-              // Update progress
-              const chartProgress = i + (j + 1) / chart.queries.length;
-              const overallProgress = {
-                current: chartProgress,
-                total: dashboard.charts.length,
-                percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
-              };
-              setLoadingProgress(overallProgress);
             }
           } else {
             // Mixed or custom queries - process individually
