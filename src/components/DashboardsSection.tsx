@@ -90,6 +90,16 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
     };
   };
 
+  // Helper function to calculate months from dateRange
+  const calculateMonthsFromDateRange = (dateRange: { startDate: number; endDate: number }): number => {
+    const diffInMs = dateRange.endDate - dateRange.startDate;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const diffInMonths = diffInDays / 30; // Approximate months
+    
+    // Return at least 1 month, and round up to ensure we get all data
+    return Math.max(1, Math.ceil(diffInMonths));
+  };
+
   useEffect(() => {
     loadDashboards();
   }, []);
@@ -462,7 +472,9 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                     percentage: Math.round((chartProgress / dashboard.charts.length) * 100)
                   };
                   setLoadingProgress(overallProgress);
-                });
+                }, chart.dateRange ? {
+                  months: calculateMonthsFromDateRange(chart.dateRange)
+                } : undefined);
                 
                 allChartData[chart.id][query.id] = data;
               }
@@ -507,7 +519,9 @@ export const DashboardsSection: React.FC<DashboardsSectionProps> = ({ walletAddr
                 percentage: Math.round(((i + (progress.percentage / 100)) / dashboard.charts.length) * 100)
               };
               setLoadingProgress(overallProgress);
-            });
+            }, chart.dateRange ? {
+              months: calculateMonthsFromDateRange(chart.dateRange)
+            } : undefined);
             
             allChartData[chart.id][chart.id] = data;
           }
