@@ -74,7 +74,46 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     projectIcon: APP_PRESETS.find(p => p.id === 'cm-note')?.icon || null,
     tweetUrl: 'https://x.com/0xCrocy/status/1950630852762767630',
     tweetId: '1950630852762767630'
-  }
+  },
+  {
+    projectId: 'cm-note',
+    projectName: 'CM Note',
+    projectIcon: APP_PRESETS.find(p => p.id === 'cm-note')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1953531286385222039',
+    tweetId: '1953531286385222039'
+  },
+  // Irys PFP
+  {
+    projectId: 'irys-pfp',
+    projectName: 'Irys PFP',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-pfp')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1954804094918435206',
+    tweetId: '1954804094918435206'
+  },
+  // Irys Memory
+  {
+    projectId: 'irys-memory',
+    projectName: 'Irys Memory',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1954468493169938773',
+    tweetId: '1954468493169938773'
+  },
+  // Irys ProofBoard
+  {
+    projectId: 'irys-proof-board',
+    projectName: 'Irys ProofBoard',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-proof-board')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1954096345129639975',
+    tweetId: '1954096345129639975'
+  },
+  // irys name
+    {
+        projectId: 'irys-names',
+        projectName: 'Irys Names',
+        projectIcon: APP_PRESETS.find(p => p.id === 'irys-names')?.icon || null,
+        tweetUrl: 'https://x.com/boyykennn/status/1953741189087162693',
+        tweetId: '1953741189087162693'
+    },
 ];
 
 // 랜덤하게 섞인 트윗 배열 반환
