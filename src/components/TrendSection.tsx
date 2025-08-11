@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, TrendingUp, Globe } from 'lucide-react';
+import { RefreshCw, ChartLine, Earth } from 'lucide-react';
 import type { ChartType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
 import { APP_PRESETS, getPresetsByIds } from '../constants/appPresets';
 import { fetchAllProjectsData } from '../services/dataService';
@@ -228,7 +228,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
       <div className="card ecosystem-card" ref={wholeEcosystemCardRef}>
         <div className="ecosystem-header">
           <div className="ecosystem-title">
-            <Globe className="ecosystem-icon" size={20} />
+            <Earth className="ecosystem-icon" size={20} />
             <h3>Whole Ecosystem</h3>
             {cacheAge !== null && (
               <span className="cache-indicator">
@@ -276,7 +276,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           />
         ) : (
           <div className="empty-state">
-            <Globe className="empty-icon" />
+            <Earth className="empty-icon" />
             <div className="empty-title">Loading ecosystem data...</div>
             <div className="empty-description">
               Please wait while we fetch the data
@@ -289,7 +289,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
       <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
         <div className="ecosystem-header">
           <div className="ecosystem-title">
-            <TrendingUp className="ecosystem-icon" size={20} />
+            <ChartLine className="ecosystem-icon" size={20} />
             <h3>Ecosystem Trends</h3>
           </div>
           <div className="header-actions">
@@ -338,7 +338,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
 
         {selectedApps.length === 0 && (
           <div className="empty-state">
-            <TrendingUp className="empty-icon" />
+            <ChartLine className="empty-icon" />
             <div className="empty-title">Select at least one application</div>
             <div className="empty-description">
               Choose applications to view their activity trends

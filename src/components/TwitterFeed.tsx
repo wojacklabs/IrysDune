@@ -3,6 +3,7 @@ import Marquee from 'react-fast-marquee';
 import { getShuffledTweets } from '../constants/projectTweets';
 import type { ProjectTweet } from '../constants/projectTweets';
 import { fetchMultipleTweets } from '../services/twitterService';
+import { BookHeart } from 'lucide-react';
 
 const TwitterFeed: React.FC = () => {
   const [tweets, setTweets] = useState<ProjectTweet[]>([]);
@@ -71,10 +72,13 @@ const TwitterFeed: React.FC = () => {
   if (loading) {
     return (
       <div className="twitter-feed-section">
-        <div className="ecosystem-title">
-          <h3>
-            Community Voices
-          </h3>
+        <div className='ecosystem-header'>
+          <div className="ecosystem-title">
+            <BookHeart className="ecosystem-icon" size={20} />
+            <h3>
+                Community Reviews
+            </h3>
+          </div>
         </div>
         <div className="twitter-feed-loading">
           <div className="loading-spinner"></div>
@@ -85,12 +89,14 @@ const TwitterFeed: React.FC = () => {
 
   return (
     <div className="twitter-feed-section">
-      <div className="ecosystem-title">
-        <h3>
-          Community Voices
-        </h3>
+      <div className='ecosystem-header'>
+        <div className="ecosystem-title">
+        <BookHeart className="ecosystem-icon" size={20} />
+          <h3>
+            Community Reviews
+          </h3>
+        </div>
       </div>
-      
       <div className="twitter-feed-container">
         <Marquee
           gradient={true}
