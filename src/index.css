@@ -7426,5 +7426,5 @@ body.weather-stormy .rfm-overlay {
 
 .rfm-overlay::before,
 .rfm-overlay::after {
-  content: none;
+  content: none !important;
 }
