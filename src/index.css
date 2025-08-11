@@ -7422,6 +7422,7 @@ body.weather-stormy .rfm-overlay {
 
 .rfm-overlay {
   z-index: 100;
+  pointer-events: none;
 }
 
 .rfm-overlay::before,
