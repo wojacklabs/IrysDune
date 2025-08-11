@@ -7400,3 +7400,12 @@ body.weather-stormy .disconnect-btn-mobile:hover {
 [data-theme="dark"] .tweet-profile-image {
   border-color: #475569;
 }
+
+/* Dark mode for general card elements */
+[data-theme="dark"] .card {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(71, 85, 105, 0.3);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(71, 85, 105, 0.2) inset;
+}
