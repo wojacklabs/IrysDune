@@ -7113,23 +7113,6 @@ body.weather-stormy .disconnect-btn-mobile:hover {
   backdrop-filter: blur(10px);
 }
 
-.tweet-card::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tweet-card:hover::before {
-  opacity: 1;
-}
-
 .tweet-card:hover {
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.1),
