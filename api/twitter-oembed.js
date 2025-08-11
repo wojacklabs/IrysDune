@@ -38,6 +38,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
+    console.log('Twitter oEmbed response:', JSON.stringify(data, null, 2));
     res.status(200).json(data);
   } catch (error) {
     console.error('Error fetching tweet:', error);

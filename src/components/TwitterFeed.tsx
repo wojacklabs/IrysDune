@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Marquee from 'react-fast-marquee';
-import { MessageCircle, Heart, Repeat, Share } from 'lucide-react';
 import { getShuffledTweets } from '../constants/projectTweets';
 import type { ProjectTweet } from '../constants/projectTweets';
 import { fetchMultipleTweets } from '../services/twitterService';
@@ -22,8 +21,15 @@ const TwitterFeed: React.FC = () => {
   }, []);
 
   const TweetCard: React.FC<{ tweet: ProjectTweet }> = ({ tweet }) => {
+    const handleClick = () => {
+      window.open(tweet.tweetUrl, '_blank', 'noopener,noreferrer');
+    };
+
     return (
-      <div className="tweet-card">
+      <div className="tweet-card" onClick={handleClick}>
+        {/* Cloud decoration */}
+        <div className="tweet-cloud-decoration"></div>
+        
         {/* Project badge */}
         {tweet.projectIcon && (
           <div className="tweet-project-badge">
@@ -60,20 +66,8 @@ const TwitterFeed: React.FC = () => {
         </div>
         
         <div className="tweet-actions">
-          <button className="tweet-action">
-            <MessageCircle size={16} />
-            <span>{tweet.metrics?.replies || 0}</span>
-          </button>
-          <button className="tweet-action">
-            <Repeat size={16} />
-            <span>{tweet.metrics?.retweets || 0}</span>
-          </button>
-          <button className="tweet-action">
-            <Heart size={16} />
-            <span>{tweet.metrics?.likes || 0}</span>
-          </button>
-          <button className="tweet-action">
-            <Share size={16} />
+          <button className="tweet-action view-on-twitter" onClick={handleClick}>
+            <span>View on 𝕏</span>
           </button>
         </div>
       </div>
@@ -121,13 +115,7 @@ const TwitterFeed: React.FC = () => {
           className="tweet-marquee"
         >
           {tweets.map((tweet, index) => (
-            <div key={index} className="tweet-wrapper">
-              <TweetCard tweet={tweet} />
-            </div>
-          ))}
-          {/* Duplicate for seamless loop */}
-          {tweets.map((tweet, index) => (
-            <div key={`dup-${index}`} className="tweet-wrapper">
+            <div key={`${tweet.tweetId}-${index}`} className="tweet-wrapper">
               <TweetCard tweet={tweet} />
             </div>
           ))}

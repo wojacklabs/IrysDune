@@ -22,9 +22,9 @@ function parseTweetHTML(html: string, authorUrl: string): {
   date: string;
   profileImage: string;
   metrics: {
-    likes?: number;
-    retweets?: number;
-    replies?: number;
+    likes?: number | null;
+    retweets?: number | null;
+    replies?: number | null;
   };
 } {
   // Create a temporary DOM element to parse HTML
@@ -47,31 +47,13 @@ function parseTweetHTML(html: string, authorUrl: string): {
   // Twitter profile images follow a pattern, but we'll use a placeholder service
   const profileImage = `https://unavatar.io/twitter/${handle}`;
   
-  // Extract metrics from HTML if available (Twitter sometimes includes them)
-  // Note: oEmbed doesn't always include metrics, so we'll use realistic placeholder values
+  // Twitter oEmbed API doesn't provide engagement metrics
+  // We'll use null to indicate that metrics are not available
   const metrics = {
-    likes: Math.floor(Math.random() * 500) + 10,
-    retweets: Math.floor(Math.random() * 100) + 5,
-    replies: Math.floor(Math.random() * 50) + 2
+    likes: null,
+    retweets: null,
+    replies: null
   };
-  
-  // Try to find metrics in the HTML (if Twitter includes them)
-  const metricElements = doc.querySelectorAll('span[aria-label]');
-  metricElements.forEach(element => {
-    const label = element.getAttribute('aria-label') || '';
-    const text = element.textContent || '';
-    
-    if (label.includes('like') || text.includes('like')) {
-      const num = parseInt(text.replace(/[^\d]/g, '')) || 0;
-      if (num > 0) metrics.likes = num;
-    } else if (label.includes('retweet') || text.includes('retweet')) {
-      const num = parseInt(text.replace(/[^\d]/g, '')) || 0;
-      if (num > 0) metrics.retweets = num;
-    } else if (label.includes('reply') || label.includes('replies') || text.includes('repl')) {
-      const num = parseInt(text.replace(/[^\d]/g, '')) || 0;
-      if (num > 0) metrics.replies = num;
-    }
-  });
   
   return {
     content: content.replace(/https:\/\/t\.co\/\w+/g, '').trim(), // Remove t.co links
