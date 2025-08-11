@@ -7105,7 +7105,7 @@ body.weather-stormy .disconnect-btn-mobile:hover {
   width: 320px;
   border: 1px solid #e5e7eb;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tweet-card::before {
@@ -7137,12 +7137,34 @@ body.weather-stormy .disconnect-btn-mobile:hover {
   margin-bottom: 1rem;
 }
 
-.tweet-project-icon {
-  width: 40px;
-  height: 40px;
+/* Project badge */
+.tweet-project-badge {
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid #f0f0f0;
+  z-index: 1;
+}
+
+.tweet-project-badge-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.tweet-profile-image {
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #f3f4f6;
+  border: 2px solid #e0e0e0;
+  flex-shrink: 0;
 }
 
 .tweet-author {

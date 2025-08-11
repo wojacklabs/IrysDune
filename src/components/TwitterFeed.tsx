@@ -24,12 +24,26 @@ const TwitterFeed: React.FC = () => {
   const TweetCard: React.FC<{ tweet: ProjectTweet }> = ({ tweet }) => {
     return (
       <div className="tweet-card">
-        <div className="tweet-header">
-          {tweet.projectIcon && (
+        {/* Project badge */}
+        {tweet.projectIcon && (
+          <div className="tweet-project-badge">
             <img 
               src={tweet.projectIcon} 
               alt={tweet.projectName} 
-              className="tweet-project-icon"
+              className="tweet-project-badge-icon"
+            />
+          </div>
+        )}
+        
+        <div className="tweet-header">
+          {tweet.profileImage && (
+            <img 
+              src={tweet.profileImage} 
+              alt={tweet.author} 
+              className="tweet-profile-image"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tweet.author || 'User')}&background=random`;
+              }}
             />
           )}
           <div className="tweet-author">
@@ -37,10 +51,7 @@ const TwitterFeed: React.FC = () => {
             <div className="tweet-author-handle">{tweet.authorHandle || '@loading'}</div>
           </div>
           <div className="tweet-date">
-            {tweet.date ? new Date(tweet.date).toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric' 
-            }) : 'Recent'}
+            {tweet.date ? tweet.date : 'Recent'}
           </div>
         </div>
         
