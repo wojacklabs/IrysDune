@@ -82,22 +82,6 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/boyykennn/status/1953531286385222039',
     tweetId: '1953531286385222039'
   },
-  // Irys PFP
-  {
-    projectId: 'irys-pfp',
-    projectName: 'Irys PFP',
-    projectIcon: APP_PRESETS.find(p => p.id === 'irys-pfp')?.icon || null,
-    tweetUrl: 'https://www.twitter.com/boyykennn/status/1954804094918435206',
-    tweetId: '1954804094918435206'
-  },
-  // Irys Memory
-  {
-    projectId: 'irys-memory',
-    projectName: 'IrysMemory',
-    projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
-    tweetUrl: 'https://www.twitter.com/boyykennn/status/1954468493169938773',
-    tweetId: '1954468493169938773'
-  },
   // Irys ProofBoard
   {
     projectId: 'irys-proof-board',
