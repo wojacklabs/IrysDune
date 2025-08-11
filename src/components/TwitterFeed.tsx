@@ -71,7 +71,7 @@ const TwitterFeed: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="card">
+      <div className="card ecosystem-card">
         <div className='ecosystem-header'>
           <div className="ecosystem-title">
             <BookHeart className="ecosystem-icon" size={20} />
@@ -88,7 +88,7 @@ const TwitterFeed: React.FC = () => {
   }
 
   return (
-    <div className="card">
+    <div className="card ecosystem-card">
       <div className='ecosystem-header'>
         <div className="ecosystem-title">
         <BookHeart className="ecosystem-icon" size={20} />
