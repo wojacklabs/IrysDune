@@ -221,9 +221,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
 
   return (
     <div className="trend-section">
-      {/* Twitter Feed Section */}
-      <TwitterFeed />
-      
       {/* Whole Ecosystem Section - Always visible */}
       <div className="card ecosystem-card" ref={wholeEcosystemCardRef}>
         <div className="ecosystem-header">
@@ -284,6 +281,9 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
       </div>
+
+      {/* Twitter Feed Section */}
+      <TwitterFeed />
 
       {/* Individual Apps Section */}
       <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
