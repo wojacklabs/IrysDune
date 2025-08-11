@@ -16,6 +16,8 @@ import { Download, Share2 } from 'lucide-react';
 import type { ChartData, ChartType } from '../types';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
 import { getChartOptions } from '../utils/chartUtils';
+import { APP_PRESETS } from '../constants/appPresets';
+import { ON_CHAIN_PRESETS } from '../services/onChainService';
 
 ChartJS.register(
   CategoryScale,
@@ -61,6 +63,109 @@ const Chart: React.FC<ChartProps> = ({
     setRenderKey(prev => prev + 1);
   }, [chartType]);
 
+  // Store loaded images to avoid reloading
+  const [loadedImages, setLoadedImages] = useState<{ [key: string]: HTMLImageElement }>({});
+
+  // Preload images when component mounts or data changes
+  useEffect(() => {
+    const images: { [key: string]: HTMLImageElement } = {};
+    
+    data.datasets.forEach((dataset: any) => {
+      const label = dataset.label || '';
+      let projectName = label.replace(' (Relative)', '').replace(' (Daily)', '').replace(' (Cumulative)', '');
+      
+      let preset = APP_PRESETS.find(p => p.name === projectName);
+      if (!preset) {
+        preset = ON_CHAIN_PRESETS.find(p => p.name === projectName) as any;
+      }
+      
+      if (preset && preset.icon) {
+        const img = new Image();
+        img.src = preset.icon;
+        img.onload = () => {
+          images[projectName] = img;
+          setLoadedImages({ ...images });
+        };
+      }
+    });
+  }, [data]);
+
+  // Custom plugin to draw logos at the end of lines
+  const logoPlugin = {
+    id: 'logoPlugin',
+    afterDatasetsDraw: (chart: any) => {
+      if (chartType !== 'line' && chartType !== 'stacked') return;
+      
+      const ctx = chart.ctx;
+      
+      chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (!meta.hidden && dataset.data && dataset.data.length > 0) {
+          // Get last visible data point
+          const lastIndex = dataset.data.length - 1;
+          const lastPoint = meta.data[lastIndex];
+          
+          if (lastPoint && lastPoint.x && lastPoint.y) {
+            // Extract project name from label
+            const label = dataset.label || '';
+            let projectName = label.replace(' (Relative)', '').replace(' (Daily)', '').replace(' (Cumulative)', '');
+            
+            // Find the corresponding preset
+            let preset = APP_PRESETS.find(p => p.name === projectName);
+            if (!preset) {
+              preset = ON_CHAIN_PRESETS.find(p => p.name === projectName) as any;
+            }
+            
+            if (preset && preset.icon && loadedImages[projectName]) {
+              const img = loadedImages[projectName];
+              
+              // Draw logo instead of the last point
+              const logoSize = 20;
+              
+              ctx.save();
+              
+              // Draw white background circle for better visibility
+              ctx.beginPath();
+              ctx.arc(lastPoint.x, lastPoint.y, logoSize/2 + 2, 0, 2 * Math.PI);
+              ctx.fillStyle = 'white';
+              ctx.fill();
+              ctx.strokeStyle = dataset.borderColor || preset.color;
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              
+              // Draw the logo
+              ctx.beginPath();
+              ctx.arc(lastPoint.x, lastPoint.y, logoSize/2, 0, 2 * Math.PI);
+              ctx.clip();
+              ctx.drawImage(img, lastPoint.x - logoSize/2, lastPoint.y - logoSize/2, logoSize, logoSize);
+              
+              ctx.restore();
+            }
+          }
+        }
+      });
+    }
+  };
+
+  // Register/update the plugin
+  useEffect(() => {
+    // Unregister if exists
+    const existingPlugin = ChartJS.registry.plugins.get('logoPlugin');
+    if (existingPlugin) {
+      ChartJS.unregister(existingPlugin);
+    }
+    // Register the new plugin
+    ChartJS.register(logoPlugin);
+    
+    // Cleanup on unmount
+    return () => {
+      const plugin = ChartJS.registry.plugins.get('logoPlugin');
+      if (plugin) {
+        ChartJS.unregister(plugin);
+      }
+    };
+  }, [logoPlugin, loadedImages, chartType]);
+
   // Check if multiple datasets for chart options
   const isMultipleDatasets = data.datasets.length > 1;
   const baseOptions = getChartOptions(isMultipleDatasets, chartType);
@@ -82,6 +187,31 @@ const Chart: React.FC<ChartProps> = ({
         },
         color: '#1e293b',
         padding: { bottom: 20 }
+      },
+      legend: {
+        ...baseOptions.plugins.legend,
+        display: false // Hide legend since we're showing logos
+      },
+      tooltip: {
+        ...baseOptions.plugins.tooltip,
+        displayColors: false, // Remove color boxes
+        itemSort: function(a: any, b: any) {
+          // Sort by value in descending order
+          return b.parsed.y - a.parsed.y;
+        },
+        callbacks: {
+          ...baseOptions.plugins.tooltip.callbacks,
+          label: function(context: any) {
+            // Only show project name without color box
+            const label = context.dataset.label || '';
+            const cleanLabel = label.replace(' (Relative)', '').replace(' (Daily)', '').replace(' (Cumulative)', '');
+            const value = context.parsed.y;
+            if (value !== null) {
+              return `${cleanLabel}: ${new Intl.NumberFormat('en-US').format(value)}`;
+            }
+            return cleanLabel;
+          }
+        }
       }
     }
   };

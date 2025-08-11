@@ -574,16 +574,18 @@ export function generateChartData(
         console.log(`[GenerateChartData] Warning: ${preset?.name || 'Unknown'} has no data for stacked chart, all values are 0`);
       }
       
-      return {
-        label: preset?.name || 'Unknown',
-        data: dataPoints,
-        backgroundColor: 'transparent',
-        borderColor: preset?.color || '#94a3b8',
-        borderWidth: 2,
-        fill: false,
-        tension: 0.1,
-        yAxisID: 'cumulative'
-      };
+              return {
+          label: preset?.name || 'Unknown',
+          data: dataPoints,
+          backgroundColor: 'transparent',
+          borderColor: preset?.color || '#94a3b8',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.1,
+          yAxisID: 'cumulative',
+          pointRadius: 3,
+          pointHoverRadius: 6
+        };
     });
 
     return { labels, datasets };
@@ -611,7 +613,9 @@ export function generateChartData(
           borderColor: preset?.color || '#94a3b8',
           fill: false,
           tension: 0.1,
-          yAxisID: 'relative'
+          yAxisID: 'relative',
+          pointRadius: 3,
+          pointHoverRadius: 6
         };
       });
 
@@ -627,7 +631,9 @@ export function generateChartData(
         borderColor: preset?.color || '#94a3b8',
         fill: false,
         tension: 0.1,
-        yAxisID: 'absolute'
+        yAxisID: 'absolute',
+        pointRadius: 3,
+        pointHoverRadius: 6
       }];
 
       return { labels, datasets };
@@ -752,7 +758,9 @@ export function generateWholeEcosystemData(
       borderWidth: 3,
       fill: false,
       tension: 0.1,
-      yAxisID: 'cumulative'
+      yAxisID: 'cumulative',
+      pointRadius: 3,
+      pointHoverRadius: 6
     }];
 
     return { labels, datasets };
@@ -766,7 +774,9 @@ export function generateWholeEcosystemData(
       borderWidth: 3,
       fill: false,
       tension: 0.1,
-      yAxisID: 'absolute'
+      yAxisID: 'absolute',
+      pointRadius: 3,
+      pointHoverRadius: 6
     }];
 
     return { labels, datasets };
