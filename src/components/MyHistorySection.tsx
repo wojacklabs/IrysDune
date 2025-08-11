@@ -487,7 +487,7 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           timestamp: tx.timestamp,
           source: 'onchain',
           project: preset?.name || 'Others',
-          projectIcon: preset?.icon,
+          projectIcon: preset?.icon || undefined,
           activity: activity,
           activityIcon: isFaucet ? '💧' : category.icon,
           detail: isFaucet ? 'Received IRYS tokens' : tx.eventName,
