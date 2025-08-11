@@ -93,7 +93,7 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
   // Irys Memory
   {
     projectId: 'irys-memory',
-    projectName: 'Irys Memory',
+    projectName: 'IrysMemory',
     projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
     tweetUrl: 'https://x.com/boyykennn/status/1954468493169938773',
     tweetId: '1954468493169938773'
