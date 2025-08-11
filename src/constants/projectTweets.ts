@@ -29,37 +29,13 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/Jst_Mariee/status/1953494872888955018',
     tweetId: '1953494872888955018'
   },
-  // CM Note
-  {
-    projectId: 'cm-note',
-    projectName: 'CM Note',
-    projectIcon: APP_PRESETS.find(p => p.id === 'cm-note')?.icon || null,
-    tweetUrl: 'https://x.com/irys_xyz/status/1849817975522935093',
-    tweetId: '1849817975522935093'
-  },
-  // GitHirys
-  {
-    projectId: 'githirys',
-    projectName: 'GitHirys',
-    projectIcon: APP_PRESETS.find(p => p.id === 'githirys')?.icon || null,
-    tweetUrl: 'https://x.com/IrysBuilders/status/1852701301002809378',
-    tweetId: '1852701301002809378'
-  },
-  // Irys Names
-  {
-    projectId: 'irys-names',
-    projectName: 'Irys Names',
-    projectIcon: APP_PRESETS.find(p => p.id === 'irys-names')?.icon || null,
-    tweetUrl: 'https://x.com/irys_xyz/status/1851000000000000000',
-    tweetId: '1851000000000000000'
-  },
-  // BridgeBox
+  // BridgBox
   {
     projectId: 'bridgebox',
-    projectName: 'BridgeBox',
+    projectName: 'BridgBox',
     projectIcon: APP_PRESETS.find(p => p.id === 'bridgebox')?.icon || null,
-    tweetUrl: 'https://x.com/irys_xyz/status/1852000000000000000',
-    tweetId: '1852000000000000000'
+    tweetUrl: 'https://x.com/Jst_Mariee/status/1952385559646601677',
+    tweetId: '1952385559646601677'
   }
 ];
 

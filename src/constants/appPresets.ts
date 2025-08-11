@@ -60,7 +60,7 @@ export const APP_PRESETS: AppPreset[] = [
   },
   {
     id: 'bridgebox',
-    name: 'BridgeBox',
+    name: 'BridgBox',
     tags: [
       { name: 'App-Name', value: 'Bridgbox-Email-Lit' }
     ],
