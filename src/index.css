@@ -7131,7 +7131,6 @@ body.weather-stormy .disconnect-btn-mobile:hover {
 }
 
 .tweet-card:hover {
-  transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 12px 40px rgba(0, 0, 0, 0.1),
     0 8px 20px rgba(59, 130, 246, 0.15),

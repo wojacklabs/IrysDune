@@ -64,12 +64,6 @@ const TwitterFeed: React.FC = () => {
         <div className="tweet-content">
           {tweet.content || 'Loading tweet content...'}
         </div>
-        
-        <div className="tweet-actions">
-          <button className="tweet-action view-on-twitter" onClick={handleClick}>
-            <span>View on 𝕏</span>
-          </button>
-        </div>
       </div>
     );
   };
@@ -77,14 +71,10 @@ const TwitterFeed: React.FC = () => {
   if (loading) {
     return (
       <div className="twitter-feed-section">
-        <div className="twitter-feed-header">
-          <h3 className="twitter-feed-title">
-            <span className="title-icon">🐦</span>
+        <div className="ecosystem-title">
+          <h3>
             Community Voices
           </h3>
-          <p className="twitter-feed-subtitle">
-            Loading tweets...
-          </p>
         </div>
         <div className="twitter-feed-loading">
           <div className="loading-spinner"></div>
@@ -95,14 +85,10 @@ const TwitterFeed: React.FC = () => {
 
   return (
     <div className="twitter-feed-section">
-      <div className="twitter-feed-header">
-        <h3 className="twitter-feed-title">
-          <span className="title-icon">🐦</span>
+      <div className="ecosystem-title">
+        <h3>
           Community Voices
         </h3>
-        <p className="twitter-feed-subtitle">
-          What people are saying about the Irys ecosystem
-        </p>
       </div>
       
       <div className="twitter-feed-container">
