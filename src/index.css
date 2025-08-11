@@ -7409,3 +7409,22 @@ body.weather-stormy .card {
     0 20px 40px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(71, 85, 105, 0.2) inset;
 }
+
+/* Dark mode for react-fast-marquee overlay */
+body.weather-stormy .rfm-overlay {
+  background: linear-gradient(to right, 
+    rgba(15, 23, 42, 1) 0%, 
+    rgba(15, 23, 42, 0) 10%, 
+    rgba(15, 23, 42, 0) 90%, 
+    rgba(15, 23, 42, 1) 100%
+  );
+}
+
+body.weather-stormy .rfm-overlay::before,
+body.weather-stormy .rfm-overlay::after {
+  background: linear-gradient(to right, rgba(15, 23, 42, 1), transparent);
+}
+
+body.weather-stormy .rfm-overlay::after {
+  background: linear-gradient(to left, rgba(15, 23, 42, 1), transparent);
+}
