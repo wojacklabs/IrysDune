@@ -238,7 +238,15 @@ const Chart: React.FC<ChartProps> = ({
         chartInstanceRef.current.update('none');
       }
       
-      // Wait for chart to stabilize
+      // Wait for chart to stabilize and logos to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Force a chart update to ensure logos are drawn
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update('none'); // Update without animation
+      }
+      
+      // Additional wait for logos to be rendered
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const filename = `irys-dune-chart-${Date.now()}.png`;
@@ -273,7 +281,15 @@ const Chart: React.FC<ChartProps> = ({
         chartInstanceRef.current.update('none');
       }
       
-      // Wait for chart to stabilize
+      // Wait for chart to stabilize and logos to load
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Force a chart update to ensure logos are drawn
+      if (chartInstanceRef.current) {
+        chartInstanceRef.current.update('none'); // Update without animation
+      }
+      
+      // Additional wait for logos to be rendered
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const blob = await captureElement(captureTarget);
@@ -342,7 +358,13 @@ const Chart: React.FC<ChartProps> = ({
           {chartType === 'treemap' ? (
             <ChartReact
               key={`treemap-${renderKey}`}
-              ref={chartInstanceRef}
+              ref={(ref) => {
+                chartInstanceRef.current = ref;
+                // Store chart instance on canvas element for capture
+                if (ref && ref.canvas) {
+                  (ref.canvas as any).chart = ref;
+                }
+              }}
               type='treemap'
               data={data}
               options={{
@@ -418,9 +440,16 @@ const Chart: React.FC<ChartProps> = ({
           ) : (
             <Line 
               key={`line-${renderKey}`}
-              ref={chartInstanceRef}
+              ref={(ref) => {
+                chartInstanceRef.current = ref;
+                // Store chart instance on canvas element for capture
+                if (ref && ref.canvas) {
+                  (ref.canvas as any).chart = ref;
+                }
+              }}
               data={data} 
               options={options} 
+              plugins={[logoPlugin]}
             />
           )}
         </div>

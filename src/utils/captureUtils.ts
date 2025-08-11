@@ -36,6 +36,30 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
           clonedCanvas.width = originalCanvas.width;
           clonedCanvas.height = originalCanvas.height;
           context.drawImage(originalCanvas, 0, 0);
+          
+          // Get Chart.js instance if exists
+          const chartInstance = (originalCanvas as any).chart;
+          if (chartInstance) {
+            // Look for logoPlugin in registered plugins
+            const Chart = (window as any).Chart;
+            if (Chart && Chart.registry && Chart.registry.plugins) {
+              const registeredPlugins = Chart.registry.plugins.items;
+              const logoPlugin = registeredPlugins.find((p: any) => p.id === 'logoPlugin');
+              
+              if (logoPlugin && logoPlugin.afterDatasetsDraw) {
+                // Execute the plugin drawing on the cloned canvas
+                const clonedChart = {
+                  ...chartInstance,
+                  ctx: context,
+                  canvas: clonedCanvas,
+                  chartArea: chartInstance.chartArea,
+                  data: chartInstance.data,
+                  getDatasetMeta: chartInstance.getDatasetMeta.bind(chartInstance)
+                };
+                logoPlugin.afterDatasetsDraw(clonedChart);
+              }
+            }
+          }
         }
       }
     });
@@ -124,6 +148,30 @@ export async function captureElement(element: HTMLElement): Promise<Blob> {
           clonedCanvas.width = originalCanvas.width;
           clonedCanvas.height = originalCanvas.height;
           context.drawImage(originalCanvas, 0, 0);
+          
+          // Get Chart.js instance if exists
+          const chartInstance = (originalCanvas as any).chart;
+          if (chartInstance) {
+            // Look for logoPlugin in registered plugins
+            const Chart = (window as any).Chart;
+            if (Chart && Chart.registry && Chart.registry.plugins) {
+              const registeredPlugins = Chart.registry.plugins.items;
+              const logoPlugin = registeredPlugins.find((p: any) => p.id === 'logoPlugin');
+              
+              if (logoPlugin && logoPlugin.afterDatasetsDraw) {
+                // Execute the plugin drawing on the cloned canvas
+                const clonedChart = {
+                  ...chartInstance,
+                  ctx: context,
+                  canvas: clonedCanvas,
+                  chartArea: chartInstance.chartArea,
+                  data: chartInstance.data,
+                  getDatasetMeta: chartInstance.getDatasetMeta.bind(chartInstance)
+                };
+                logoPlugin.afterDatasetsDraw(clonedChart);
+              }
+            }
+          }
         }
       }
     });
