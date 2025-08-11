@@ -10,6 +10,7 @@ import irysCrushIcon from '../assets/irys-crush.png';
 import irysMemoryIcon from '../assets/irysmemoryicon.jpg';
 import irysPfpIcon from '../assets/iryspfp.jpg';
 import playHirysIcon from '../assets/playhirys.jpg';
+import irysRealms from '../assets/irysrealms.jpg';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -20,6 +21,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#d4a574',
     icon: cmNoteIcon
+  },
+  {
+    id: 'irys-realms',
+    name: 'Irys Realms',
+    tags: [
+      { name: 'App-Name', value: 'Irys Realms' }
+    ],
+    color: '#d4a574',
+    icon: irysRealms
   },
   {
     id: 'irys-pfp',

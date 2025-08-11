@@ -333,6 +333,47 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
         })()
       ]);
 
+      // faucet 데이터 로드
+      let faucetTransactions: OnChainTransaction[] = [];
+      const faucetPreset = ON_CHAIN_PRESETS.find(p => p.id === 'irys-faucet');
+      if (faucetPreset) {
+        try {
+          console.log('[MyHistory] Loading faucet transactions');
+          const events = await queryOnChainEvents(
+            {
+              contractAddress: faucetPreset.contractAddress,
+              network: faucetPreset.network,
+              rpcUrl: faucetPreset.rpcUrl,
+              abis: []
+            },
+            50, // 최근 50개 이벤트
+            walletAddress
+          );
+          
+          // Transfer 이벤트를 트랜잭션 형태로 변환
+          faucetTransactions = events
+            .filter(event => event.eventName === 'Transfer')
+            .map(event => ({
+              id: event.transactionHash,
+              timestamp: event.timestamp,
+              eventName: 'Faucet Claim',
+              contractName: 'Irys Testnet Faucet',
+              network: 'irys-testnet',
+              url: `https://testnet-explorer.irys.xyz/tx/${event.transactionHash}`
+            }));
+          
+          console.log(`[MyHistory] Found ${faucetTransactions.length} faucet transactions`);
+          
+          // faucet 트랜잭션을 onchainData에 추가
+          if (faucetTransactions.length > 0) {
+            onchainData.transactions.push(...faucetTransactions);
+            onchainData.projectCounts['irys-faucet'] = (onchainData.projectCounts['irys-faucet'] || 0) + faucetTransactions.length;
+          }
+        } catch (error) {
+          console.error('[MyHistory] Error loading faucet data:', error);
+        }
+      }
+
       // Storage와 on-chain 프로젝트 통합
       const combinedProjectCounts: { [key: string]: { storage: number, onchain: number } } = {};
       
@@ -437,15 +478,19 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
           : tx.contractName;
         const preset = ON_CHAIN_PRESETS.find(p => p.name === contractBaseName);
         
+        // Faucet 트랜잭션의 경우 특별 처리
+        const isFaucet = preset?.id === 'irys-faucet';
+        const activity = isFaucet ? 'Faucet Claim' : category.name;
+        
         allUnifiedTransactions.push({
           id: tx.id,
           timestamp: tx.timestamp,
           source: 'onchain',
           project: preset?.name || 'Others',
           projectIcon: preset?.icon,
-          activity: category.name,
-          activityIcon: category.icon,
-          detail: tx.eventName,
+          activity: activity,
+          activityIcon: isFaucet ? '💧' : category.icon,
+          detail: isFaucet ? 'Received IRYS tokens' : tx.eventName,
           network: tx.network,
           url: tx.url
         });

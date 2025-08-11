@@ -79,6 +79,13 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
     color: '#6b7280',
     icon: '📦',
     description: 'Uncategorized activities'
+  },
+  'faucet': {
+    id: 'faucet',
+    name: 'Faucet',
+    color: '#9333ea',
+    icon: '💧',
+    description: 'Faucet token distribution'
   }
 };
 
@@ -89,6 +96,11 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     tags: [{ name: 'App-Name', value: 'irys-cm-note-unified' }],
     activityId: 'social',
     projectId: 'cm-note'
+  },
+  {
+    tags: [{ name: 'App-Name', value: 'Irys Realms' }],
+    activityId: 'gaming',
+    projectId: 'irys-realms'
   },
   {
     tags: [{ name: 'App-Name', value: 'irys-git' }],
@@ -178,7 +190,9 @@ export const EVENT_ACTIVITY_MAPPINGS: { [eventName: string]: string } = {
   // Lens
   'ProfileCreated': 'identity',
   // Default
-  'Transfer': 'storage'
+  'Transfer': 'storage',
+  // Faucet
+  'Faucet Claim': 'faucet'
 };
 
 // 온체인 이벤트로부터 activity 가져오기

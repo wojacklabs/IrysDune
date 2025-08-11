@@ -472,6 +472,17 @@ export const ON_CHAIN_PRESETS = [
     ]
   },
   {
+    id: 'irys-faucet',
+    name: 'Irys Testnet Faucet',
+    contractAddress: '0x65b7fd9237df3c64461825f0c722a777d7a53804',
+    network: 'irys-testnet',
+    rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
+    description: 'Irys Testnet Faucet - Track IRYS token distributions',
+    color: '#9333ea',
+    icon: null,
+    abis: [] // Transfer 이벤트를 자동으로 추적
+  },
+  {
     id: 'play-hirys',
     name: 'PlayHirys',
     contractAddress: '', // Multiple contracts
