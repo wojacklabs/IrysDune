@@ -7420,11 +7420,7 @@ body.weather-stormy .rfm-overlay {
   );
 }
 
-body.weather-stormy .rfm-overlay::before,
-body.weather-stormy .rfm-overlay::after {
-  background: linear-gradient(to right, rgba(15, 23, 42, 1), transparent);
-}
-
-body.weather-stormy .rfm-overlay::after {
-  background: linear-gradient(to left, rgba(15, 23, 42, 1), transparent);
+.rfm-overlay::before,
+.rfm-overlay::after {
+  content: none;
 }
