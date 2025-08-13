@@ -103,7 +103,16 @@ const BADGES: Badge[] = [
     requirements: 'Send at least 5 email on BridgBox',
     project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 5
-  }
+  },
+  {
+    id: 'the-hero',
+    name: 'The Hero',
+    description: 'Become a hero of the decentralized inbox',
+    image: 'https://gateway.irys.xyz/A6CJ3HBNH1JGgAbEJDVxvC13Kh4zonGiaWUgbuiHSMzF', // Using temporary placeholder image
+    requirements: 'Send at least 10 email on BridgBox',
+    project: 'BridgBox',
+    checkEligibility: (data) => data.emailCount >= 10
+  },
 ];
 
 // Project metadata for sections (badges coming soon)
@@ -664,7 +673,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
               )}
               
               {/* Debug info for email count */}
-              {(selectedBadge.id === 'inbox-awakening' || selectedBadge.id === 'email-adventure' || selectedBadge.id === 'the-sword') && (
+              {(selectedBadge.id === 'inbox-awakening' || selectedBadge.id === 'email-adventure' || selectedBadge.id === 'the-sword' || selectedBadge.id === 'the-hero') && (
                 <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
                   Email count: {emailCount}
                 </div>
