@@ -111,6 +111,11 @@ const MyHistorySection: React.FC<MyHistorySectionProps> = ({ walletAddress }) =>
             const project = getProjectFromTags(tx.tags);
             const projectId = project?.id || 'other';
             projectCounts[projectId] = (projectCounts[projectId] || 0) + 1;
+            
+            // Debug: Log BridgBox transactions
+            if (tx.tags.some(tag => tag.name === 'App-Name' && tag.value === 'Bridgbox-Email-Lit')) {
+              console.log('[MyHistory] Found BridgBox transaction:', tx.id, 'endpoint:', tx.endpoint, 'tags:', tx.tags);
+            }
           });
           
           return { transactions: fetchedTransactions, projectCounts };

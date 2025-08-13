@@ -680,7 +680,7 @@ export async function getUserTransactions(
   
   // Query each endpoint
   for (const endpoint of IRYS_ENDPOINTS) {
-    console.log(`[IrysService] Querying endpoint: ${endpoint.name}`);
+    console.log(`[IrysService] Querying endpoint: ${endpoint.name} (${endpoint.graphql})`);
     
     let after = "";
     let hasMore = true;
@@ -716,7 +716,7 @@ export async function getUserTransactions(
       `;
       
       try {
-        console.log(`[IrysService] [${endpoint.name}] Fetching page ${pageCount + 1}`);
+        console.log(`[IrysService] [${endpoint.name}] Fetching page ${pageCount + 1}, after: ${after}`);
         
         const result = await executeQuery(`getUserTx-${endpoint.name}-${walletAddress}-${after}`, async () => {
           const response = await axios.post(endpoint.graphql, { 
@@ -759,6 +759,13 @@ export async function getUserTransactions(
           }
           
           if (txDate <= new Date(now)) {
+            // Debug: Check for BridgBox transactions
+            const tags = edge.node.tags || [];
+            const isBridgBox = tags.some((tag: any) => tag.name === 'App-Name' && tag.value === 'Bridgbox-Email-Lit');
+            if (isBridgBox) {
+              console.log(`[IrysService] [${endpoint.name}] Found BridgBox transaction:`, edge.node.id, 'tags:', tags);
+            }
+            
             allTransactions.push({
               id: edge.node.id,
               timestamp,
@@ -811,5 +818,100 @@ export async function getUserTransactions(
   allTransactions.sort((a, b) => b.timestamp - a.timestamp);
   
   console.log(`[IrysService] Total transactions fetched from all endpoints: ${allTransactions.length}`);
+  
+  // Debug: Count BridgBox transactions
+  const bridgBoxCount = allTransactions.filter(tx => 
+    tx.tags.some(tag => tag.name === 'App-Name' && tag.value === 'Bridgbox-Email-Lit')
+  ).length;
+  console.log(`[IrysService] BridgBox transactions found: ${bridgBoxCount}`);
+  
+  // Special handling for BridgBox on devnet
+  if (bridgBoxCount === 0) {
+    console.log('[IrysService] No BridgBox transactions found, trying targeted query on devnet...');
+    
+    try {
+      const devnetEndpoint = IRYS_ENDPOINTS.find(e => e.name === 'DevNet');
+      if (devnetEndpoint) {
+        const bridgBoxQuery = `
+          query {
+            transactions(
+              owners: ["${walletAddress}"]
+              tags: [
+                { name: "App-Name", values: ["Bridgbox-Email-Lit"] }
+              ]
+              first: 100
+              order: DESC
+            ) {
+              edges {
+                node {
+                  id
+                  timestamp
+                  tags {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+          }
+        `;
+        
+        const result = await executeQuery(`bridgbox-special-${walletAddress}`, async () => {
+          const response = await axios.post(devnetEndpoint.graphql, { 
+            query: bridgBoxQuery,
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          return response.data;
+        });
+        
+        if (result?.data?.transactions?.edges) {
+            console.log(`[IrysService] Found ${result.data.transactions.edges.length} BridgBox transactions via targeted query`);
+            
+            let addedCount = 0;
+            let filteredOutCount = 0;
+            
+            for (const edge of result.data.transactions.edges) {
+              if (!edge.node) continue;
+              
+              let timestamp = parseInt(edge.node.timestamp);
+              console.log(`[IrysService] BridgBox tx ${edge.node.id} raw timestamp: ${edge.node.timestamp}`);
+              
+              if (timestamp < 10000000000) {
+                timestamp = timestamp * 1000;
+              }
+              
+              const txDate = new Date(timestamp);
+              console.log(`[IrysService] BridgBox tx ${edge.node.id} date: ${txDate.toISOString()}, range: ${new Date(fromTimestamp).toISOString()} to ${new Date(now).toISOString()}`);
+              
+              if (txDate >= new Date(fromTimestamp) && txDate <= new Date(now)) {
+                allTransactions.push({
+                  id: edge.node.id,
+                  timestamp,
+                  tags: edge.node.tags || [],
+                  endpoint: 'DevNet',
+                  url: `${devnetEndpoint.base}/${edge.node.id}`
+                });
+                
+                console.log(`[IrysService] Added BridgBox transaction: ${edge.node.id}`);
+                addedCount++;
+              } else {
+                console.log(`[IrysService] BridgBox tx ${edge.node.id} filtered out - outside time range`);
+                filteredOutCount++;
+              }
+            }
+            
+            console.log(`[IrysService] BridgBox summary: ${addedCount} added, ${filteredOutCount} filtered out`);
+          }
+          
+          // Re-sort after adding new transactions
+          allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+        }
+    } catch (error) {
+      console.error('[IrysService] Error in BridgBox targeted query:', error);
+    }
+  }
+  
   return allTransactions;
 } 
