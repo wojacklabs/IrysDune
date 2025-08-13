@@ -76,14 +76,14 @@ const BADGES: Badge[] = [
     checkEligibility: (data) => data.dashboardCount >= 10
   },
   
-  // BridgeBox Project Badges
+  // BridgBox Project Badges
   {
     id: 'inbox-awakening',
     name: 'Inbox Awakening',
     description: 'Decentralized Inbox about to wake up',
     image: 'https://gateway.irys.xyz/BHG5yZC2bT1KAZ6CJLyBnuWdconDCikGoMcsnUp7CdYd', // Using temporary placeholder image
     requirements: 'Available for everyone',
-    project: 'BridgeBox',
+    project: 'BridgBox',
     checkEligibility: () => true
   },
   {
@@ -91,8 +91,8 @@ const BADGES: Badge[] = [
     name: 'Email Adventure',
     description: 'Exploring Decentralized Inbox',
     image: 'https://gateway.irys.xyz/G8sMUrF8yrVYJh326VkNw6eY65NnaVCHKqm6oBL3U1XW', // Using temporary placeholder image
-    requirements: 'Send at least 1 email on BridgeBox',
-    project: 'BridgeBox',
+    requirements: 'Send at least 1 email on BridgBox',
+    project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 1
   },
   {
@@ -100,8 +100,8 @@ const BADGES: Badge[] = [
     name: 'The Sword',
     description: 'Found the legendary sword',
     image: 'https://gateway.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
-    requirements: 'Send at least 5 email on BridgeBox',
-    project: 'BridgeBox',
+    requirements: 'Send at least 5 email on BridgBox',
+    project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 5
   }
 ];
@@ -113,6 +113,13 @@ const PROJECT_SECTIONS = [
     description: 'Analytics dashboard for Irys ecosystem',
     url: 'https://irys-dune.vercel.app',
     hasBadges: true
+  },
+  {
+    project: 'BridgBox',
+    description: 'Secure email bridge powered by Irys',
+    url: 'https://bridgbox.cloud',
+    hasBadges: true,
+    comingSoon: false
   },
   {
     project: 'PlayHirys',
@@ -134,13 +141,6 @@ const PROJECT_SECTIONS = [
     url: 'https://irysnameservice.xyz',
     hasBadges: false,
     comingSoon: true
-  },
-  {
-    project: 'BridgeBox',
-    description: 'Secure email bridge powered by Irys',
-    url: 'https://bridgbox.cloud',
-    hasBadges: true,
-    comingSoon: false
   },
   {
     project: 'IrysProofBoard',

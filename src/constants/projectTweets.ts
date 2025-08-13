@@ -38,16 +38,16 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
   },
   // BridgBox
   {
-    projectId: 'bridgebox',
+    projectId: 'bridgbox',
     projectName: 'BridgBox',
-    projectIcon: APP_PRESETS.find(p => p.id === 'bridgebox')?.icon || null,
+    projectIcon: APP_PRESETS.find(p => p.id === 'bridgbox')?.icon || null,
     tweetUrl: 'https://x.com/Jst_Mariee/status/1952385559646601677',
     tweetId: '1952385559646601677'
   },
   {
-    projectId: 'bridgebox',
+    projectId: 'bridgbox',
     projectName: 'BridgBox',
-    projectIcon: APP_PRESETS.find(p => p.id === 'bridgebox')?.icon || null,
+    projectIcon: APP_PRESETS.find(p => p.id === 'bridgbox')?.icon || null,
     tweetUrl: 'https://x.com/0xCrocy/status/1952543921013182567',
     tweetId: '1952543921013182567'
   },

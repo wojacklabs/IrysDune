@@ -5,7 +5,7 @@ const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'cm-note': 'E6Vxp2LXNtnKa4CPiMtbRyKcZNYHiPjCtpqzb3WnaGsS',
   'githirys': 'CawuQ2beZoEQf3aP4AYcKXBTnP3SScvPABjEkHZ17Mwi',
   'irys-names': 'CXNvR5HpcAvmwZMePL5vknEFq8jxJ5Ds5kRAwNJ5uNxn',
-  'bridgebox': 'DThGX1CJMtDAR16rXygFneEygjEfbnJj3v3sGna1TrNB',
+  'bridgbox': 'DThGX1CJMtDAR16rXygFneEygjEfbnJj3v3sGna1TrNB',
   'irysdune': 'FhQBDN8bJxrXd93DfPG9DcFvVTSaq1AetwhbPEURLFzY',
   'irys-proof-board': 'FeihLByeu1DukYLdwpzwyV1D4MRcU47j6oRQjXHvubB5',
   'irysflip': 'GoGqYGUHnhAFJfetfSBsTiZxeUXGqAjLX75jw9B715J7',

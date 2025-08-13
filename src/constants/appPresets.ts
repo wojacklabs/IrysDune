@@ -59,7 +59,7 @@ export const APP_PRESETS: AppPreset[] = [
     icon: irysNamesIcon
   },
   {
-    id: 'bridgebox',
+    id: 'bridgbox',
     name: 'BridgBox',
     tags: [
       { name: 'App-Name', value: 'Bridgbox-Email-Lit' }

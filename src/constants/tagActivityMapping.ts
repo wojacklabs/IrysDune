@@ -127,7 +127,7 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
   {
     tags: [{ name: 'App-Name', value: 'Bridgbox-Email-Lit' }],
     activityId: 'email',
-    projectId: 'bridgebox'
+    projectId: 'bridgbox'
   },
   // IrysDune
   {
