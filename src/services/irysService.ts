@@ -317,64 +317,78 @@ export async function fetchIrysName(walletAddress: string): Promise<string | nul
 export async function queryBridgeBoxEmails(walletAddress: string): Promise<number> {
   console.log('[IrysService] Querying BridgeBox emails for:', walletAddress);
   
-  try {
-    const result = await executeQuery(`bridgebox-emails-${walletAddress}`, async () => {
-      const emailQuery = {
-        query: `
-          query GetUserBridgeBoxEmails {
-            transactions(
-              owners: ["${walletAddress}"]
-              tags: [
-                { name: "App-Name", values: ["Bridgbox-Email-Lit"] }
-              ]
-              first: 100
-              order: DESC
-            ) {
-              edges {
-                node {
-                  id
-                  tags {
-                    name
-                    value
+  // BridgBox uses devnet, so we need to check both mainnet and devnet
+  const endpoints = [
+    { url: IRYS_GRAPHQL_URL, name: 'mainnet' },
+    { url: 'https://devnet.irys.xyz/graphql', name: 'devnet' }
+  ];
+  
+  let totalEmailCount = 0;
+  
+  for (const endpoint of endpoints) {
+    console.log(`[IrysService] Checking BridgeBox emails on ${endpoint.name}...`);
+    
+    try {
+      const result = await executeQuery(`bridgebox-emails-${walletAddress}-${endpoint.name}`, async () => {
+        const emailQuery = {
+          query: `
+            query GetUserBridgeBoxEmails {
+              transactions(
+                owners: ["${walletAddress}"]
+                tags: [
+                  { name: "App-Name", values: ["Bridgbox-Email-Lit"] }
+                ]
+                first: 100
+                order: DESC
+              ) {
+                edges {
+                  node {
+                    id
+                    tags {
+                      name
+                      value
+                    }
                   }
                 }
               }
             }
-          }
-        `
-      };
+          `
+        };
 
-      const response = await fetch(IRYS_GRAPHQL_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailQuery)
+        const response = await fetch(endpoint.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailQuery)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.errors) {
+          console.error(`[IrysService] GraphQL errors on ${endpoint.name}:`, result.errors);
+          throw new Error('GraphQL query failed');
+        }
+
+        return result;
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // Count emails from this endpoint
+      const emailCount = result.data?.transactions?.edges?.length || 0;
+      console.log(`[IrysService] Found ${emailCount} BridgeBox emails on ${endpoint.name}`);
+      totalEmailCount += emailCount;
       
-      if (result.errors) {
-        console.error('[IrysService] GraphQL errors:', result.errors);
-        throw new Error('GraphQL query failed');
-      }
-
-      return result;
-    });
-
-    // Count emails
-    const emailCount = result.data?.transactions?.edges?.length || 0;
-    console.log('[IrysService] Found BridgeBox emails:', emailCount);
-    
-    return emailCount;
-  } catch (error) {
-    console.error('[IrysService] Error querying BridgeBox emails:', error);
-    return 0;
+    } catch (error) {
+      console.error(`[IrysService] Error querying BridgeBox emails on ${endpoint.name}:`, error);
+    }
   }
+  
+  console.log(`[IrysService] Total BridgeBox emails found: ${totalEmailCount}`);
+  return totalEmailCount;
 }
 
 // Query badge eligibility data for a wallet

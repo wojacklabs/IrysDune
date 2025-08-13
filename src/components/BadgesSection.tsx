@@ -113,6 +113,7 @@ const BADGES: Badge[] = [
     project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 10
   },
+  // IrysRealms Project Badges
 ];
 
 // Project metadata for sections (badges coming soon)
@@ -127,6 +128,13 @@ const PROJECT_SECTIONS = [
     project: 'BridgBox',
     description: 'Secure email bridge powered by Irys',
     url: 'https://bridgbox.cloud',
+    hasBadges: true,
+    comingSoon: false
+  },
+  {
+    project: 'IrysRealms',
+    description: 'An on-chain gaming world built on Irys',
+    url: 'https://irysrealms.xyz/game',
     hasBadges: true,
     comingSoon: false
   },
