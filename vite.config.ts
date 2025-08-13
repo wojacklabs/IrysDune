@@ -19,6 +19,15 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  server: {
+    proxy: {
+      '/api/bridgbox': {
+        target: 'https://app.bridgbox.cloud',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/bridgbox/, '/api'),
+      },
+    },
+  },
   resolve: {
     alias: {
       stream: 'vite-plugin-node-polyfills/stream',

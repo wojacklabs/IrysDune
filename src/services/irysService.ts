@@ -313,10 +313,51 @@ export async function fetchIrysName(walletAddress: string): Promise<string | nul
   return null;
 }
 
-// Query BridgeBox email count for a wallet
+// Query BridgeBox email count for a wallet using BridgBox API
 export async function queryBridgeBoxEmails(walletAddress: string): Promise<number> {
   console.log('[IrysService] Querying BridgeBox emails for:', walletAddress);
   
+  try {
+    // Use BridgBox API to get email count
+    // Use proxy in development to avoid CORS issues
+    const apiUrl = import.meta.env.DEV 
+      ? `/api/bridgbox/sent-email-count?address=${walletAddress}`
+      : `https://app.bridgbox.cloud/api/sent-email-count?address=${walletAddress}`;
+    
+    console.log('[IrysService] Calling BridgBox API:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Assuming the API returns { count: number } or similar structure
+    // Adjust based on actual API response format
+    const emailCount = data.count || data.emailCount || data.sentEmailCount || 0;
+    
+    console.log('[IrysService] BridgBox API response:', data);
+    console.log('[IrysService] Total BridgeBox emails found:', emailCount);
+    
+    return emailCount;
+  } catch (error) {
+    console.error('[IrysService] Error querying BridgeBox emails from API:', error);
+    
+    // Fallback to Irys query if API fails
+    console.log('[IrysService] Falling back to Irys GraphQL query...');
+    return queryBridgeBoxEmailsFromIrys(walletAddress);
+  }
+}
+
+// Fallback function to query from Irys GraphQL
+async function queryBridgeBoxEmailsFromIrys(walletAddress: string): Promise<number> {
   // BridgBox uses devnet, so we need to check both mainnet and devnet
   const endpoints = [
     { url: IRYS_GRAPHQL_URL, name: 'mainnet' },
@@ -387,7 +428,7 @@ export async function queryBridgeBoxEmails(walletAddress: string): Promise<numbe
     }
   }
   
-  console.log(`[IrysService] Total BridgeBox emails found: ${totalEmailCount}`);
+  console.log(`[IrysService] Total BridgeBox emails found from Irys: ${totalEmailCount}`);
   return totalEmailCount;
 }
 
