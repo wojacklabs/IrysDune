@@ -99,7 +99,7 @@ const BADGES: Badge[] = [
     id: 'the-sword',
     name: 'The Sword',
     description: 'Found the legendary sword',
-    image: 'hhttps://gateway.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
+    image: 'https://gateway.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
     requirements: 'Send at least 5 email on BridgeBox',
     project: 'BridgeBox',
     checkEligibility: (data) => data.emailCount >= 5
