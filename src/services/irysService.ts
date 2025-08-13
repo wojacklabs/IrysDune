@@ -318,15 +318,11 @@ export async function queryBridgeBoxEmails(walletAddress: string): Promise<numbe
   console.log('[IrysService] Querying BridgeBox emails for:', walletAddress);
   
   try {
-    // Use BridgBox API to get email count
-    // Use proxy in development to avoid CORS issues
-    const apiUrl = import.meta.env.DEV 
-      ? `/api/bridgbox/sent-email-count?address=${walletAddress}`
-      : `https://app.bridgbox.cloud/api/sent-email-count?address=${walletAddress}`;
+    // Use proxy API to avoid CORS issues
+    const proxyUrl = `/api/bridgbox-email-count?address=${walletAddress}`;
+    console.log('[IrysService] Calling BridgBox API via proxy:', proxyUrl);
     
-    console.log('[IrysService] Calling BridgBox API:', apiUrl);
-    
-    const response = await fetch(apiUrl, {
+    const response = await fetch(proxyUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -339,8 +335,12 @@ export async function queryBridgeBoxEmails(walletAddress: string): Promise<numbe
 
     const data = await response.json();
     
-    // Assuming the API returns { count: number } or similar structure
-    // Adjust based on actual API response format
+    // Check for error response from proxy
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    
+    // Extract count from response
     const emailCount = data.count || data.emailCount || data.sentEmailCount || 0;
     
     console.log('[IrysService] BridgBox API response:', data);
