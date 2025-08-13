@@ -256,11 +256,31 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
     return formatAddress(address);
   };
 
+  // Get network name from chain ID
+  const getNetworkName = () => {
+    if (!currentChainId) return '';
+    const networkNames: { [key: string]: string } = {
+      '0x1': 'Ethereum',
+      '0x89': 'Polygon',
+      '0xa4b1': 'Arbitrum',
+      '0xa86a': 'Avalanche',
+      '0x2105': 'Base',
+      '0x4f6': 'Irys Testnet',
+      '0x4F6': 'Irys Testnet'
+    };
+    return networkNames[currentChainId] || networkNames[currentChainId.toUpperCase()] || 'Unknown';
+  };
+
   return (
     <div className="connect-wallet">
       {isConnected ? (
         <div className="wallet-info">
           <span className="wallet-address">{getDisplayName()}</span>
+          {currentChainId && (
+            <span className="network-badge" style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '8px' }}>
+              {getNetworkName()}
+            </span>
+          )}
           <button 
             onClick={disconnectWallet}
             className="disconnect-btn"

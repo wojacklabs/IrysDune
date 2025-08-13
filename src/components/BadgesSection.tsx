@@ -678,7 +678,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <Award size={18} />
                     <span>You have already minted this badge!</span>
                   </div>
-                ) : selectedBadge.checkEligibility({ dashboardCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount }) ? (
                   <div className="status-message eligible">
                     <Award size={18} />
                     <span>You are eligible to mint this badge!</span>
@@ -723,7 +723,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 disabled={
                   isMinting || 
                   !walletAddress || 
-                  !selectedBadge.checkEligibility({ dashboardCount }) ||
+                  !selectedBadge.checkEligibility({ dashboardCount, emailCount }) ||
                   mintedBadges.includes(selectedBadge.id)
                 }
               >
@@ -734,7 +734,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   </>
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
-                ) : selectedBadge.checkEligibility({ dashboardCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount }) ? (
                   'Mint Badge (0.1 IRYS)'
                 ) : (
                   'Requirements Not Met'
