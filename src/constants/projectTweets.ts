@@ -100,7 +100,15 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     },
 ];
 
-// 랜덤하게 섞인 트윗 배열 반환
+// 랜덤하게 섞인 트윗 배열 반환 (Fisher-Yates 알고리즘 사용)
 export function getShuffledTweets(): ProjectTweet[] {
-  return [...PROJECT_TWEETS].sort(() => Math.random() - 0.5);
+  const tweets = [...PROJECT_TWEETS];
+  
+  // Fisher-Yates shuffle algorithm for truly random ordering
+  for (let i = tweets.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tweets[i], tweets[j]] = [tweets[j], tweets[i]];
+  }
+  
+  return tweets;
 }

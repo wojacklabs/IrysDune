@@ -12,7 +12,11 @@ import { fetchAllProjectsData } from './services/dataService';
 import type { QueryResult } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('trends');
+  // Restore active tab from localStorage or default to 'trends'
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('activeTab');
+    return savedTab || 'trends';
+  });
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [trendData, setTrendData] = useState<{ [key: string]: QueryResult[] }>({});
@@ -25,6 +29,11 @@ function App() {
   useEffect(() => {
     console.log('[Dropdown] State changed to:', dropdownOpen);
   }, [dropdownOpen]);
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Apply weather state class to body
   useEffect(() => {

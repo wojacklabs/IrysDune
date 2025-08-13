@@ -17,7 +17,7 @@ interface Badge {
   image: string;
   requirements: string;
   project: string;
-  checkEligibility: (data: { dashboardCount: number }) => boolean;
+  checkEligibility: (data: { dashboardCount: number; emailCount: number }) => boolean;
 }
 
 interface MintedBadgeDetails {
@@ -74,6 +74,35 @@ const BADGES: Badge[] = [
     requirements: 'Create at least 10 dashboard',
     project: 'IrysDune',
     checkEligibility: (data) => data.dashboardCount >= 10
+  },
+  
+  // BridgeBox Project Badges
+  {
+    id: 'inbox-awakening',
+    name: 'Inbox Awakening',
+    description: 'Decentralized Inbox about to wake up',
+    image: 'https://gateway.irys.xyz/BHG5yZC2bT1KAZ6CJLyBnuWdconDCikGoMcsnUp7CdYd', // Using temporary placeholder image
+    requirements: 'Available for everyone',
+    project: 'BridgeBox',
+    checkEligibility: () => true
+  },
+  {
+    id: 'email-adventure',
+    name: 'Email Adventure',
+    description: 'Exploring Decentralized Inbox',
+    image: 'https://gateway.irys.xyz/G8sMUrF8yrVYJh326VkNw6eY65NnaVCHKqm6oBL3U1XW', // Using temporary placeholder image
+    requirements: 'Send at least 1 email on BridgeBox',
+    project: 'BridgeBox',
+    checkEligibility: (data) => data.emailCount >= 1
+  },
+  {
+    id: 'the-sword',
+    name: 'The Sword',
+    description: 'Found the legendary sword',
+    image: 'hhttps://gateway.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
+    requirements: 'Send at least 5 email on BridgeBox',
+    project: 'BridgeBox',
+    checkEligibility: (data) => data.emailCount >= 5
   }
 ];
 
@@ -110,8 +139,8 @@ const PROJECT_SECTIONS = [
     project: 'BridgeBox',
     description: 'Secure email bridge powered by Irys',
     url: 'https://bridgbox.cloud',
-    hasBadges: false,
-    comingSoon: true
+    hasBadges: true,
+    comingSoon: false
   },
   {
     project: 'IrysProofBoard',
@@ -146,6 +175,7 @@ const PROJECT_SECTIONS = [
 const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   // Badge states
   const [dashboardCount, setDashboardCount] = useState(0);
+  const [emailCount, setEmailCount] = useState(0);
   const [mintedBadges, setMintedBadges] = useState<string[]>([]);
   const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -218,6 +248,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         // Query dashboard eligibility from Irys
         const eligibility = await queryBadgeEligibility(walletAddress);
         setDashboardCount(eligibility.dashboardCount);
+        setEmailCount(eligibility.emailCount);
         
         // Query actual minted badges from on-chain NFT contract
         const onChainBadges = await queryMintedBadgesOnChain(walletAddress);
@@ -325,7 +356,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
 
     try {
       // Check eligibility
-      const isEligible = badge.checkEligibility({ dashboardCount });
+      const isEligible = badge.checkEligibility({ dashboardCount, emailCount });
       if (!isEligible) {
         throw new Error("You are not eligible to mint this badge yet");
       }
@@ -542,7 +573,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
           ) : (
             <div className="badge-grid">
               {projectBadges.map(badge => {
-                const isEligible = badge.checkEligibility({ dashboardCount });
+                const isEligible = badge.checkEligibility({ dashboardCount, emailCount });
                 const isMinted = mintedBadges.includes(badge.id);
                 return (
                   <div
@@ -629,6 +660,13 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
               {(selectedBadge.id === 'dashboard-creator' || selectedBadge.id === 'pattern-hacker' || selectedBadge.id === 'the-watcher') && (
                 <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
                   Dashboard count: {dashboardCount}
+                </div>
+              )}
+              
+              {/* Debug info for email count */}
+              {(selectedBadge.id === 'inbox-awakening' || selectedBadge.id === 'email-adventure' || selectedBadge.id === 'the-sword') && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Email count: {emailCount}
                 </div>
               )}
             </div>

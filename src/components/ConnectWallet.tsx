@@ -23,6 +23,7 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [address, setAddress] = useState<string>('');
   const [isConnecting, setIsConnecting] = useState(false);
+  const [currentChainId, setCurrentChainId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for saved wallet and connection on mount
@@ -98,10 +99,37 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
     }
   };
 
-  const handleChainChanged = (chainId: string) => {
-    console.log('[ConnectWallet] Chain changed:', chainId);
-    // Reload the page as recommended by MetaMask
-    window.location.reload();
+  const handleChainChanged = async (chainId: string) => {
+    console.log('[ConnectWallet] Chain changed to:', chainId);
+    
+    // Update the current chain ID
+    setCurrentChainId(chainId);
+    
+    // Convert chainId to network name for better logging
+    const networkNames: { [key: string]: string } = {
+      '0x1': 'Ethereum Mainnet',
+      '0x89': 'Polygon',
+      '0xa4b1': 'Arbitrum',
+      '0xa86a': 'Avalanche',
+      '0x2105': 'Base',
+      '0x4f6': 'Irys Testnet',
+      '0x4F6': 'Irys Testnet'
+    };
+    
+    const networkName = networkNames[chainId] || networkNames[chainId.toUpperCase()] || `Unknown (${chainId})`;
+    console.log('[ConnectWallet] Switched to network:', networkName);
+    
+    // Verify the connection is still valid
+    // This allows the user to continue their work without interruption
+    await checkConnection();
+    
+    // Emit a custom event for other components to listen to
+    window.dispatchEvent(new CustomEvent('chainChanged', { 
+      detail: { 
+        chainId,
+        networkName 
+      } 
+    }));
   };
 
   const handleDisconnect = () => {
@@ -125,6 +153,12 @@ export const ConnectWallet: React.FC<ConnectWalletProps> = ({
       try {
         const ethersProvider = new ethers.BrowserProvider(provider);
         const accounts = await ethersProvider.listAccounts();
+        
+        // Get current chain ID
+        const network = await ethersProvider.getNetwork();
+        const chainId = `0x${network.chainId.toString(16)}`;
+        setCurrentChainId(chainId);
+        console.log('[ConnectWallet] Current chain ID:', chainId, 'Network:', network.name);
         
         if (accounts.length > 0) {
           const addr = accounts[0].address;

@@ -313,9 +313,74 @@ export async function fetchIrysName(walletAddress: string): Promise<string | nul
   return null;
 }
 
+// Query BridgeBox email count for a wallet
+export async function queryBridgeBoxEmails(walletAddress: string): Promise<number> {
+  console.log('[IrysService] Querying BridgeBox emails for:', walletAddress);
+  
+  try {
+    const result = await executeQuery(`bridgebox-emails-${walletAddress}`, async () => {
+      const emailQuery = {
+        query: `
+          query GetUserBridgeBoxEmails {
+            transactions(
+              owners: ["${walletAddress}"]
+              tags: [
+                { name: "App-Name", values: ["Bridgbox-Email-Lit"] }
+              ]
+              first: 100
+              order: DESC
+            ) {
+              edges {
+                node {
+                  id
+                  tags {
+                    name
+                    value
+                  }
+                }
+              }
+            }
+          }
+        `
+      };
+
+      const response = await fetch(IRYS_GRAPHQL_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailQuery)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.errors) {
+        console.error('[IrysService] GraphQL errors:', result.errors);
+        throw new Error('GraphQL query failed');
+      }
+
+      return result;
+    });
+
+    // Count emails
+    const emailCount = result.data?.transactions?.edges?.length || 0;
+    console.log('[IrysService] Found BridgeBox emails:', emailCount);
+    
+    return emailCount;
+  } catch (error) {
+    console.error('[IrysService] Error querying BridgeBox emails:', error);
+    return 0;
+  }
+}
+
 // Query badge eligibility data for a wallet
 export async function queryBadgeEligibility(walletAddress: string): Promise<{
   dashboardCount: number;
+  emailCount: number;
   mintedBadges: string[];
   mintedBadgeDetails: Map<string, { txHash: string; timestamp: number; metadataUri: string }>;
   loading: boolean;
@@ -485,8 +550,12 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     console.log('[IrysService] Found minted badges:', Array.from(mintedBadges));
     console.log('[IrysService] Minted badge details:', Array.from(mintedBadgeDetails.entries()));
     
+    // Query BridgeBox email count
+    const emailCount = await queryBridgeBoxEmails(walletAddress);
+    
     return { 
       dashboardCount, 
+      emailCount,
       mintedBadges: Array.from(mintedBadges),
       mintedBadgeDetails,
       loading: false 
@@ -495,6 +564,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     console.error('[IrysService] Error querying badge eligibility:', error);
     return { 
       dashboardCount: 0, 
+      emailCount: 0,
       mintedBadges: [],
       mintedBadgeDetails: new Map(),
       loading: false, 
