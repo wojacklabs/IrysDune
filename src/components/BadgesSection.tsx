@@ -135,8 +135,8 @@ const PROJECT_SECTIONS = [
     project: 'IrysRealms',
     description: 'An on-chain gaming world built on Irys',
     url: 'https://irysrealms.xyz/game',
-    hasBadges: true,
-    comingSoon: false
+    hasBadges: false,
+    comingSoon: true
   },
   {
     project: 'PlayHirys',
