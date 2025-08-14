@@ -1,25 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import Marquee from 'react-fast-marquee';
-import { getShuffledTweets } from '../constants/projectTweets';
 import type { ProjectTweet } from '../constants/projectTweets';
-import { fetchMultipleTweets } from '../services/twitterService';
-import { BookHeart } from 'lucide-react';
+import { fetchTweetData } from '../services/twitterService';
+import { projectTweets } from '../constants/projectTweets';
 
-const TwitterFeed: React.FC = () => {
-  const [tweets, setTweets] = useState<ProjectTweet[]>([]);
+interface TwitterFeedProps {
+  tweetId: string;
+  className?: string;
+}
+
+const TwitterFeed: React.FC<TwitterFeedProps> = ({ tweetId, className }) => {
+  const [tweet, setTweet] = useState<ProjectTweet | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadTweets = async () => {
+    const loadTweet = async () => {
       setLoading(true);
-      const shuffledTweets = getShuffledTweets();
-      const tweetsWithData = await fetchMultipleTweets(shuffledTweets);
-      setTweets(tweetsWithData);
+      
+      // Find the project info for this tweet
+      let projectInfo: Partial<ProjectTweet> = { tweetId };
+      
+      for (const [projectId, tweets] of Object.entries(projectTweets)) {
+        if ((tweets as string[]).includes(tweetId)) {
+          // Get project name from the constants
+          const projectName = projectId.split('-').map(w => 
+            w.charAt(0).toUpperCase() + w.slice(1)
+          ).join(' ');
+          
+          projectInfo = {
+            tweetId,
+            projectId,
+            projectName,
+            tweetUrl: `https://twitter.com/i/web/status/${tweetId}`
+          };
+          break;
+        }
+      }
+      
+      const tweetData = await fetchTweetData(projectInfo as ProjectTweet);
+      setTweet(tweetData);
       setLoading(false);
     };
     
-    loadTweets();
-  }, []);
+    loadTweet();
+  }, [tweetId]);
 
   const TweetCard: React.FC<{ tweet: ProjectTweet }> = ({ tweet }) => {
     const handleClick = () => {
@@ -69,51 +92,16 @@ const TwitterFeed: React.FC = () => {
     );
   };
 
-  if (loading) {
+  if (loading || !tweet) {
     return (
-      <div className="card ecosystem-card">
-        <div className='ecosystem-header'>
-          <div className="ecosystem-title">
-            <BookHeart className="ecosystem-icon" size={20} />
-            <h3>
-                Community Reviews
-            </h3>
-          </div>
-        </div>
-        <div className="twitter-feed-loading">
-          <div className="loading-spinner"></div>
-        </div>
+      <div className={`tweet-card loading ${className || ''}`}>
+        <div className="loading-spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="card ecosystem-card">
-      <div className='ecosystem-header'>
-        <div className="ecosystem-title">
-        <BookHeart className="ecosystem-icon" size={20} />
-          <h3>
-            Community Reviews
-          </h3>
-        </div>
-      </div>
-      <div className="twitter-feed-container">
-        <Marquee
-          gradient={true}
-          gradientColor="rgba(248, 250, 252, 1)"
-          gradientWidth={50}
-          speed={30}
-          pauseOnHover={true}
-          className="tweet-marquee"
-        >
-          {tweets.map((tweet, index) => (
-            <div key={`${tweet.tweetId}-${index}`} className="tweet-wrapper">
-              <TweetCard tweet={tweet} />
-            </div>
-          ))}
-        </Marquee>
-      </div>
-    </div>
+      <TweetCard tweet={tweet} />
   );
 };
 

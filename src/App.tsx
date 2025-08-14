@@ -3,6 +3,7 @@ import TrendSection from './components/TrendSection';
 import { DashboardsSection } from './components/DashboardsSection';
 import MyHistorySection from './components/MyHistorySection';
 import BadgesSection from './components/BadgesSection';
+import ArticlesSection from './components/ArticlesSection';
 import CloudBackground from './components/CloudBackground';
 import { ConnectWallet } from './components/ConnectWallet';
 
@@ -222,10 +223,10 @@ function App() {
               Badges
             </button>
             <button
-              onClick={() => setActiveTab('my-history')}
-              className={`nav-button ${activeTab === 'my-history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('articles')}
+              className={`nav-button ${activeTab === 'articles' ? 'active' : ''}`}
             >
-              My History
+              Articles
             </button>
           </div>
           
@@ -289,12 +290,12 @@ function App() {
                     </button>
                     <button
                       onClick={() => {
-                        setActiveTab('my-history');
+                        setActiveTab('articles');
                         setDropdownOpen(false);
                       }}
-                      className={`mobile-nav-item ${activeTab === 'my-history' ? 'active' : ''}`}
+                      className={`mobile-nav-item ${activeTab === 'articles' ? 'active' : ''}`}
                     >
-                      My History
+                      Articles
                     </button>
                   </div>
                   
@@ -347,6 +348,24 @@ function App() {
                   
                   <div className="dropdown-divider mobile-only"></div>
                   
+                  {/* My History (only show when wallet connected) */}
+                  {walletAddress && (
+                    <>
+                      <div className="dropdown-divider"></div>
+                      <button
+                        onClick={() => {
+                          setActiveTab('my-history');
+                          setDropdownOpen(false);
+                        }}
+                        className="dropdown-item-button"
+                      >
+                        <span>My History</span>
+                      </button>
+                    </>
+                  )}
+                  
+                  <div className="dropdown-divider"></div>
+                  
                   <div className="dropdown-item">
                     <span>DarkMode</span>
                     <label className="toggle-switch">
@@ -388,6 +407,7 @@ function App() {
           {activeTab === 'dashboards' && <DashboardsSection walletAddress={walletAddress} username={username} trendData={trendData} />}
           {activeTab === 'my-history' && <MyHistorySection walletAddress={walletAddress} />}
           {activeTab === 'badges' && <BadgesSection walletAddress={walletAddress} />}
+          {activeTab === 'articles' && <ArticlesSection />}
         </div>
       </main>
 

@@ -100,6 +100,17 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     },
 ];
 
+// 프로젝트별로 그룹화된 트윗 ID
+export const projectTweets: Record<string, string[]> = PROJECT_TWEETS.reduce((acc, tweet) => {
+  if (!acc[tweet.projectId]) {
+    acc[tweet.projectId] = [];
+  }
+  if (tweet.tweetId) {
+    acc[tweet.projectId].push(tweet.tweetId);
+  }
+  return acc;
+}, {} as Record<string, string[]>);
+
 // 랜덤하게 섞인 트윗 배열 반환 (Fisher-Yates 알고리즘 사용)
 export function getShuffledTweets(): ProjectTweet[] {
   const tweets = [...PROJECT_TWEETS];

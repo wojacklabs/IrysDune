@@ -7105,7 +7105,6 @@ body.weather-stormy .disconnect-btn-mobile:hover {
     0 2px 8px rgba(59, 130, 246, 0.08),
     inset 0 1px 2px rgba(255, 255, 255, 0.8);
   transition: all 0.4s ease;
-  width: 340px;
   border: 1px solid rgba(255, 255, 255, 0.8);
   position: relative;
   overflow: visible;
@@ -7279,7 +7278,6 @@ body.weather-stormy .disconnect-btn-mobile:hover {
   }
 
   .tweet-card {
-    width: 280px;
     padding: 1.25rem;
   }
 
@@ -7427,4 +7425,128 @@ body.weather-stormy .rfm-overlay {
 .rfm-overlay::before,
 .rfm-overlay::after {
   content: none !important;
+}
+
+/* === Articles Section === */
+.articles-section {
+  margin-top: 20px;
+}
+
+.articles-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.project-articles-section {
+  border-bottom: 1px solid var(--cloud-whisper);
+  padding-bottom: 2rem;
+}
+
+.project-articles-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.project-articles-section .project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.project-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.project-info .project-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.project-info h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--sky-800);
+}
+
+.article-count {
+  font-size: 0.875rem;
+  color: var(--sky-600);
+  background: var(--sky-50);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+}
+
+.tweets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.tweet-card {
+  background: var(--cloud-white);
+  border: 1px solid var(--cloud-whisper);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tweet-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Dropdown button styles */
+.dropdown-item-button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--sky-800);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dropdown-item-button:hover {
+  background: var(--sky-50);
+  color: var(--sky-600);
+}
+
+/* Dark mode for articles section */
+body.weather-stormy .project-articles-section {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .project-info h4 {
+  color: var(--dark-text-primary);
+}
+
+body.weather-stormy .article-count {
+  color: var(--dark-text-primary);
+  background: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .tweet-card {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .dropdown-item-button {
+  color: var(--dark-text-primary);
+}
+
+body.weather-stormy .dropdown-item-button:hover {
+  background: rgba(71, 85, 105, 0.3);
+  color: var(--dark-text-secondary);
 }

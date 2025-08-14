@@ -12,7 +12,7 @@ import {
 import { getCachedData, saveCacheData, getCacheAge } from '../services/storageService';
 import Chart from './Chart';
 import LoadingProgress from './LoadingProgress';
-import TwitterFeed from './TwitterFeed';
+
 
 type TimePeriod = '7d' | '30d' | '3M' | '6M';
 
@@ -281,9 +281,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
       </div>
-
-      {/* Twitter Feed Section */}
-      <TwitterFeed />
 
       {/* Individual Apps Section */}
       <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
