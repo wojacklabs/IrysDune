@@ -128,7 +128,7 @@ const BADGES: Badge[] = [
     name: 'Block Verifier',
     description: 'Player who loves Block Dropper game',
     image: 'https://gateway.irys.xyz/Dn67oo5DqnXuYqoAUQiBzHGfFjFg6L1fE4RF3E64pocm', // Using temporary placeholder image
-    requirements: 'Play Block Dropper at least 3 times',
+    requirements: 'Play and upload score of Block Dropper at least 3 times',
     project: 'IrysRealms',
     checkEligibility: (data) => data.blockDropperCount >= 3
   },
@@ -137,7 +137,7 @@ const BADGES: Badge[] = [
     name: 'Tetris Lover',
     description: 'Player who loves 3D Tetris game',
     image: 'https://gateway.irys.xyz/D2NBm9EoNVWMiAW3pFqxWxPUf1C2MvRWsng3mTt6tkdk', // Using temporary placeholder image
-    requirements: 'Play Tetris at least 3 times',
+    requirements: 'Play and upload score of Tetris at least 3 times',
     project: 'IrysRealms',
     checkEligibility: (data) => data.tetrisCount >= 3
   },
