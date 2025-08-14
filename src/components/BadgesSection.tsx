@@ -17,7 +17,7 @@ interface Badge {
   image: string;
   requirements: string;
   project: string;
-  checkEligibility: (data: { dashboardCount: number; emailCount: number }) => boolean;
+  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number }) => boolean;
 }
 
 interface MintedBadgeDetails {
@@ -114,6 +114,33 @@ const BADGES: Badge[] = [
     checkEligibility: (data) => data.emailCount >= 10
   },
   // IrysRealms Project Badges
+  {
+    id: 'pixel-pioneer',
+    name: 'Pixel Pioneer',
+    description: 'The first pixel to enter the IrysRealms',
+    image: 'https://gateway.irys.xyz/617KmNNw95etYCpFdddh5RfW9fJL9GT7S5gPh8PFWDv2', // Using temporary placeholder image
+    requirements: 'Available for everyone',
+    project: 'IrysRealms',
+    checkEligibility: () => true
+  },
+  {
+    id: 'block-verifier',
+    name: 'Block Verifier',
+    description: 'Player who loves Block Dropper game',
+    image: 'https://gateway.irys.xyz/Dn67oo5DqnXuYqoAUQiBzHGfFjFg6L1fE4RF3E64pocm', // Using temporary placeholder image
+    requirements: 'Play Block Dropper at least 3 times',
+    project: 'IrysRealms',
+    checkEligibility: (data) => data.blockDropperCount >= 3
+  },
+  {
+    id: 'tetris-lover',
+    name: 'Tetris Lover',
+    description: 'Player who loves 3D Tetris game',
+    image: 'https://gateway.irys.xyz/D2NBm9EoNVWMiAW3pFqxWxPUf1C2MvRWsng3mTt6tkdk', // Using temporary placeholder image
+    requirements: 'Play Tetris at least 3 times',
+    project: 'IrysRealms',
+    checkEligibility: (data) => data.tetrisCount >= 3
+  },
 ];
 
 // Project metadata for sections (badges coming soon)
@@ -135,8 +162,8 @@ const PROJECT_SECTIONS = [
     project: 'IrysRealms',
     description: 'An on-chain gaming world built on Irys',
     url: 'https://irysrealms.xyz/game',
-    hasBadges: false,
-    comingSoon: true
+    hasBadges: true,
+    comingSoon: false
   },
   {
     project: 'PlayHirys',
@@ -193,6 +220,8 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   // Badge states
   const [dashboardCount, setDashboardCount] = useState(0);
   const [emailCount, setEmailCount] = useState(0);
+  const [blockDropperCount, setBlockDropperCount] = useState(0);
+  const [tetrisCount, setTetrisCount] = useState(0);
   const [mintedBadges, setMintedBadges] = useState<string[]>([]);
   const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -266,6 +295,8 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         const eligibility = await queryBadgeEligibility(walletAddress);
         setDashboardCount(eligibility.dashboardCount);
         setEmailCount(eligibility.emailCount);
+        setBlockDropperCount(eligibility.blockDropperCount);
+        setTetrisCount(eligibility.tetrisCount);
         
         // Query actual minted badges from on-chain NFT contract
         const onChainBadges = await queryMintedBadgesOnChain(walletAddress);
@@ -373,7 +404,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
 
     try {
       // Check eligibility
-      const isEligible = badge.checkEligibility({ dashboardCount, emailCount });
+      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount });
       if (!isEligible) {
         throw new Error("You are not eligible to mint this badge yet");
       }
@@ -590,7 +621,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
           ) : (
             <div className="badge-grid">
               {projectBadges.map(badge => {
-                const isEligible = badge.checkEligibility({ dashboardCount, emailCount });
+                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount });
                 const isMinted = mintedBadges.includes(badge.id);
                 return (
                   <div
@@ -686,6 +717,19 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   Email count: {emailCount}
                 </div>
               )}
+              
+              {/* Debug info for game counts */}
+              {selectedBadge.id === 'block-verifier' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Block Dropper plays: {blockDropperCount}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'tetris-lover' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Tetris plays: {tetrisCount}
+                </div>
+              )}
             </div>
             
             {walletAddress && (
@@ -695,7 +739,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <Award size={18} />
                     <span>You have already minted this badge!</span>
                   </div>
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ? (
                   <div className="status-message eligible">
                     <Award size={18} />
                     <span>You are eligible to mint this badge!</span>
@@ -740,7 +784,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 disabled={
                   isMinting || 
                   !walletAddress || 
-                  !selectedBadge.checkEligibility({ dashboardCount, emailCount }) ||
+                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ||
                   mintedBadges.includes(selectedBadge.id)
                 }
               >
@@ -751,7 +795,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   </>
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ? (
                   'Mint Badge (0.1 IRYS)'
                 ) : (
                   'Requirements Not Met'

@@ -432,10 +432,113 @@ async function queryBridgeBoxEmailsFromIrys(walletAddress: string): Promise<numb
   return totalEmailCount;
 }
 
+// Query IrysRealms game counts for a wallet
+export async function queryIrysRealmsGames(walletAddress: string): Promise<{
+  blockDropperCount: number;
+  tetrisCount: number;
+}> {
+  console.log('[IrysService] Querying IrysRealms games for:', walletAddress);
+  
+  try {
+    // Query Block Dropper games
+    const blockDropperQuery = {
+      query: `
+        query GetBlockDropperGames {
+          transactions(
+            owners: ["${walletAddress}"]
+            tags: [
+              { name: "Game", values: ["Block-Dropper"] }
+            ]
+            first: 100
+            order: DESC
+          ) {
+            edges {
+              node {
+                id
+                timestamp
+              }
+            }
+          }
+        }
+      `
+    };
+
+    // Query Tetris games
+    const tetrisQuery = {
+      query: `
+        query GetTetrisGames {
+          transactions(
+            owners: ["${walletAddress}"]
+            tags: [
+              { name: "Game", values: ["Tetris"] }
+            ]
+            first: 100
+            order: DESC
+          ) {
+            edges {
+              node {
+                id
+                timestamp
+              }
+            }
+          }
+        }
+      `
+    };
+
+    // Execute both queries in parallel
+    const [blockDropperResult, tetrisResult] = await Promise.all([
+      executeQuery(`block-dropper-${walletAddress}`, async () => {
+        const response = await fetch(IRYS_GRAPHQL_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(blockDropperQuery)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+      }),
+      
+      executeQuery(`tetris-${walletAddress}`, async () => {
+        const response = await fetch(IRYS_GRAPHQL_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tetrisQuery)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
+      })
+    ]);
+
+    const blockDropperCount = blockDropperResult.data?.transactions?.edges?.length || 0;
+    const tetrisCount = tetrisResult.data?.transactions?.edges?.length || 0;
+
+    console.log('[IrysService] IrysRealms game counts:', { blockDropperCount, tetrisCount });
+
+    return { blockDropperCount, tetrisCount };
+  } catch (error) {
+    console.error('[IrysService] Error querying IrysRealms games:', error);
+    return { blockDropperCount: 0, tetrisCount: 0 };
+  }
+}
+
 // Query badge eligibility data for a wallet
 export async function queryBadgeEligibility(walletAddress: string): Promise<{
   dashboardCount: number;
   emailCount: number;
+  blockDropperCount: number;
+  tetrisCount: number;
   mintedBadges: string[];
   mintedBadgeDetails: Map<string, { txHash: string; timestamp: number; metadataUri: string }>;
   loading: boolean;
@@ -608,9 +711,14 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     // Query BridgeBox email count
     const emailCount = await queryBridgeBoxEmails(walletAddress);
     
+    // Query IrysRealms game counts
+    const { blockDropperCount, tetrisCount } = await queryIrysRealmsGames(walletAddress);
+    
     return { 
       dashboardCount, 
       emailCount,
+      blockDropperCount,
+      tetrisCount,
       mintedBadges: Array.from(mintedBadges),
       mintedBadgeDetails,
       loading: false 
@@ -620,6 +728,8 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     return { 
       dashboardCount: 0, 
       emailCount: 0,
+      blockDropperCount: 0,
+      tetrisCount: 0,
       mintedBadges: [],
       mintedBadgeDetails: new Map(),
       loading: false, 
