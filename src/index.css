@@ -7457,7 +7457,6 @@ body.weather-stormy .rfm-overlay {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0;
-  border-bottom: 1px solid var(--cloud-whisper);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   transition: background-color 0.2s ease;
 }
@@ -7605,8 +7604,6 @@ body.weather-stormy .rfm-overlay {
 }
 
 .tweet-embed-card {
-  background: var(--cloud-white);
-  border: 1px solid var(--cloud-whisper);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all 0.3s ease;
@@ -7650,9 +7647,6 @@ body.weather-stormy .rfm-overlay {
     padding: 1rem;
   }
   
-  .project-article-card .project-header {
-  }
-  
   .author-profile-image-small {
     width: 24px;
     height: 24px;
@@ -7694,11 +7688,6 @@ body.weather-stormy .article-count {
   background: rgba(71, 85, 105, 0.3);
 }
 
-body.weather-stormy .tweet-embed-card {
-  background: rgba(30, 41, 59, 0.95);
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
 body.weather-stormy .tweet-loading {
   background: rgba(30, 41, 59, 0.95);
 }
@@ -7718,10 +7707,6 @@ body.weather-stormy .article-count {
 body.weather-stormy .project-article-card {
   background: rgba(30, 41, 59, 0.95);
   border-color: rgba(71, 85, 105, 0.3);
-}
-
-body.weather-stormy .project-article-card .project-header {
-  border-bottom-color: rgba(71, 85, 105, 0.3);
 }
 
 body.weather-stormy .author-profile-image-small {
