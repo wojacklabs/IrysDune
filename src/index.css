@@ -6162,10 +6162,6 @@ body.weather-stormy .display-mode-selector label:hover {
   z-index: 1;
 }
 
-.project-header > div {
-  flex: 1;
-}
-
 .project-header h3 {
   margin: 0;
   font-size: 1.25rem;
@@ -7432,28 +7428,102 @@ body.weather-stormy .rfm-overlay {
   margin-top: 20px;
 }
 
-.articles-content {
+.articles-header {
+  margin-bottom: 2rem;
+}
+
+.articles-grid {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
-.project-articles-section {
-  border-bottom: 1px solid var(--cloud-whisper);
-  padding-bottom: 2rem;
+.project-article-card {
+  background: var(--cloud-white);
+  border: 1px solid var(--cloud-whisper);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
 }
 
-.project-articles-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.project-article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.project-articles-section .project-header {
+.project-article-card .project-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding: 0 0.5rem;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--cloud-whisper);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  transition: background-color 0.2s ease;
+}
+
+.project-header.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.project-header.clickable:hover {
+  background: var(--cloud-whisper);
+}
+
+.project-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.author-profiles-inline {
+  display: flex;
+  align-items: center;
+}
+
+.author-profile-image-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--cloud-white);
+  position: relative;
+  transition: all 0.2s ease;
+  margin-left: -8px;
+}
+
+.author-profile-image-small:first-child {
+  margin-left: 0;
+}
+
+.author-profile-image-small:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+.author-profile-image-small.loading {
+  opacity: 0.5;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
+}
+
+.more-authors {
+  margin-left: 12px;
+  font-size: 0.875rem;
+  color: var(--sky-600);
+  font-weight: 500;
 }
 
 .project-info {
@@ -7483,23 +7553,110 @@ body.weather-stormy .rfm-overlay {
   border-radius: 1rem;
 }
 
-.tweets-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+/* 트윗 컨테이너 스타일 */
+.tweets-container {
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
 
-.tweet-card {
+.tweets-container.collapsed {
+  display: none;
+}
+
+.tweets-horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem 0.5rem;
+  margin: 0 -0.5rem;
+  
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--sky-300) var(--sky-100);
+}
+
+.tweets-horizontal-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tweets-horizontal-scroll::-webkit-scrollbar-track {
+  background: var(--sky-100);
+  border-radius: 4px;
+}
+
+.tweets-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: var(--sky-300);
+  border-radius: 4px;
+}
+
+.tweets-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--sky-400);
+}
+
+.tweets-row {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.twitter-embed-container {
+  min-height: 200px;
+  position: relative;
+}
+
+.tweet-embed-card {
   background: var(--cloud-white);
   border: 1px solid var(--cloud-whisper);
   border-radius: var(--radius-lg);
-  padding: 1rem;
+  overflow: hidden;
   transition: all 0.3s ease;
+  flex: 0 0 auto;
+  min-width: 350px;
+  max-width: 450px;
 }
 
-.tweet-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+.tweet-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  background: var(--cloud-white);
+  border-radius: var(--radius-lg);
+}
+
+/* Twitter widget iframe styles */
+.twitter-embed-container iframe {
+  border-radius: var(--radius-lg) !important;
+}
+
+/* Hide twitter widget while loading */
+.twitter-embed-container .twitter-tweet {
+  margin: 0 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tweet-embed-card {
+    min-width: 280px;
+    max-width: 320px;
+  }
+  
+  .tweets-horizontal-scroll {
+    margin: 0 -1rem;
+    padding: 1rem 1rem;
+  }
+  
+  .project-article-card {
+    padding: 1rem;
+  }
+  
+  .project-article-card .project-header {
+  }
+  
+  .author-profile-image-small {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Dropdown button styles */
@@ -7537,9 +7694,59 @@ body.weather-stormy .article-count {
   background: rgba(71, 85, 105, 0.3);
 }
 
-body.weather-stormy .tweet-card {
+body.weather-stormy .tweet-embed-card {
   background: rgba(30, 41, 59, 0.95);
   border-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .tweet-loading {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+/* Dark mode - 접힘/펼침 UI */
+body.weather-stormy .project-header.clickable:hover {
+  background: rgba(71, 85, 105, 0.2);
+}
+
+
+
+body.weather-stormy .article-count {
+  background: rgba(71, 85, 105, 0.3);
+  color: var(--sky-300);
+}
+
+body.weather-stormy .project-article-card {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .project-article-card .project-header {
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .author-profile-image-small {
+  border-color: rgba(30, 41, 59, 0.95);
+}
+
+body.weather-stormy .more-authors {
+  color: var(--sky-400);
+}
+
+/* Dark mode scrollbar */
+body.weather-stormy .tweets-horizontal-scroll {
+  scrollbar-color: rgba(71, 85, 105, 0.6) rgba(30, 41, 59, 0.3);
+}
+
+body.weather-stormy .tweets-horizontal-scroll::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+body.weather-stormy .tweets-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.6);
+}
+
+body.weather-stormy .tweets-horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.8);
 }
 
 body.weather-stormy .dropdown-item-button {

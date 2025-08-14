@@ -11,13 +11,56 @@ export interface ProjectTweet {
   authorHandle?: string;
   content?: string;
   date?: string;
-  profileImage?: string;
   metrics?: {
     likes?: number | null;
     retweets?: number | null;
     replies?: number | null;
   };
 }
+
+// 작성자별 프로필 정보 매핑 (트윗 ID 기준)
+export const AUTHOR_PROFILES: Record<string, { name: string; handle: string }> = {
+  '1953494872888955018': {
+    name: 'Jst_Mariee',
+    handle: 'Jst_Mariee'
+  },
+  '1951799943187829167': {
+    name: '0xCrocy',
+    handle: '0xCrocy'
+  },
+  '1952385559646601677': {
+    name: 'Jst_Mariee',
+    handle: 'Jst_Mariee'
+  },
+  '1952543921013182567': {
+    name: '0xCrocy',
+    handle: '0xCrocy'
+  },
+  '1953917125157847440': {
+    name: '0xCrocy',
+    handle: '0xCrocy'
+  },
+  '1951054949481119751': {
+    name: '0xCrocy',
+    handle: '0xCrocy'
+  },
+  '1950630852762767630': {
+    name: '0xCrocy',
+    handle: '0xCrocy'
+  },
+  '1953531286385222039': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1954096345129639975': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1953741189087162693': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  }
+};
 
 // 프로젝트별 트윗 URL 데이터
 export const PROJECT_TWEETS: ProjectTweet[] = [

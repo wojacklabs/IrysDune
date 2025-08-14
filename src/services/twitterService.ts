@@ -88,7 +88,6 @@ export async function fetchTweetData(tweet: ProjectTweet): Promise<ProjectTweet>
       authorHandle: parsedData.authorHandle,
       content: parsedData.content,
       date: parsedData.date,
-      profileImage: parsedData.profileImage,
       metrics: parsedData.metrics
     };
   } catch (error) {

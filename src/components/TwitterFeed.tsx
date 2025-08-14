@@ -66,16 +66,6 @@ const TwitterFeed: React.FC<TwitterFeedProps> = ({ tweetId, className }) => {
         )}
         
         <div className="tweet-header">
-          {tweet.profileImage && (
-            <img 
-              src={tweet.profileImage} 
-              alt={tweet.author} 
-              className="tweet-profile-image"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tweet.author || 'User')}&background=random`;
-              }}
-            />
-          )}
           <div className="tweet-author">
             <div className="tweet-author-name">{tweet.author || 'Loading...'}</div>
             <div className="tweet-author-handle">{tweet.authorHandle || '@loading'}</div>
