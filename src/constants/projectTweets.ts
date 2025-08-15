@@ -94,6 +94,13 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/0xCrocy/status/1952543921013182567',
     tweetId: '1952543921013182567'
   },
+  {
+    projectId: 'bridgbox',
+    projectName: 'BridgBox',
+    projectIcon: APP_PRESETS.find(p => p.id === 'bridgbox')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1955561362769203451',
+    tweetId: '1955561362769203451'
+  },
   // Irys Flip
   {
     projectId: 'irysflip',
@@ -109,6 +116,20 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     projectIcon: APP_PRESETS.find(p => p.id === 'irys-realms')?.icon || null,
     tweetUrl: 'https://x.com/0xCrocy/status/1951054949481119751',
     tweetId: '1951054949481119751'
+  },
+  {
+    projectId: 'irys-realms',
+    projectName: 'Irys Realms',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-realms')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1955166172464226690',
+    tweetId: '1955166172464226690'
+  },
+  {
+    projectId: 'irys-realms',
+    projectName: 'Irys Realms',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-realms')?.icon || null,
+    tweetUrl: 'https://x.com/Jst_Mariee/status/1955919563230437766',
+    tweetId: '1955919563230437766'
   },
   // cm's note
   {
@@ -133,6 +154,14 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/boyykennn/status/1954096345129639975',
     tweetId: '1954096345129639975'
   },
+  // Irys PFP
+  {
+    projectId: 'irys-pfp',
+    projectName: 'Irys PFP',
+    projectIcon: APP_PRESETS.find(p => p.id === 'irys-pfp')?.icon || null,
+    tweetUrl: 'https://x.com/boyykennn/status/1954804094918435206',
+    tweetId: '1954804094918435206'
+  },
   // irys name
     {
         projectId: 'irys-names',
@@ -141,6 +170,30 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
         tweetUrl: 'https://x.com/boyykennn/status/1953741189087162693',
         tweetId: '1953741189087162693'
     },
+    // irys flip
+    {
+        projectId: 'irys-flip',
+        projectName: 'Irys Flip',
+        projectIcon: APP_PRESETS.find(p => p.id === 'irys-flip')?.icon || null,
+        tweetUrl: 'https://x.com/boyykennn/status/1955789582500327904',
+        tweetId: '1955789582500327904'
+    },
+    // irys memory  
+    {
+      projectId: 'irys-memory',
+      projectName: 'Irys Memory',
+      projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
+      tweetUrl: 'https://x.com/boyykennn/status/1954468493169938773',
+      tweetId: '1954468493169938773'
+    },
+    // Play Hirys
+    {
+      projectId: 'play-hirys',
+      projectName: 'Play Hirys',
+      projectIcon: APP_PRESETS.find(p => p.id === 'play-hirys')?.icon || null,
+      tweetUrl: 'https://x.com/0xsoros/status/1955914400076050510',
+      tweetId: '1955914400076050510'
+    }
 ];
 
 // 프로젝트별로 그룹화된 트윗 ID
