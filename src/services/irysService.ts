@@ -432,6 +432,54 @@ async function queryBridgeBoxEmailsFromIrys(walletAddress: string): Promise<numb
   return totalEmailCount;
 }
 
+// Query PlayHirys game counts for a wallet
+export async function queryPlayHirysGames(walletAddress: string): Promise<Map<string, number>> {
+  console.log('[IrysService] Querying PlayHirys games for:', walletAddress);
+  
+  try {
+    // Import necessary functions from onChainService
+    const { queryUserOnChainData, ON_CHAIN_PRESETS } = await import('./onChainService');
+    
+    // Find PlayHirys preset
+    const playHirysPreset = ON_CHAIN_PRESETS.find(preset => preset.id === 'play-hirys');
+    if (!playHirysPreset || !playHirysPreset.multipleContracts) {
+      console.error('[IrysService] PlayHirys preset not found');
+      return new Map();
+    }
+    
+    const gameCounts = new Map<string, number>();
+    
+    // Query each game contract
+    await Promise.all(playHirysPreset.multipleContracts.map(async (gameContract) => {
+      try {
+        const results = await queryUserOnChainData(
+          {
+            contractAddress: gameContract.contractAddress,
+            network: playHirysPreset.network,
+            rpcUrl: playHirysPreset.rpcUrl,
+            abis: gameContract.abis
+          },
+          walletAddress,
+          undefined,
+          { days: 365 } // Look back 1 year for all games
+        );
+        
+        const gameCount = results.reduce((sum, r) => sum + r.count, 0);
+        console.log(`[IrysService] ${gameContract.name} count:`, gameCount);
+        gameCounts.set(gameContract.name, gameCount);
+      } catch (error) {
+        console.error(`[IrysService] Error querying ${gameContract.name}:`, error);
+        gameCounts.set(gameContract.name, 0);
+      }
+    }));
+    
+    return gameCounts;
+  } catch (error) {
+    console.error('[IrysService] Error querying PlayHirys games:', error);
+    return new Map();
+  }
+}
+
 // Query IrysRealms game counts for a wallet
 export async function queryIrysRealmsGames(walletAddress: string): Promise<{
   blockDropperCount: number;
@@ -539,6 +587,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
   emailCount: number;
   blockDropperCount: number;
   tetrisCount: number;
+  playHirysGames: Map<string, number>;
   mintedBadges: string[];
   mintedBadgeDetails: Map<string, { txHash: string; timestamp: number; metadataUri: string }>;
   loading: boolean;
@@ -714,11 +763,15 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     // Query IrysRealms game counts
     const { blockDropperCount, tetrisCount } = await queryIrysRealmsGames(walletAddress);
     
+    // Query PlayHirys game counts
+    const playHirysGames = await queryPlayHirysGames(walletAddress);
+    
     return { 
       dashboardCount, 
       emailCount,
       blockDropperCount,
       tetrisCount,
+      playHirysGames,
       mintedBadges: Array.from(mintedBadges),
       mintedBadgeDetails,
       loading: false 
@@ -730,6 +783,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
       emailCount: 0,
       blockDropperCount: 0,
       tetrisCount: 0,
+      playHirysGames: new Map(),
       mintedBadges: [],
       mintedBadgeDetails: new Map(),
       loading: false, 

@@ -17,7 +17,7 @@ interface Badge {
   image: string;
   requirements: string;
   project: string;
-  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number }) => boolean;
+  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number; playHirysGames?: Map<string, number> }) => boolean;
 }
 
 interface MintedBadgeDetails {
@@ -141,6 +141,80 @@ const BADGES: Badge[] = [
     project: 'IrysRealms',
     checkEligibility: (data) => data.tetrisCount >= 3
   },
+  
+  // PlayHirys Project Badges
+  {
+    id: 'playhirys-picnic',
+    name: 'Enjoying Picnic with Sprite',
+    description: 'Cleared Picnic with Sprite',
+    image: 'https://gateway.irys.xyz/CJ2cVGz46jpLAAYBMTFQGyX5PmKKnCevySuQcSqGFWz9', // PlayHirys placeholder image
+    requirements: 'Clear Picnic with Sprite at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('Picnic with Sprite') || 0) >= 1;
+    }
+  },
+  {
+    id: 'playhirys-100na-easy',
+    name: 'Enjoying NAS vs Sprite(EZ mode)',
+    description: 'Cleared 100 NAs vs 1 Sprite (Easy)',
+    image: 'https://gateway.irys.xyz/iZ5a3s9zqQhshnSzgYmtA3mgZBuHaYV4QzsoYEojUfd', // PlayHirys placeholder image
+    requirements: 'Clear 100 NAs vs 1 Sprite (Easy) at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('100 NAs vs 1 Sprite (Easy)') || 0) >= 1;
+    }
+  },
+  {
+    id: 'playhirys-100na-hard',
+    name: 'Enjoying NAS vs Sprite(Hard mode)',
+    description: 'Cleared 100 NAs vs 1 Sprite (Hard)',
+    image: 'https://gateway.irys.xyz/Ge44uT8eWJhsrTzsmk6wnagTxtazrKy9Vs9zJEBPL93N', // PlayHirys placeholder image
+    requirements: 'Clear 100 NAs vs 1 Sprite (Hard) at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('100 NAs vs 1 Sprite (Hard)') || 0) >= 1;
+    }
+  },
+  {
+    id: 'playhirys-100na-superhard',
+    name: 'Enjoying NAS vs Sprite(Super Hard mode)',
+    description: 'Cleared 100 NAs vs 1 Sprite (Super Hard)',
+    image: 'https://gateway.irys.xyz/djEkkfxHGd3J95HXidmyrDx2h3xHFZrz2QLaWRLp8KJ', // PlayHirys placeholder image
+    requirements: 'Clear 100 NAs vs 1 Sprite (Super Hard) at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('100 NAs vs 1 Sprite (Super Hard)') || 0) >= 1;
+    }
+  },
+  {
+    id: 'playhirys-bubble',
+    name: 'Enjoying Bubble Sprite',
+    description: 'Cleared Bubble Sprite',
+    image: 'https://gateway.irys.xyz/F4HGEHPCdW6ceRkn2XYjzJzNbLhBHkjAtotKppSF41D9', // PlayHirys placeholder image
+    requirements: 'Clear Bubble Sprite at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('Bubble Sprite') || 0) >= 1;
+    }
+  },
+  {
+    id: 'playhirys-glide',
+    name: 'Enjoying Sprite Glide',
+    description: 'Cleared Sprite Glide',
+    image: 'https://gateway.irys.xyz/C4SQucNdJFr6JzVUEFXQ6qonKTLctqgE5YPLu3rsSwpd', // PlayHirys placeholder image
+    requirements: 'Clear Sprite Glide at least 1 time',
+    project: 'PlayHirys',
+    checkEligibility: (data) => {
+      if (!data.playHirysGames) return false;
+      return (data.playHirysGames.get('Sprite Glide') || 0) >= 1;
+    }
+  },
 ];
 
 // Project metadata for sections (badges coming soon)
@@ -169,8 +243,8 @@ const PROJECT_SECTIONS = [
     project: 'PlayHirys',
     description: 'Korean Irys fan made game platform',
     url: 'https://playhirys.netlify.app',
-    hasBadges: false,
-    comingSoon: true
+    hasBadges: true,
+    comingSoon: false
   },
   {
     project: 'GitHirys',
@@ -222,6 +296,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   const [emailCount, setEmailCount] = useState(0);
   const [blockDropperCount, setBlockDropperCount] = useState(0);
   const [tetrisCount, setTetrisCount] = useState(0);
+  const [playHirysGames, setPlayHirysGames] = useState<Map<string, number>>(new Map());
   const [mintedBadges, setMintedBadges] = useState<string[]>([]);
   const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -297,6 +372,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         setEmailCount(eligibility.emailCount);
         setBlockDropperCount(eligibility.blockDropperCount);
         setTetrisCount(eligibility.tetrisCount);
+        setPlayHirysGames(eligibility.playHirysGames || new Map());
         
         // Query actual minted badges from on-chain NFT contract
         const onChainBadges = await queryMintedBadgesOnChain(walletAddress);
@@ -404,7 +480,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
 
     try {
       // Check eligibility
-      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount });
+      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames });
       if (!isEligible) {
         throw new Error("You are not eligible to mint this badge yet");
       }
@@ -621,7 +697,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
           ) : (
             <div className="badge-grid">
               {projectBadges.map(badge => {
-                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount });
+                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames });
                 const isMinted = mintedBadges.includes(badge.id);
                 return (
                   <div
@@ -730,6 +806,42 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   Tetris plays: {tetrisCount}
                 </div>
               )}
+              
+              {selectedBadge.id === 'playhirys-picnic' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Picnic with Sprite plays: {playHirysGames.get('Picnic with Sprite') || 0}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'playhirys-100na-easy' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  100 NAs vs 1 Sprite (Easy) plays: {playHirysGames.get('100 NAs vs 1 Sprite (Easy)') || 0}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'playhirys-100na-hard' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  100 NAs vs 1 Sprite (Hard) plays: {playHirysGames.get('100 NAs vs 1 Sprite (Hard)') || 0}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'playhirys-100na-superhard' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  100 NAs vs 1 Sprite (Super Hard) plays: {playHirysGames.get('100 NAs vs 1 Sprite (Super Hard)') || 0}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'playhirys-bubble' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Bubble Sprite plays: {playHirysGames.get('Bubble Sprite') || 0}
+                </div>
+              )}
+              
+              {selectedBadge.id === 'playhirys-glide' && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  Sprite Glide plays: {playHirysGames.get('Sprite Glide') || 0}
+                </div>
+              )}
             </div>
             
             {walletAddress && (
@@ -739,7 +851,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <Award size={18} />
                     <span>You have already minted this badge!</span>
                   </div>
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
                   <div className="status-message eligible">
                     <Award size={18} />
                     <span>You are eligible to mint this badge!</span>
@@ -784,7 +896,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 disabled={
                   isMinting || 
                   !walletAddress || 
-                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ||
+                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ||
                   mintedBadges.includes(selectedBadge.id)
                 }
               >
@@ -795,7 +907,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   </>
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
                   'Mint Badge (0.1 IRYS)'
                 ) : (
                   'Requirements Not Met'

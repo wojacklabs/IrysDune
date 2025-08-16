@@ -603,6 +603,29 @@ export const ON_CHAIN_PRESETS = [
             ]
           }
         ]
+      },
+      {
+        name: 'Sprite Glide',
+        contractAddress: '0x472f75ADF4598373648B5871c7877913A37AAd72',
+        abis: [
+          {
+            name: 'submitScore',
+            type: 'function' as const,
+            inputs: [
+              { name: 'score', type: 'uint256' }
+            ]
+          },
+          {
+            name: 'ScoreSubmitted',
+            type: 'event' as const,
+            anonymous: false,
+            inputs: [
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'score', type: 'uint256', indexed: false },
+              { name: 'timestamp', type: 'uint256', indexed: false }
+            ]
+          }
+        ]
       }
     ]
   }
