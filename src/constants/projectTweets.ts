@@ -60,30 +60,12 @@ export const AUTHOR_PROFILES: Record<string, { name: string; handle: string }> =
     name: 'boyykennn',
     handle: 'boyykennn'
   },
-  '1955561362769203451': {
-    name: 'boyykennn',
-    handle: 'boyykennn'
-  },
-  '1955166172464226690': {
-    name: 'boyykennn',
-    handle: 'boyykennn'
-  },
+
   '1955919563230437766': {
     name: 'Jst_Mariee',
     handle: 'Jst_Mariee'
   },
-  '1954804094918435206': {
-    name: 'boyykennn',
-    handle: 'boyykennn'
-  },
-  '1955789582500327904': {
-    name: 'boyykennn',
-    handle: 'boyykennn'
-  },
-  '1954468493169938773': {
-    name: 'boyykennn',
-    handle: 'boyykennn'
-  },
+
   '1955914400076050510': {
     name: '0xsoros',
     handle: '0xsoros'
@@ -122,13 +104,14 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/0xCrocy/status/1952543921013182567',
     tweetId: '1952543921013182567'
   },
-  {
-    projectId: 'bridgbox',
-    projectName: 'BridgBox',
-    projectIcon: APP_PRESETS.find(p => p.id === 'bridgbox')?.icon || null,
-    tweetUrl: 'https://x.com/boyykennn/status/1955561362769203451',
-    tweetId: '1955561362769203451'
-  },
+  // Removed - Tweet is private
+  // {
+  //   projectId: 'bridgbox',
+  //   projectName: 'BridgBox',
+  //   projectIcon: APP_PRESETS.find(p => p.id === 'bridgbox')?.icon || null,
+  //   tweetUrl: 'https://x.com/boyykennn/status/1955561362769203451',
+  //   tweetId: '1955561362769203451'
+  // },
   // Irys Flip
   {
     projectId: 'irysflip',
@@ -145,13 +128,14 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetUrl: 'https://x.com/0xCrocy/status/1951054949481119751',
     tweetId: '1951054949481119751'
   },
-  {
-    projectId: 'irys-realms',
-    projectName: 'Irys Realms',
-    projectIcon: APP_PRESETS.find(p => p.id === 'irys-realms')?.icon || null,
-    tweetUrl: 'https://x.com/boyykennn/status/1955166172464226690',
-    tweetId: '1955166172464226690'
-  },
+  // Removed - Tweet is private
+  // {
+  //   projectId: 'irys-realms',
+  //   projectName: 'Irys Realms',
+  //   projectIcon: APP_PRESETS.find(p => p.id === 'irys-realms')?.icon || null,
+  //   tweetUrl: 'https://x.com/boyykennn/status/1955166172464226690',
+  //   tweetId: '1955166172464226690'
+  // },
   {
     projectId: 'irys-realms',
     projectName: 'Irys Realms',
@@ -183,13 +167,14 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
     tweetId: '1954096345129639975'
   },
   // Irys PFP
-  {
-    projectId: 'irys-pfp',
-    projectName: 'Irys PFP',
-    projectIcon: APP_PRESETS.find(p => p.id === 'irys-pfp')?.icon || null,
-    tweetUrl: 'https://x.com/boyykennn/status/1954804094918435206',
-    tweetId: '1954804094918435206'
-  },
+  // Removed - Tweet is private
+  // {
+  //   projectId: 'irys-pfp',
+  //   projectName: 'Irys PFP',
+  //   projectIcon: APP_PRESETS.find(p => p.id === 'irys-pfp')?.icon || null,
+  //   tweetUrl: 'https://x.com/boyykennn/status/1954804094918435206',
+  //   tweetId: '1954804094918435206'
+  // },
   // irys name
     {
         projectId: 'irys-names',
@@ -199,21 +184,23 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
         tweetId: '1953741189087162693'
     },
     // irys flip
-    {
-        projectId: 'irys-flip',
-        projectName: 'Irys Flip',
-        projectIcon: APP_PRESETS.find(p => p.id === 'irys-flip')?.icon || null,
-        tweetUrl: 'https://x.com/boyykennn/status/1955789582500327904',
-        tweetId: '1955789582500327904'
-    },
+    // Removed - Tweet is private
+    // {
+    //     projectId: 'irys-flip',
+    //     projectName: 'Irys Flip',
+    //     projectIcon: APP_PRESETS.find(p => p.id === 'irys-flip')?.icon || null,
+    //     tweetUrl: 'https://x.com/boyykennn/status/1955789582500327904',
+    //     tweetId: '1955789582500327904'
+    // },
     // irys memory  
-    {
-      projectId: 'irys-memory',
-      projectName: 'Irys Memory',
-      projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
-      tweetUrl: 'https://x.com/boyykennn/status/1954468493169938773',
-      tweetId: '1954468493169938773'
-    },
+    // Removed - Tweet is private
+    // {
+    //   projectId: 'irys-memory',
+    //   projectName: 'Irys Memory',
+    //   projectIcon: APP_PRESETS.find(p => p.id === 'irys-memory')?.icon || null,
+    //   tweetUrl: 'https://x.com/boyykennn/status/1954468493169938773',
+    //   tweetId: '1954468493169938773'
+    // },
     // Play Hirys
     {
       projectId: 'play-hirys',

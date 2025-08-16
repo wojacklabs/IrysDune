@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# IrysDune - Irys Ecosystem Analytics Dashboard
+# This is a legitimate Web3 analytics platform
+Sitemap: https://irys-dune.vercel.app/sitemap.xml
