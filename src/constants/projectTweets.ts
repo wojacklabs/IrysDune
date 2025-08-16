@@ -59,6 +59,34 @@ export const AUTHOR_PROFILES: Record<string, { name: string; handle: string }> =
   '1953741189087162693': {
     name: 'boyykennn',
     handle: 'boyykennn'
+  },
+  '1955561362769203451': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1955166172464226690': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1955919563230437766': {
+    name: 'Jst_Mariee',
+    handle: 'Jst_Mariee'
+  },
+  '1954804094918435206': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1955789582500327904': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1954468493169938773': {
+    name: 'boyykennn',
+    handle: 'boyykennn'
+  },
+  '1955914400076050510': {
+    name: '0xsoros',
+    handle: '0xsoros'
   }
 };
 

@@ -15,6 +15,7 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isCreatingRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   const createTweet = async () => {
     if (containerRef.current && window.twttr && !isCreatingRef.current) {
@@ -44,7 +45,16 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
         
         if (tweetElement) {
           setIsLoading(false);
+          setHasError(false);
+        } else {
+          // Tweet not found or failed to load
+          setIsLoading(false);
+          setHasError(true);
         }
+      } catch (error) {
+        console.error('Error creating tweet:', error);
+        setIsLoading(false);
+        setHasError(true);
       } finally {
         isCreatingRef.current = false;
       }
@@ -102,12 +112,20 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
 
   return (
     <div className={`twitter-embed-container ${className || ''}`}>
-      {isLoading && (
+      {isLoading && !hasError && (
         <div className="tweet-loading">
           <div className="loading-spinner"></div>
         </div>
       )}
-      <div ref={containerRef}></div>
+      {hasError && (
+        <div className="tweet-error">
+          <div className="error-content">
+            <p>Tweet not found</p>
+            <small>This tweet may have been deleted or the account may be private.</small>
+          </div>
+        </div>
+      )}
+      <div ref={containerRef} style={{ display: hasError ? 'none' : 'block' }}></div>
     </div>
   );
 };
