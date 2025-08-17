@@ -956,9 +956,9 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
                 ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
-                  '✅ Mint Badge (Cost: 0.1 IRYS + gas)'
+                  'Mint Badge (Cost: 0.1 IRYS + gas)'
                 ) : (
-                  '🔒 Requirements Not Met'
+                  'Requirements Not Met'
                 )}
               </button>
             </div>

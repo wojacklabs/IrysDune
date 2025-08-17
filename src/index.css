@@ -905,8 +905,7 @@ body.weather-stormy .badge-status.minted {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
+  width: 100%;
   gap: 0.5rem;
 }
 
