@@ -36,7 +36,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: wss: data:; img-src 'self' https: data: blob:; font-src 'self' https: data:;"
+          "value": "default-src 'self' https: wss: data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https: wss: data:; img-src 'self' https: data: blob:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com;"
         }
       ]
     }

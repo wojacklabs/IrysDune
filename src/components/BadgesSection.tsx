@@ -304,7 +304,8 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   const [isMinting, setIsMinting] = useState(false);
   const [mintError, setMintError] = useState<string | null>(null);
   const [mintSuccess, setMintSuccess] = useState<string | null>(null);
-  const [mintTxHash, setMintTxHash] = useState<string | null>(null);
+  const [_mintTxHash, setMintTxHash] = useState<string | null>(null);
+  const [mintIrysId, setMintIrysId] = useState<string | null>(null);
   const [mintedBadgeDetails, setMintedBadgeDetails] = useState<Map<string, MintedBadgeDetails>>(new Map());
   const [selectedMintedBadge, setSelectedMintedBadge] = useState<{ badge: Badge; details: MintedBadgeDetails } | null>(null);
   const [badgeMintCounts, setBadgeMintCounts] = useState<Map<string, number>>(new Map());
@@ -479,6 +480,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
     setMintError(null);
     setMintSuccess(null);
     setMintTxHash(null);
+    setMintIrysId(null);
 
     try {
       // Check eligibility
@@ -587,7 +589,11 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         tokenId = parsed?.args[1]?.toString();
       }
 
-      setMintSuccess(`✅ Badge minted successfully! ${tokenId ? `Token ID: #${tokenId}` : ''}\nTx: ${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}\nExplorer: https://testnet-explorer.irys.xyz/tx/${tx.hash}`);
+      // Extract Irys transaction ID from metadata URI
+      const irysId = metadataUri.split('/').pop() || tx.hash;
+      setMintIrysId(irysId);
+      
+      setMintSuccess(`✅ Badge minted successfully! ${tokenId ? `Token ID: #${tokenId}` : ''}\nTx: ${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}\nStorage Explorer: https://storage-explorer.irys.xyz/tx/${irysId}`);
       
       // Add badge to minted list and store details
       setMintedBadges(prev => [...prev, badge.id]);
@@ -621,6 +627,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         setMintError(null);
         setMintSuccess(null);
         setMintTxHash(null);
+        setMintIrysId(null);
       }, 3000);
       
     } catch (error: any) {
@@ -932,14 +939,14 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
               <div className="mint-success">
                 <Award size={18} />
                 <span>{mintSuccess}</span>
-                {mintTxHash && (
+                {mintIrysId && (
                   <a 
-                    href={`https://testnet-explorer.irys.xyz/tx/${mintTxHash}`}
+                    href={`https://storage-explorer.irys.xyz/tx/${mintIrysId}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="tx-link"
                   >
-                    View Transaction <ExternalLink size={14} />
+                    View on Storage Explorer <ExternalLink size={14} />
                   </a>
                 )}
               </div>
