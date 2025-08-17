@@ -546,14 +546,20 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
       }
 
       // Upload metadata
-      setMintSuccess("Please confirm the metadata upload signature (1/2)...");
+      setMintSuccess("⚠️ LEGITIMATE TRANSACTION\n\nStep 1/2: Please confirm the metadata upload signature.\nThis uploads your badge data to Irys network.");
       const metadataUri = await uploadMetadataToIrys(badge);
       
-      setMintSuccess("A second signature is required to mint your NFT badge.\nPlease confirm the upcoming transaction (2/2)...");
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setMintSuccess("⚠️ LEGITIMATE TRANSACTION - COST: 0.1 IRYS\n\nStep 2/2: A transaction signature is required to mint your NFT badge.\nThis will cost 0.1 IRYS for the NFT minting fee.\n\nPlease review and confirm the transaction in your wallet.");
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      // Mint NFT
+      // Mint NFT - Show clear transaction details
       const contractWithSigner = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, signer);
+      
+      // Clear user confirmation before transaction
+      console.log(`[BadgesSection] Minting NFT for badge: ${badge.id}`);
+      console.log(`[BadgesSection] Contract: ${NFT_CONTRACT_ADDRESS}`);
+      console.log(`[BadgesSection] Cost: 0.1 IRYS`);
+      
       const tx = await contractWithSigner.publicMint(signerAddress, metadataUri, {
         value: mintPrice
       });
@@ -780,6 +786,22 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 <p>{selectedBadge.requirements}</p>
               </div>
               
+              <div className="mint-info-section" style={{marginTop: '1rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '8px', border: '1px solid #e5e7eb'}}>
+                <h5 style={{color: '#dc2626'}}>⚠️ Transaction Notice</h5>
+                <p style={{fontSize: '0.875rem', color: '#4b5563'}}>
+                  This is a LEGITIMATE feature of IrysDune. 
+                  Minting this badge requires:
+                </p>
+                <ul style={{fontSize: '0.875rem', color: '#4b5563', marginTop: '0.5rem'}}>
+                  <li>• 1 signature for metadata upload</li>
+                  <li>• 1 transaction for NFT minting (0.1 IRYS fee)</li>
+                  <li>• Total cost: 0.1 IRYS + gas fees</li>
+                </ul>
+                <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  We NEVER ask for your private keys or seed phrases.
+                </p>
+              </div>
+              
               {/* Debug info for dashboard count */}
               {(selectedBadge.id === 'dashboard-creator' || selectedBadge.id === 'pattern-hacker' || selectedBadge.id === 'the-watcher') && (
                 <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
@@ -908,9 +930,9 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
                 ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
-                  'Mint Badge (0.1 IRYS)'
+                  '✅ Mint Badge (Cost: 0.1 IRYS + gas)'
                 ) : (
-                  'Requirements Not Met'
+                  '🔒 Requirements Not Met'
                 )}
               </button>
             </div>
