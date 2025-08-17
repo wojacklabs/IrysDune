@@ -3,7 +3,7 @@ import type { QueryResult, LoadingProgress } from '../types';
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'cm-note': 'E6Vxp2LXNtnKa4CPiMtbRyKcZNYHiPjCtpqzb3WnaGsS',
-  'githirys': 'CawuQ2beZoEQf3aP4AYcKXBTnP3SScvPABjEkHZ17Mwi',
+  'githirys': '9unbTk3ykt7aPiq8gKEj6Z9BDUUCLpufSNfpEnXiUnpJ',
   'irys-names': 'CXNvR5HpcAvmwZMePL5vknEFq8jxJ5Ds5kRAwNJ5uNxn',
   'bridgbox': 'DThGX1CJMtDAR16rXygFneEygjEfbnJj3v3sGna1TrNB',
   'irysdune': 'FhQBDN8bJxrXd93DfPG9DcFvVTSaq1AetwhbPEURLFzY',
