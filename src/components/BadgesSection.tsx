@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Award, Lock, X, AlertCircle, ExternalLink, Share2 } from 'lucide-react';
+import { Award, Lock, X, AlertCircle, ExternalLink, Share2, RefreshCw } from 'lucide-react';
 import { queryBadgeEligibility } from '../services/irysService';
 import { ethers } from 'ethers';
 import { ensureUploaderReady } from '../services/irysUploadService';
 import { captureAndShare } from '../utils/captureUtils';
-import { queryMintedBadgesOnChain, queryBadgeMintCounts } from '../services/onChainService';
+// import { queryMintedBadgesOnChain, queryBadgeMintCounts } from '../services/onChainService';
+import { queryBadgeMintCountsFromIrys, queryMintedBadgesFromIrys } from '../services/irysMetadataCount';
 
 interface BadgesSectionProps {
   walletAddress: string | null;
@@ -334,23 +335,24 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
     }
   }, [walletAddress, mintedBadgeDetails]);
 
+  // Function to fetch mint counts - always use Irys metadata
+  const fetchMintCounts = async () => {
+    console.log('[Badges] Fetching badge mint counts from Irys...');
+    setMintCountsLoading(true);
+    
+    try {
+      const counts = await queryBadgeMintCountsFromIrys();
+      setBadgeMintCounts(counts);
+      console.log('[Badges] Badge mint counts from Irys:', Array.from(counts.entries()));
+    } catch (error) {
+      console.error('[Badges] Error fetching mint counts:', error);
+    } finally {
+      setMintCountsLoading(false);
+    }
+  };
+
   // Fetch badge mint counts
   useEffect(() => {
-    const fetchMintCounts = async () => {
-      console.log('[Badges] Fetching badge mint counts...');
-      setMintCountsLoading(true);
-      
-      try {
-        const counts = await queryBadgeMintCounts();
-        setBadgeMintCounts(counts);
-        console.log('[Badges] Badge mint counts:', Array.from(counts.entries()));
-      } catch (error) {
-        console.error('[Badges] Error fetching mint counts:', error);
-      } finally {
-        setMintCountsLoading(false);
-      }
-    };
-
     fetchMintCounts();
   }, []); // Run once on component mount
 
@@ -374,17 +376,17 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         setTetrisCount(eligibility.tetrisCount);
         setPlayHirysGames(eligibility.playHirysGames || new Map());
         
-        // Query actual minted badges from on-chain NFT contract
-        const onChainBadges = await queryMintedBadgesOnChain(walletAddress);
+        // Query minted badges from Irys metadata (includes pre-testnet-reset data)
+        const irysBadges = await queryMintedBadgesFromIrys(walletAddress);
         
-        if (onChainBadges.size > 0) {
-          // Use on-chain data as primary source
-          const mintedBadgeIds = Array.from(onChainBadges.keys());
+        if (irysBadges.size > 0) {
+          // Use Irys data as primary source
+          const mintedBadgeIds = Array.from(irysBadges.keys());
           setMintedBadges(mintedBadgeIds);
           
           // Convert to MintedBadgeDetails format
           const detailsMap = new Map<string, MintedBadgeDetails>();
-          onChainBadges.forEach((details, badgeId) => {
+          irysBadges.forEach((details, badgeId) => {
             detailsMap.set(badgeId, {
               badgeId,
               tokenId: details.tokenId,
@@ -394,9 +396,9 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
             });
           });
           setMintedBadgeDetails(detailsMap);
-          console.log('[Badges] Set minted badge details from on-chain NFT contract:', Array.from(detailsMap.entries()));
+          console.log('[Badges] Set minted badge details from Irys metadata:', Array.from(detailsMap.entries()));
         } else {
-          // Fallback to Irys data if no on-chain data found
+          // Fallback to eligibility data if no Irys data found
           setMintedBadges(eligibility.mintedBadges);
           
           if (eligibility.mintedBadgeDetails && eligibility.mintedBadgeDetails.size > 0) {
@@ -404,14 +406,14 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
             eligibility.mintedBadgeDetails.forEach((details, badgeId) => {
               detailsMap.set(badgeId, {
                 badgeId,
-                tokenId: undefined, // We don't have tokenId from Irys
+                tokenId: undefined,
                 txHash: details.txHash,
                 mintedAt: details.timestamp,
                 metadataUri: details.metadataUri
               });
             });
             setMintedBadgeDetails(detailsMap);
-            console.log('[Badges] Set minted badge details from Irys (fallback):', Array.from(detailsMap.entries()));
+            console.log('[Badges] Set minted badge details from eligibility (fallback):', Array.from(detailsMap.entries()));
           }
         }
         
@@ -606,6 +608,13 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         return newMap;
       });
       
+      // Update badge mint count
+      setBadgeMintCounts(prev => {
+        const newCounts = new Map(prev);
+        newCounts.set(badge.id, (newCounts.get(badge.id) || 0) + 1);
+        return newCounts;
+      });
+      
       // Close minting modal after 3 seconds
       setTimeout(() => {
         setSelectedBadge(null);
@@ -646,9 +655,34 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   return (
     <div className="badges-section">
       <div className="title-badges">
-        <h2>Achievement Badges</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2>Achievement Badges</h2>
+          <button
+            onClick={fetchMintCounts}
+            disabled={mintCountsLoading}
+            title="Refresh badge counts"
+            style={{
+              background: 'transparent',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px',
+              cursor: mintCountsLoading ? 'not-allowed' : 'pointer',
+              opacity: mintCountsLoading ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+          >
+            <RefreshCw 
+              size={20} 
+              className={mintCountsLoading ? 'animate-spin' : ''}
+              style={{ color: '#6b7280' }}
+            />
+          </button>
+        </div>
         <p className="section-description">
           Collect badges to showcase your achievements across the Irys ecosystem
+          <span style={{ fontSize: '0.875rem', color: '#9ca3af', marginLeft: '8px' }}>
+            (showing all-time data stored on Irys)
+          </span>
         </p>
       </div>
 
@@ -967,19 +1001,21 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 <p><strong>Minted:</strong> {new Date(selectedMintedBadge.details.mintedAt).toLocaleDateString()}</p>
                 <p><strong>Network:</strong> Irys Testnet</p>
                 {selectedMintedBadge.details.txHash !== 'Unknown' && (
-                  <p>
-                    <strong>Explorer: </strong>
-                    <a 
-                      href={`https://testnet-explorer.irys.xyz/tx/${selectedMintedBadge.details.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="tx-link"
-                      style={{ wordBreak: 'break-all', fontSize: '0.75rem' }}
-                    >
-                      https://testnet-explorer.irys.xyz/tx/{selectedMintedBadge.details.txHash}
-                      <ExternalLink size={14} style={{ marginLeft: '4px', flexShrink: 0 }} />
-                    </a>
-                  </p>
+                  <>
+                    <p>
+                      <strong>Metadata: </strong>
+                      <a 
+                        href={selectedMintedBadge.details.metadataUri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="tx-link"
+                        style={{ wordBreak: 'break-all', fontSize: '0.75rem' }}
+                      >
+                        {selectedMintedBadge.details.metadataUri}
+                        <ExternalLink size={14} style={{ marginLeft: '4px', flexShrink: 0 }} />
+                      </a>
+                    </p>
+                  </>
               )}
               </div>
             </div>

@@ -1064,6 +1064,10 @@ body.weather-stormy .badge-mint-modal .close-button:hover {
   }
 }
 
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 /* Share button */
 .share-btn {
   display: flex;

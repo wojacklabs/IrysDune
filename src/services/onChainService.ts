@@ -755,6 +755,7 @@ const IRYS_TESTNET_RPC = 'https://testnet-rpc.irys.xyz/v1/execution-rpc';
 const NFT_ABI = [
   'function publicMint(address to, string memory uri) payable',
   'function getMintPrice() pure returns (uint256)',
+  'function totalSupply() view returns (uint256)',
   'event NFTMinted(address indexed minter, uint256 indexed tokenId, string uri)'
 ];
 
@@ -851,58 +852,82 @@ export async function queryBadgeMintCounts(): Promise<Map<string, number>> {
     const provider = new JsonRpcProvider(IRYS_TESTNET_RPC);
     const contract = new Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
     
-    // Get latest block number
-    const latestBlock = await provider.getBlockNumber();
-    const fromBlock = Math.max(0, latestBlock - 100000); // Look back ~100k blocks
+    // Get total supply to verify
+    let totalSupply = 0;
+    try {
+      const totalSupplyBN = await contract.totalSupply();
+      totalSupply = Number(totalSupplyBN.toString());
+      console.log('[OnChainService] Total NFT supply:', totalSupply);
+    } catch (error) {
+      console.log('[OnChainService] Could not get total supply:', error);
+    }
     
-    // Query ALL NFTMinted events (no wallet filter)
+    // Query ALL NFTMinted events from contract deployment (block 0)
     const filter = contract.filters.NFTMinted();
-    const events = await contract.queryFilter(filter, fromBlock, latestBlock);
+    const events = await contract.queryFilter(filter, 0, 'latest');
     
     console.log('[OnChainService] Found', events.length, 'total NFTMinted events');
     
     const badgeCounts = new Map<string, number>();
-    
-    // Create a cache for metadata
     const metadataCache = new Map<string, string>();
+    const failedFetches: string[] = [];
     
-    // Process events in batches for better performance
-    const batchSize = 10;
-    for (let i = 0; i < events.length; i += batchSize) {
-      const batch = events.slice(i, i + batchSize);
+    // Process events sequentially to avoid rate limiting
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i];
       
-      await Promise.all(batch.map(async (event) => {
-        if ('args' in event && event.args) {
-          const [, , uri] = event.args;
-          
-          // Check cache first
-          let badgeId = metadataCache.get(uri) || 'unknown';
-          
-          if (badgeId === 'unknown') {
-            try {
-              const metadataResponse = await fetch(uri);
-              if (metadataResponse.ok) {
-                const metadata = await metadataResponse.json();
-                const badgeTypeAttr = metadata.attributes?.find((attr: any) => 
-                  attr.trait_type === 'Badge Type'
-                );
-                if (badgeTypeAttr) {
-                  badgeId = badgeTypeAttr.value;
-                  metadataCache.set(uri, badgeId);
-                }
+      if ('args' in event && event.args) {
+        const [, tokenId, uri] = event.args;
+        
+        // Check cache first
+        let badgeId = metadataCache.get(uri);
+        
+        if (!badgeId) {
+          try {
+            console.log(`[OnChainService] Fetching metadata ${i + 1}/${events.length} from: ${uri}`);
+            const metadataResponse = await fetch(uri);
+            
+            if (metadataResponse.ok) {
+              const metadata = await metadataResponse.json();
+              const badgeTypeAttr = metadata.attributes?.find((attr: any) => 
+                attr.trait_type === 'Badge Type'
+              );
+              
+              badgeId = badgeTypeAttr?.value || 'unknown';
+              if (badgeId) {
+                metadataCache.set(uri, badgeId);
               }
-            } catch (error) {
-              console.error('[OnChainService] Error fetching metadata:', error);
+              
+              console.log(`[OnChainService] Token #${tokenId} - Badge: ${badgeId}`);
+            } else {
+              console.error(`[OnChainService] Failed to fetch metadata: ${metadataResponse.status}`);
+              badgeId = 'unknown';
+              failedFetches.push(uri);
             }
+          } catch (error) {
+            console.error('[OnChainService] Error fetching metadata:', error);
+            badgeId = 'unknown';
+            failedFetches.push(uri);
           }
           
-          // Increment count for this badge
+          // Add small delay to avoid rate limiting
+          if (i < events.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        }
+        
+        // Increment count for this badge
+        if (badgeId) {
           badgeCounts.set(badgeId, (badgeCounts.get(badgeId) || 0) + 1);
         }
-      }));
+      }
     }
     
     console.log('[OnChainService] Badge mint counts:', Array.from(badgeCounts.entries()));
+    if (failedFetches.length > 0) {
+      console.log('[OnChainService] Failed to fetch metadata for', failedFetches.length, 'URIs');
+    }
+    
     return badgeCounts;
   } catch (error) {
     console.error('[OnChainService] Error querying badge mint counts:', error);
