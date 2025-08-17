@@ -808,7 +808,6 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
               <h5 style={{color: '#92400e', marginBottom: '0.5rem', fontSize: '1rem'}}>⚠️ Transaction Notice</h5>
               <p style={{fontSize: '0.875rem', color: '#78350f', margin: 0}}>
                 Creating a dashboard requires 0.1 IRYS + gas fees for permanent storage on the Irys network.
-                This is a LEGITIMATE feature of IrysDune, not a phishing attempt.
               </p>
             </div>
           )}

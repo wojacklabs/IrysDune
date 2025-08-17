@@ -550,11 +550,10 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
       }
 
       // Upload metadata
-      setMintSuccess("⚠️ LEGITIMATE TRANSACTION\n\nStep 1/2: Please confirm the metadata upload signature.\nThis uploads your badge data to Irys network.");
+      setMintSuccess("Uploading badge metadata to Irys...");
       const metadataUri = await uploadMetadataToIrys(badge);
       
-      setMintSuccess("⚠️ LEGITIMATE TRANSACTION - COST: 0.1 IRYS\n\nStep 2/2: A transaction signature is required to mint your NFT badge.\nThis will cost 0.1 IRYS for the NFT minting fee.\n\nPlease review and confirm the transaction in your wallet.");
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      setMintSuccess("Minting NFT badge...");
 
       // Mint NFT - Show clear transaction details
       const contractWithSigner = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, signer);
@@ -827,21 +826,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 <p>{selectedBadge.requirements}</p>
               </div>
               
-              <div className="mint-info-section" style={{marginTop: '1rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '8px', border: '1px solid #e5e7eb'}}>
-                <h5 style={{color: '#dc2626'}}>⚠️ Transaction Notice</h5>
-                <p style={{fontSize: '0.875rem', color: '#4b5563'}}>
-                  This is a LEGITIMATE feature of IrysDune. 
-                  Minting this badge requires:
-                </p>
-                <ul style={{fontSize: '0.875rem', color: '#4b5563', marginTop: '0.5rem'}}>
-                  <li>• 1 signature for metadata upload</li>
-                  <li>• 1 transaction for NFT minting (0.1 IRYS fee)</li>
-                  <li>• Total cost: 0.1 IRYS + gas fees</li>
-                </ul>
-                <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem'}}>
-                  We NEVER ask for your private keys or seed phrases.
-                </p>
-              </div>
+
               
               {/* Debug info for dashboard count */}
               {(selectedBadge.id === 'dashboard-creator' || selectedBadge.id === 'pattern-hacker' || selectedBadge.id === 'the-watcher') && (
@@ -1012,13 +997,13 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <p>
                       <strong>Metadata: </strong>
                       <a 
-                        href={selectedMintedBadge.details.metadataUri}
+                        href={`https://storage-explorer.irys.xyz/tx/${selectedMintedBadge.details.metadataUri?.split('/').pop() || ''}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="tx-link"
                         style={{ wordBreak: 'break-all', fontSize: '0.75rem' }}
                       >
-                        {selectedMintedBadge.details.metadataUri}
+                        {`https://storage-explorer.irys.xyz/tx/${selectedMintedBadge.details.metadataUri?.split('/').pop() || ''}`}
                         <ExternalLink size={14} style={{ marginLeft: '4px', flexShrink: 0 }} />
                       </a>
                     </p>
