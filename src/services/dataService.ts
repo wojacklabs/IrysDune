@@ -2,17 +2,17 @@ import type { QueryResult, LoadingProgress } from '../types';
 
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
-  'cm-note': 'E6Vxp2LXNtnKa4CPiMtbRyKcZNYHiPjCtpqzb3WnaGsS',
+  'cm-note': 'DPA46y8aDJ65Hp4iwRvdRp2RpCs1oEJdsWEsoA4555jB',
   'githirys': '9unbTk3ykt7aPiq8gKEj6Z9BDUUCLpufSNfpEnXiUnpJ',
-  'irys-names': 'CXNvR5HpcAvmwZMePL5vknEFq8jxJ5Ds5kRAwNJ5uNxn',
-  'bridgbox': 'DThGX1CJMtDAR16rXygFneEygjEfbnJj3v3sGna1TrNB',
-  'irysdune': 'FhQBDN8bJxrXd93DfPG9DcFvVTSaq1AetwhbPEURLFzY',
+  'irys-names': 'GQianxkyC1p2V8VZBd8XahL3Qpw4ZwfbcQGVE3pEvKuv',
+  'bridgbox': 'DhW8NTY9BHy6w4JaBNDtycG4XFaAgk287D6fxnxhkDkd',
+  'irysdune': '5votnRvij9wMDp49RP1vkgnTwg6WBJgh7wntPq5hJHt1',
   'irys-proof-board': 'FeihLByeu1DukYLdwpzwyV1D4MRcU47j6oRQjXHvubB5',
-  'irysflip': 'GoGqYGUHnhAFJfetfSBsTiZxeUXGqAjLX75jw9B715J7',
+  'irysflip': '7XWJYAN6QUmViaF4gU7M7VcF1V7PkEaTJFYqK8MtM7QA',
   'irys-crush': '5eFGjKARxZ9eQ2krUnGK3M1FjcRabH69jFfzFz3ckV8q',
-  'irys-memory': 'AsoXsWd5LHNFeXFUrfipqFrB3veA9cA4kUcjAKvHa79w',
-  'irys-pfp': 'DjtyngmAeV8gNns7TmC2n6sQK3Lv9zdUWsS17Qoz2ZV',
-  'play-hirys': '9XVcm5iieaFMoVpdCX73iLYr9YBFpH527EsQNRYZ8ADA',
+  'irys-memory': '9um9YHT8cdJmHPXYVtxMDLSY1xzs4eXiX5df8Mc4dyxL',
+  'irys-pfp': 'HD7SCa1wXbqxcQ6Kzv5VpQJv1JY6aHNNNzR5rDTo8x',
+  'play-hirys': 'Beazg3zfiLvhRu4m5NRNDLcqMD5bbX5KbR43Fc4ou2YE',
   'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit'
 };
 
