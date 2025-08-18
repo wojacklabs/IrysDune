@@ -29,15 +29,7 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
       // Check if dark mode is active
       const isDarkMode = document.body.classList.contains('weather-stormy');
       
-      // Set a timeout for tweet loading
-      const timeoutId = setTimeout(() => {
-        if (isCreatingRef.current) {
-          console.warn(`Tweet ${tweetId} timed out after 10 seconds`);
-          setIsLoading(false);
-          setHasError(true);
-          isCreatingRef.current = false;
-        }
-      }, 10000); // 10 second timeout
+
       
       try {
         // Create tweet embed
@@ -53,7 +45,7 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
           }
         );
         
-        clearTimeout(timeoutId);
+
         
         if (tweetElement) {
           setIsLoading(false);
@@ -64,7 +56,7 @@ const TwitterEmbed: React.FC<TwitterEmbedProps> = ({ tweetId, className }) => {
           setHasError(true);
         }
       } catch (error) {
-        clearTimeout(timeoutId);
+
         console.error('Error creating tweet:', error);
         setIsLoading(false);
         setHasError(true);
