@@ -11,6 +11,7 @@ import irysMemoryIcon from '../assets/irysmemoryicon.jpg';
 import irysPfpIcon from '../assets/iryspfp.jpg';
 import playHirysIcon from '../assets/playhirys.jpg';
 import irysRealms from '../assets/irysrealms.jpg';
+import irysSlotIcon from '../assets/irysslot.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -102,6 +103,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#ff8a00',
     icon: irysCrushIcon
+  },
+  {
+    id: 'irys-slot',
+    name: 'IrysSlot',
+    tags: [
+      { name: 'App', value: 'IrysSlot' }
+    ],
+    color: '#4B2E83',
+    icon: irysSlotIcon
   },
   {
     id: 'play-hirys',

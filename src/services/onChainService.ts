@@ -2,6 +2,7 @@ import { ethers, Contract, JsonRpcProvider } from 'ethers';
 import type { OnChainQuery, OnChainQueryResult, LoadingProgress } from '../types';
 import { getCacheKey, getFromCache, setCache } from '../utils/queryUtils';
 import irysflipIcon from '../assets/irysflip.png';
+import irysSlotIcon from '../assets/irysslot.png';
 import irysCrushIcon from '../assets/irys-crush.png';
 import playHirysIcon from '../assets/playhirys.jpg';
 
@@ -395,6 +396,46 @@ export const ON_CHAIN_PRESETS = [
           { name: 'amount', type: 'uint256', indexed: false },
           { name: 'guess', type: 'bool', indexed: false },
           { name: 'win', type: 'bool', indexed: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'irys-slot',
+    name: 'IrysSlot',
+    contractAddress: '0xf30e6506382defd92c2703a094bda00f17664a82',
+    network: 'irys-testnet',
+    rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
+    description: 'IrysSlot Machine Bank Contract',
+    color: '#ffd700',
+    icon: irysSlotIcon,
+    abis: [
+      {
+        name: 'Deposit',
+        type: 'event' as const,
+        inputs: [
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'amount', type: 'uint256', indexed: false },
+          { name: 'newBalance', type: 'uint256', indexed: false }
+        ]
+      },
+      {
+        name: 'Withdrawal',
+        type: 'event' as const,
+        inputs: [
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'amount', type: 'uint256', indexed: false },
+          { name: 'newBalance', type: 'uint256', indexed: false }
+        ]
+      },
+      {
+        name: 'BalanceUpdated',
+        type: 'event' as const,
+        inputs: [
+          { name: 'player', type: 'address', indexed: true },
+          { name: 'change', type: 'int256', indexed: false },
+          { name: 'newBalance', type: 'uint256', indexed: false },
+          { name: 'reason', type: 'string', indexed: false }
         ]
       }
     ]

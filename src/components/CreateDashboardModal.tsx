@@ -883,7 +883,7 @@ export const CreateDashboardModal: React.FC<CreateDashboardModalProps> = ({
                 <div className="data-sources-grid">
                   {/* Storage presets (excluding on-chain only projects) */}
                   {APP_PRESETS.filter(preset => 
-                    !['irysflip', 'irys-crush', 'play-hirys'].includes(preset.id)
+                    !['irysflip', 'irys-crush', 'play-hirys', 'irys-slot'].includes(preset.id)
                   ).map(preset => (
                     <div 
                       key={preset.id} 

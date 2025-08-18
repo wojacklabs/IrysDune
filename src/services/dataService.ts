@@ -13,7 +13,8 @@ const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'irys-memory': '9um9YHT8cdJmHPXYVtxMDLSY1xzs4eXiX5df8Mc4dyxL',
   'irys-pfp': 'HD7SCa1wXbqYrxcQ6Kzv5VpQJv1JY6aHNNNzR5rDTo8x',
   'play-hirys': 'Beazg3zfiLvhRu4m5NRNDLcqMD5bbX5KbR43Fc4ou2YE',
-  'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit'
+  'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit',
+  'irys-slot': '2DbanWkKG8FmXmQg4jChmZjUrvbiZcY1fVb8U2k6tpi5'
 };
 
 // Data structure from the actual server data
