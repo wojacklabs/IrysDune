@@ -18,7 +18,7 @@ interface Badge {
   image: string;
   requirements: string;
   project: string;
-  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number; playHirysGames?: Map<string, number> }) => boolean;
+  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number; playHirysGames?: Map<string, number>; irysSlotCount?: number }) => boolean;
 }
 
 interface MintedBadgeDetails {
@@ -82,7 +82,7 @@ const BADGES: Badge[] = [
     id: 'inbox-awakening',
     name: 'Inbox Awakening',
     description: 'Decentralized Inbox about to wake up',
-    image: 'https://gateway.irys.xyz/BHG5yZC2bT1KAZ6CJLyBnuWdconDCikGoMcsnUp7CdYd', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/BHG5yZC2bT1KAZ6CJLyBnuWdconDCikGoMcsnUp7CdYd', // Using temporary placeholder image
     requirements: 'Available for everyone',
     project: 'BridgBox',
     checkEligibility: () => true
@@ -91,7 +91,7 @@ const BADGES: Badge[] = [
     id: 'email-adventure',
     name: 'Email Adventure',
     description: 'Exploring Decentralized Inbox',
-    image: 'https://gateway.irys.xyz/G8sMUrF8yrVYJh326VkNw6eY65NnaVCHKqm6oBL3U1XW', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/G8sMUrF8yrVYJh326VkNw6eY65NnaVCHKqm6oBL3U1XW', // Using temporary placeholder image
     requirements: 'Send at least 1 email on BridgBox',
     project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 1
@@ -100,7 +100,7 @@ const BADGES: Badge[] = [
     id: 'the-sword',
     name: 'The Sword',
     description: 'Found the legendary sword',
-    image: 'https://gateway.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/Fp9qdGf9oVL9zTyRKWrB9aznt4w3zkqujhnQ4tXhUetK', // Using temporary placeholder image
     requirements: 'Send at least 5 email on BridgBox',
     project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 5
@@ -109,7 +109,7 @@ const BADGES: Badge[] = [
     id: 'the-hero',
     name: 'The Hero',
     description: 'Become a hero of the decentralized inbox',
-    image: 'https://gateway.irys.xyz/A6CJ3HBNH1JGgAbEJDVxvC13Kh4zonGiaWUgbuiHSMzF', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/A6CJ3HBNH1JGgAbEJDVxvC13Kh4zonGiaWUgbuiHSMzF', // Using temporary placeholder image
     requirements: 'Send at least 10 email on BridgBox',
     project: 'BridgBox',
     checkEligibility: (data) => data.emailCount >= 10
@@ -119,7 +119,7 @@ const BADGES: Badge[] = [
     id: 'pixel-pioneer',
     name: 'Pixel Pioneer',
     description: 'The first pixel to enter the IrysRealms',
-    image: 'https://gateway.irys.xyz/617KmNNw95etYCpFdddh5RfW9fJL9GT7S5gPh8PFWDv2', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/617KmNNw95etYCpFdddh5RfW9fJL9GT7S5gPh8PFWDv2', // Using temporary placeholder image
     requirements: 'Available for everyone',
     project: 'IrysRealms',
     checkEligibility: () => true
@@ -128,7 +128,7 @@ const BADGES: Badge[] = [
     id: 'block-verifier',
     name: 'Block Verifier',
     description: 'Player who loves Block Dropper game',
-    image: 'https://gateway.irys.xyz/Dn67oo5DqnXuYqoAUQiBzHGfFjFg6L1fE4RF3E64pocm', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/Dn67oo5DqnXuYqoAUQiBzHGfFjFg6L1fE4RF3E64pocm', // Using temporary placeholder image
     requirements: 'Play and upload score of Block Dropper at least 3 times',
     project: 'IrysRealms',
     checkEligibility: (data) => data.blockDropperCount >= 3
@@ -137,7 +137,7 @@ const BADGES: Badge[] = [
     id: 'tetris-lover',
     name: 'Tetris Lover',
     description: 'Player who loves 3D Tetris game',
-    image: 'https://gateway.irys.xyz/D2NBm9EoNVWMiAW3pFqxWxPUf1C2MvRWsng3mTt6tkdk', // Using temporary placeholder image
+    image: 'https://uploader.irys.xyz/D2NBm9EoNVWMiAW3pFqxWxPUf1C2MvRWsng3mTt6tkdk', // Using temporary placeholder image
     requirements: 'Play and upload score of Tetris at least 3 times',
     project: 'IrysRealms',
     checkEligibility: (data) => data.tetrisCount >= 3
@@ -148,7 +148,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-picnic',
     name: 'Enjoying Picnic with Sprite',
     description: 'Cleared Picnic with Sprite',
-    image: 'https://gateway.irys.xyz/CJ2cVGz46jpLAAYBMTFQGyX5PmKKnCevySuQcSqGFWz9', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/CJ2cVGz46jpLAAYBMTFQGyX5PmKKnCevySuQcSqGFWz9', // PlayHirys placeholder image
     requirements: 'Clear Picnic with Sprite at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -160,7 +160,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-100na-easy',
     name: 'Enjoying NAS vs Sprite(EZ mode)',
     description: 'Cleared 100 NAs vs 1 Sprite (Easy)',
-    image: 'https://gateway.irys.xyz/iZ5a3s9zqQhshnSzgYmtA3mgZBuHaYV4QzsoYEojUfd', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/iZ5a3s9zqQhshnSzgYmtA3mgZBuHaYV4QzsoYEojUfd', // PlayHirys placeholder image
     requirements: 'Clear 100 NAs vs 1 Sprite (Easy) at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -172,7 +172,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-100na-hard',
     name: 'Enjoying NAS vs Sprite(Hard mode)',
     description: 'Cleared 100 NAs vs 1 Sprite (Hard)',
-    image: 'https://gateway.irys.xyz/Ge44uT8eWJhsrTzsmk6wnagTxtazrKy9Vs9zJEBPL93N', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/Ge44uT8eWJhsrTzsmk6wnagTxtazrKy9Vs9zJEBPL93N', // PlayHirys placeholder image
     requirements: 'Clear 100 NAs vs 1 Sprite (Hard) at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -184,7 +184,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-100na-superhard',
     name: 'Enjoying NAS vs Sprite(Super Hard mode)',
     description: 'Cleared 100 NAs vs 1 Sprite (Super Hard)',
-    image: 'https://gateway.irys.xyz/djEkkfxHGd3J95HXidmyrDx2h3xHFZrz2QLaWRLp8KJ', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/djEkkfxHGd3J95HXidmyrDx2h3xHFZrz2QLaWRLp8KJ', // PlayHirys placeholder image
     requirements: 'Clear 100 NAs vs 1 Sprite (Super Hard) at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -196,7 +196,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-bubble',
     name: 'Enjoying Bubble Sprite',
     description: 'Cleared Bubble Sprite',
-    image: 'https://gateway.irys.xyz/F4HGEHPCdW6ceRkn2XYjzJzNbLhBHkjAtotKppSF41D9', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/F4HGEHPCdW6ceRkn2XYjzJzNbLhBHkjAtotKppSF41D9', // PlayHirys placeholder image
     requirements: 'Clear Bubble Sprite at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -208,7 +208,7 @@ const BADGES: Badge[] = [
     id: 'playhirys-glide',
     name: 'Enjoying Sprite Glide',
     description: 'Cleared Sprite Glide',
-    image: 'https://gateway.irys.xyz/C4SQucNdJFr6JzVUEFXQ6qonKTLctqgE5YPLu3rsSwpd', // PlayHirys placeholder image
+    image: 'https://uploader.irys.xyz/C4SQucNdJFr6JzVUEFXQ6qonKTLctqgE5YPLu3rsSwpd', // PlayHirys placeholder image
     requirements: 'Clear Sprite Glide at least 1 time',
     project: 'PlayHirys',
     checkEligibility: (data) => {
@@ -216,10 +216,62 @@ const BADGES: Badge[] = [
       return (data.playHirysGames.get('Sprite Glide') || 0) >= 1;
     }
   },
+  
+  // IrysSlot Project Badges
+  {
+    id: 'casino-newbie',
+    name: 'Casino Newbie',
+    description: 'Just entered the Casino',
+    image: 'https://uploader.irys.xyz/DhBi8nU4K4McG2FF2KRqti3hjTYYW96HsVHfarjHWHhH', // IrysSlot placeholder image
+    requirements: 'Available for everyone',
+    project: 'IrysSlot',
+    checkEligibility: () => true
+  },
+  {
+    id: 'beginners-luck',
+    name: 'Beginners Luck',
+    description: 'Play IrysSlot at least 1 time',
+    image: 'https://uploader.irys.xyz/Bde9ezKqQgb9Q7mUSKVfYgpMU8kyAtdZYFqfHmo7Mujn', // IrysSlot placeholder image
+    requirements: 'Play IrysSlot at least 1 time',
+    project: 'IrysSlot',
+          checkEligibility: (data) => (data.irysSlotCount || 0) >= 1
+  },
+  {
+    id: 'jackpot-hunter',
+    name: 'Jackpot Hunter',
+    description: 'Play IrysSlot at least 3 times',
+    image: 'https://uploader.irys.xyz/B3oNTCMWS9PRsNiVEYqnmaoM5S8qk6GrmbAZi5UAhuME', // IrysSlot placeholder image
+    requirements: 'Play IrysSlot at least 3 times',
+    project: 'IrysSlot',
+          checkEligibility: (data) => (data.irysSlotCount || 0) >= 3
+  },
+  {
+    id: 'slot-maxi',
+    name: 'Slot Maxi',
+    description: 'Play IrysSlot at least 5 times',
+    image: 'https://uploader.irys.xyz/3MWNacrs2Jijg5UWNPePy9mPaTrYoTs348YUdSmhzSFH', // IrysSlot placeholder image
+    requirements: 'Play IrysSlot at least 5 times',
+    project: 'IrysSlot',
+          checkEligibility: (data) => (data.irysSlotCount || 0) >= 5
+  },
 ];
 
 // Project metadata for sections (badges coming soon)
 const PROJECT_SECTIONS = [
+  {
+    project: 'PlayHirys',
+    description: 'Korean Irys fan made game platform',
+    url: 'https://playhirys.netlify.app',
+    hasBadges: true,
+    comingSoon: false
+  },
+  {
+    project: 'IrysSlot',
+    description: 'Decentralized slot machine game on Irys',
+    url: 'https://iryslots.xyz/',
+    hasBadges: true,
+    comingSoon: false
+  },
   {
     project: 'IrysDune',
     description: 'Analytics dashboard for Irys ecosystem',
@@ -237,13 +289,6 @@ const PROJECT_SECTIONS = [
     project: 'IrysRealms',
     description: 'An on-chain gaming world built on Irys',
     url: 'https://irysrealms.xyz/game',
-    hasBadges: true,
-    comingSoon: false
-  },
-  {
-    project: 'PlayHirys',
-    description: 'Korean Irys fan made game platform',
-    url: 'https://playhirys.netlify.app',
     hasBadges: true,
     comingSoon: false
   },
@@ -298,6 +343,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   const [blockDropperCount, setBlockDropperCount] = useState(0);
   const [tetrisCount, setTetrisCount] = useState(0);
   const [playHirysGames, setPlayHirysGames] = useState<Map<string, number>>(new Map());
+  const [irysSlotCount, setIrysSlotCount] = useState(0);
   const [mintedBadges, setMintedBadges] = useState<string[]>([]);
   const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -376,6 +422,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         setBlockDropperCount(eligibility.blockDropperCount);
         setTetrisCount(eligibility.tetrisCount);
         setPlayHirysGames(eligibility.playHirysGames || new Map());
+        setIrysSlotCount(eligibility.irysSlotCount || 0);
         
         // Query minted badges from Irys metadata (includes pre-testnet-reset data)
         const irysBadges = await queryMintedBadgesFromIrys(walletAddress);
@@ -484,7 +531,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
 
     try {
       // Check eligibility
-      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames });
+      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount });
       if (!isEligible) {
         throw new Error("You are not eligible to mint this badge yet");
       }
@@ -743,7 +790,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
           ) : (
             <div className="badge-grid">
               {projectBadges.map(badge => {
-                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames });
+                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount });
                 const isMinted = mintedBadges.includes(badge.id);
                 return (
                   <div
@@ -890,6 +937,13 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   Sprite Glide plays: {playHirysGames.get('Sprite Glide') || 0}
                 </div>
               )}
+              
+              {/* Debug info for IrysSlot count */}
+              {(selectedBadge.id === 'beginners-luck' || selectedBadge.id === 'jackpot-hunter' || selectedBadge.id === 'slot-maxi') && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  IrysSlot plays: {irysSlotCount}
+                </div>
+              )}
             </div>
             
             {walletAddress && (
@@ -899,7 +953,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <Award size={18} />
                     <span>You have already minted this badge!</span>
                   </div>
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ? (
                   <div className="status-message eligible">
                     <Award size={18} />
                     <span>You are eligible to mint this badge!</span>
@@ -944,7 +998,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 disabled={
                   isMinting || 
                   !walletAddress || 
-                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ||
+                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ||
                   mintedBadges.includes(selectedBadge.id)
                 }
               >
@@ -955,7 +1009,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   </>
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ? (
                   'Mint Badge (Cost: 0.1 IRYS + gas)'
                 ) : (
                   'Requirements Not Met'
