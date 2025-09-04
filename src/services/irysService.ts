@@ -528,6 +528,54 @@ export async function queryIrysSlotCount(walletAddress: string): Promise<number>
   }
 }
 
+// Query IrysFlip bet count for a wallet
+export async function queryIrysFlipCount(walletAddress: string): Promise<number> {
+  console.log('[IrysService] Querying IrysFlip count for:', walletAddress);
+  
+  try {
+    // Import necessary functions from onChainService
+    const { queryUserOnChainData, ON_CHAIN_PRESETS } = await import('./onChainService');
+    
+    // Find IrysFlip preset
+    const irysFlipPreset = ON_CHAIN_PRESETS.find(preset => preset.id === 'irys-flip');
+    if (!irysFlipPreset) {
+      console.error('[IrysService] IrysFlip preset not found');
+      console.log('[IrysService] Available presets:', ON_CHAIN_PRESETS.map(p => p.id));
+      return 0;
+    }
+    
+    console.log('[IrysService] Found IrysFlip preset:', {
+      id: irysFlipPreset.id,
+      contractAddress: irysFlipPreset.contractAddress,
+      network: irysFlipPreset.network,
+      rpcUrl: irysFlipPreset.rpcUrl,
+      events: irysFlipPreset.abis?.map(abi => abi.name) || []
+    });
+    
+    // Query IrysFlip contract
+    const results = await queryUserOnChainData(
+      {
+        contractAddress: irysFlipPreset.contractAddress,
+        network: irysFlipPreset.network,
+        rpcUrl: irysFlipPreset.rpcUrl,
+        abis: irysFlipPreset.abis
+      },
+      walletAddress,
+      undefined,
+      { days: 365 } // Look back 1 year
+    );
+    
+    console.log('[IrysService] IrysFlip query results:', results);
+    const flipCount = results.reduce((sum, r) => sum + r.count, 0);
+    console.log('[IrysService] IrysFlip bet count:', flipCount);
+    
+    return flipCount;
+  } catch (error) {
+    console.error('[IrysService] Error querying IrysFlip count:', error);
+    return 0;
+  }
+}
+
 // Query IrysRealms game counts for a wallet
 export async function queryIrysRealmsGames(walletAddress: string): Promise<{
   blockDropperCount: number;
@@ -637,6 +685,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
   tetrisCount: number;
   playHirysGames: Map<string, number>;
   irysSlotCount: number;
+  irysFlipCount: number;
   mintedBadges: string[];
   mintedBadgeDetails: Map<string, { txHash: string; timestamp: number; metadataUri: string }>;
   loading: boolean;
@@ -818,6 +867,9 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
     // Query IrysSlot count
     const irysSlotCount = await queryIrysSlotCount(walletAddress);
     
+    // Query IrysFlip count
+    const irysFlipCount = await queryIrysFlipCount(walletAddress);
+    
     return { 
       dashboardCount, 
       emailCount,
@@ -825,6 +877,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
       tetrisCount,
       playHirysGames,
       irysSlotCount,
+      irysFlipCount,
       mintedBadges: Array.from(mintedBadges),
       mintedBadgeDetails,
       loading: false 
@@ -838,6 +891,7 @@ export async function queryBadgeEligibility(walletAddress: string): Promise<{
       tetrisCount: 0,
       playHirysGames: new Map(),
       irysSlotCount: 0,
+      irysFlipCount: 0,
       mintedBadges: [],
       mintedBadgeDetails: new Map(),
       loading: false, 

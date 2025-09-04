@@ -2,19 +2,19 @@ import type { QueryResult, LoadingProgress } from '../types';
 
 // Mutable addresses for each project's data
 const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
-  'cm-note': 'DPA46y8aDJ65Hp4iwRvdRp2RpCs1oEJdsWEsoA4555jB',
+  'cm-note': 'BPJkksQCWERREdP1ftVAVQ38z429W5q8iKZ3oRNEsWZQ',
   'githirys': '9unbTk3ykt7aPiq8gKEj6Z9BDUUCLpufSNfpEnXiUnpJ',
-  'irys-names': 'GQianxkyC1p2V8VZBd8XahL3Qpw4ZwfbcQGVE3pEvKuv',
+  'irys-names': 'F46W6UM5cL2eXvM3uFvttuAdsBf53cu97S6TAn3vDWz1',
   'bridgbox': 'DhW8NTY9BHy6w4JaBNDtycG4XFaAgk287D6fxnxhkDkd',
-  'irysdune': '5votnRvij9wMDp49RP1vkgnTwg6WBJgh7wntPq5hJHt1',
+  'irysdune': '9eCDDCox81c6dsjjgcZ7bvs6Yf7VNfBVGeS7AevvSR7R',
   'irys-proof-board': 'FeihLByeu1DukYLdwpzwyV1D4MRcU47j6oRQjXHvubB5',
-  'irysflip': '7XWJYAN6QUmViaF4gU7M7VcF1V7PkEaTJFYqK8MtM7QA',
+  'irysflip': '3dHMNfs4rnoL9fCfc7c9CgpEe2jvozF89vJ7KnEhSxfG',
   'irys-crush': '5eFGjKARxZ9eQ2krUnGK3M1FjcRabH69jFfzFz3ckV8q',
   'irys-memory': '9um9YHT8cdJmHPXYVtxMDLSY1xzs4eXiX5df8Mc4dyxL',
-  'irys-pfp': 'HD7SCa1wXbqYrxcQ6Kzv5VpQJv1JY6aHNNNzR5rDTo8x',
-  'play-hirys': 'Beazg3zfiLvhRu4m5NRNDLcqMD5bbX5KbR43Fc4ou2YE',
+  'irys-pfp': 'FwTTi9Sk5pv4e4UbPBNUjWHt94F5Y1XWhPbZuBHe1BQ9',
+  'play-hirys': '78n3sD6YFSADU3tff2KbBwGu6BhqipYEr93fEPbubaap',
   'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit',
-  'irys-slot': '2DbanWkKG8FmXmQg4jChmZjUrvbiZcY1fVb8U2k6tpi5'
+  'irys-slot': 'B3aag66tJuhNmsqh3LPVj4kM1sGx9ZnzZu9Cm2ZbEdD9'
 };
 
 // Data structure from the actual server data

@@ -18,7 +18,7 @@ interface Badge {
   image: string;
   requirements: string;
   project: string;
-  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number; playHirysGames?: Map<string, number>; irysSlotCount?: number }) => boolean;
+  checkEligibility: (data: { dashboardCount: number; emailCount: number; blockDropperCount: number; tetrisCount: number; playHirysGames?: Map<string, number>; irysSlotCount?: number; irysFlipCount?: number }) => boolean;
 }
 
 interface MintedBadgeDetails {
@@ -254,6 +254,44 @@ const BADGES: Badge[] = [
     project: 'IrysSlot',
           checkEligibility: (data) => (data.irysSlotCount || 0) >= 5
   },
+  
+  // IrysFlip Project Badges
+  {
+    id: 'flip-beginner',
+    name: 'Flip Beginner',
+    description: 'Just started flipping coins',
+    image: 'https://uploader.irys.xyz/7YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    requirements: 'Available for everyone',
+    project: 'IrysFlip',
+    checkEligibility: () => true
+  },
+  {
+    id: 'lucky-flipper',
+    name: 'Lucky Flipper',
+    description: 'Placed your first bet on IrysFlip',
+    image: 'https://uploader.irys.xyz/8YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    requirements: 'Place at least 1 bet on IrysFlip',
+    project: 'IrysFlip',
+    checkEligibility: (data) => (data.irysFlipCount || 0) >= 1
+  },
+  {
+    id: 'coin-enthusiast',
+    name: 'Coin Enthusiast',
+    description: 'Getting the hang of coin flipping',
+    image: 'https://uploader.irys.xyz/9YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    requirements: 'Place at least 10 bets on IrysFlip',
+    project: 'IrysFlip',
+    checkEligibility: (data) => (data.irysFlipCount || 0) >= 10
+  },
+  {
+    id: 'flip-master',
+    name: 'Flip Master',
+    description: 'Master of the coin flip',
+    image: 'https://uploader.irys.xyz/AYZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    requirements: 'Place at least 50 bets on IrysFlip',
+    project: 'IrysFlip',
+    checkEligibility: (data) => (data.irysFlipCount || 0) >= 50
+  },
 ];
 
 // Project metadata for sections (badges coming soon)
@@ -269,6 +307,13 @@ const PROJECT_SECTIONS = [
     project: 'IrysSlot',
     description: 'Decentralized slot machine game on Irys',
     url: 'https://iryslots.xyz/',
+    hasBadges: true,
+    comingSoon: false
+  },
+  {
+    project: 'IrysFlip',
+    description: 'Decentralized coin flip game on Irys',
+    url: 'https://irysflip.xyz/',
     hasBadges: true,
     comingSoon: false
   },
@@ -344,6 +389,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
   const [tetrisCount, setTetrisCount] = useState(0);
   const [playHirysGames, setPlayHirysGames] = useState<Map<string, number>>(new Map());
   const [irysSlotCount, setIrysSlotCount] = useState(0);
+  const [irysFlipCount, setIrysFlipCount] = useState(0);
   const [mintedBadges, setMintedBadges] = useState<string[]>([]);
   const [badgeEligibilityLoading, setBadgeEligibilityLoading] = useState(true);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
@@ -423,6 +469,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
         setTetrisCount(eligibility.tetrisCount);
         setPlayHirysGames(eligibility.playHirysGames || new Map());
         setIrysSlotCount(eligibility.irysSlotCount || 0);
+        setIrysFlipCount(eligibility.irysFlipCount || 0);
         
         // Query minted badges from Irys metadata (includes pre-testnet-reset data)
         const irysBadges = await queryMintedBadgesFromIrys(walletAddress);
@@ -531,7 +578,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
 
     try {
       // Check eligibility
-      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount });
+      const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount, irysFlipCount });
       if (!isEligible) {
         throw new Error("You are not eligible to mint this badge yet");
       }
@@ -790,7 +837,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
           ) : (
             <div className="badge-grid">
               {projectBadges.map(badge => {
-                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount });
+                const isEligible = badge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount, irysFlipCount });
                 const isMinted = mintedBadges.includes(badge.id);
                 return (
                   <div
@@ -944,6 +991,13 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   IrysSlot plays: {irysSlotCount}
                 </div>
               )}
+              
+              {/* Debug info for IrysFlip count */}
+              {(selectedBadge.id === 'lucky-flipper' || selectedBadge.id === 'coin-enthusiast' || selectedBadge.id === 'flip-master') && (
+                <div className="debug-info" style={{fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem'}}>
+                  IrysFlip bets: {irysFlipCount}
+                </div>
+              )}
             </div>
             
             {walletAddress && (
@@ -953,7 +1007,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                     <Award size={18} />
                     <span>You have already minted this badge!</span>
                   </div>
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount, irysFlipCount }) ? (
                   <div className="status-message eligible">
                     <Award size={18} />
                     <span>You are eligible to mint this badge!</span>
@@ -998,7 +1052,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                 disabled={
                   isMinting || 
                   !walletAddress || 
-                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ||
+                  !selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount, irysFlipCount }) ||
                   mintedBadges.includes(selectedBadge.id)
                 }
               >
@@ -1009,7 +1063,7 @@ const BadgesSection: React.FC<BadgesSectionProps> = ({ walletAddress }) => {
                   </>
                 ) : mintedBadges.includes(selectedBadge.id) ? (
                   'Already Minted'
-                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount }) ? (
+                ) : selectedBadge.checkEligibility({ dashboardCount, emailCount, blockDropperCount, tetrisCount, playHirysGames, irysSlotCount, irysFlipCount }) ? (
                   'Mint Badge (Cost: 0.1 IRYS + gas)'
                 ) : (
                   'Requirements Not Met'
