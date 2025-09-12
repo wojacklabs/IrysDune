@@ -381,11 +381,11 @@ export const ON_CHAIN_PRESETS = [
   {
     id: 'irys-flip',
     name: 'IrysFlip',
-    contractAddress: '0x3ef1a34D98e7Eb2CEB089df23B306328f4a05Aa9',
+    contractAddress: '0x3ef1a34D98e7Eb2CEB089df23B306328f4a05Aa9', // Primary contract
     network: 'irys-testnet',
     rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
     description: 'IrysFlip Game Contract',
-    color: '#ff6b6b',
+    color: '#10B981',
     icon: irysflipIcon,
     abis: [
       {
@@ -396,6 +396,39 @@ export const ON_CHAIN_PRESETS = [
           { name: 'amount', type: 'uint256', indexed: false },
           { name: 'guess', type: 'bool', indexed: false },
           { name: 'win', type: 'bool', indexed: false }
+        ]
+      }
+    ],
+    // Additional IrysFlip specific configuration
+    multipleContracts: [
+      {
+        contractAddress: '0x3ef1a34D98e7Eb2CEB089df23B306328f4a05Aa9',
+        abis: [
+          {
+            name: 'BetPlaced',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'amount', type: 'uint256', indexed: false },
+              { name: 'guess', type: 'bool', indexed: false },
+              { name: 'win', type: 'bool', indexed: false }
+            ]
+          }
+        ]
+      },
+      {
+        contractAddress: '0xC9F9A1e0C2822663e31c0fCdF46aF0dc10081423',
+        abis: [
+          {
+            name: 'BetPlaced',
+            type: 'event' as const,
+            inputs: [
+              { name: 'player', type: 'address', indexed: true },
+              { name: 'amount', type: 'uint256', indexed: false },
+              { name: 'guess', type: 'bool', indexed: false },
+              { name: 'win', type: 'bool', indexed: false }
+            ]
+          }
         ]
       }
     ]

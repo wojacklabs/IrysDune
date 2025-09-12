@@ -61,6 +61,10 @@ export interface OnChainQuery {
   abis?: AbiFunction[];
   network?: string; // 'mainnet' | 'polygon' 등
   rpcUrl?: string;
+  multipleContracts?: {
+    contractAddress: string;
+    abis: AbiFunction[];
+  }[];
 }
 
 export interface AbiFunction {

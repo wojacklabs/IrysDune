@@ -260,7 +260,7 @@ const BADGES: Badge[] = [
     id: 'flip-beginner',
     name: 'Flip Beginner',
     description: 'Just started flipping coins',
-    image: 'https://uploader.irys.xyz/7YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    image: 'https://uploader.irys.xyz/B3QfsVYfFibWKCeJZhFrMWHJ1tewNuEKYfctt9fRKgp6', // IrysFlip placeholder image
     requirements: 'Available for everyone',
     project: 'IrysFlip',
     checkEligibility: () => true
@@ -269,7 +269,7 @@ const BADGES: Badge[] = [
     id: 'lucky-flipper',
     name: 'Lucky Flipper',
     description: 'Placed your first bet on IrysFlip',
-    image: 'https://uploader.irys.xyz/8YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    image: 'https://uploader.irys.xyz/4hk9Z3ZmwZqoMBbwAd6bYehgx1FRXuoRUk7PBs719qwe', // IrysFlip placeholder image
     requirements: 'Place at least 1 bet on IrysFlip',
     project: 'IrysFlip',
     checkEligibility: (data) => (data.irysFlipCount || 0) >= 1
@@ -278,19 +278,19 @@ const BADGES: Badge[] = [
     id: 'coin-enthusiast',
     name: 'Coin Enthusiast',
     description: 'Getting the hang of coin flipping',
-    image: 'https://uploader.irys.xyz/9YZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    image: 'https://uploader.irys.xyz/2V3926p4WL1ezwzrS8g3KXWU5CC9qb53Ne5LQWi1bZDx', // IrysFlip placeholder image
     requirements: 'Place at least 10 bets on IrysFlip',
     project: 'IrysFlip',
-    checkEligibility: (data) => (data.irysFlipCount || 0) >= 10
+    checkEligibility: (data) => (data.irysFlipCount || 0) >= 5
   },
   {
     id: 'flip-master',
     name: 'Flip Master',
     description: 'Master of the coin flip',
-    image: 'https://uploader.irys.xyz/AYZEwMiWFqRhJTyJqZyWZEyZfN3zZQqJuKJzWyZfN3zZ', // IrysFlip placeholder image
+    image: 'https://uploader.irys.xyz/Doq7ipFtYCES4CN9BeRhueqwxx33qRzKqXmUz2tzbMGH', // IrysFlip placeholder image
     requirements: 'Place at least 50 bets on IrysFlip',
     project: 'IrysFlip',
-    checkEligibility: (data) => (data.irysFlipCount || 0) >= 50
+    checkEligibility: (data) => (data.irysFlipCount || 0) >= 10
   },
 ];
 

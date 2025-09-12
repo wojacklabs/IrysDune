@@ -533,6 +533,73 @@ export async function queryIrysFlipCount(walletAddress: string): Promise<number>
   console.log('[IrysService] Querying IrysFlip count for:', walletAddress);
   
   try {
+    // First, try to query from Irys data storage using the correct endpoint
+    console.log('[IrysService] Querying IrysFlip data from Irys testnet node...');
+    
+    const IRYS_FLIP_ENDPOINT = 'https://node1.testnet.irys.xyz/graphql';
+    
+    // Query with the correct tag structure: App = 'IrysFlip'
+    const query = {
+      query: `
+        query GetIrysFlipGames {
+          transactions(
+            owners: ["${walletAddress}"]
+            tags: [
+              { name: "App", values: ["IrysFlip"] }
+            ]
+            first: 100
+            order: DESC
+          ) {
+            edges {
+              node {
+                id
+                timestamp
+                tags {
+                  name
+                  value
+                }
+              }
+            }
+          }
+        }
+      `
+    };
+    
+    let irysDataCount = 0;
+    
+    try {
+      const result = await executeQuery(`irysflip-app-${walletAddress}`, async () => {
+        const response = await fetch(IRYS_FLIP_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(query)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+      });
+      
+      if (result.data?.transactions?.edges) {
+        irysDataCount = result.data.transactions.edges.length;
+        console.log(`[IrysService] Found ${irysDataCount} IrysFlip transactions in Irys data`);
+        
+        // Log sample tags for debugging
+        if (irysDataCount > 0) {
+          console.log('[IrysService] Sample transaction tags:', result.data.transactions.edges[0].node.tags);
+        }
+      }
+    } catch (error) {
+      console.error('[IrysService] Error querying Irys testnet node:', error);
+    }
+    
+    // Query on-chain contracts (both addresses)
+    console.log('[IrysService] Querying on-chain contracts...');
+    
     // Import necessary functions from onChainService
     const { queryUserOnChainData, ON_CHAIN_PRESETS } = await import('./onChainService');
     
@@ -540,20 +607,13 @@ export async function queryIrysFlipCount(walletAddress: string): Promise<number>
     const irysFlipPreset = ON_CHAIN_PRESETS.find(preset => preset.id === 'irys-flip');
     if (!irysFlipPreset) {
       console.error('[IrysService] IrysFlip preset not found');
-      console.log('[IrysService] Available presets:', ON_CHAIN_PRESETS.map(p => p.id));
-      return 0;
+      return irysDataCount; // Return Irys data count if any
     }
     
-    console.log('[IrysService] Found IrysFlip preset:', {
-      id: irysFlipPreset.id,
-      contractAddress: irysFlipPreset.contractAddress,
-      network: irysFlipPreset.network,
-      rpcUrl: irysFlipPreset.rpcUrl,
-      events: irysFlipPreset.abis?.map(abi => abi.name) || []
-    });
+    let onChainCount = 0;
     
-    // Query IrysFlip contract
-    const results = await queryUserOnChainData(
+    // Query primary contract
+    const primaryResults = await queryUserOnChainData(
       {
         contractAddress: irysFlipPreset.contractAddress,
         network: irysFlipPreset.network,
@@ -562,14 +622,40 @@ export async function queryIrysFlipCount(walletAddress: string): Promise<number>
       },
       walletAddress,
       undefined,
-      { days: 365 } // Look back 1 year
+      { days: 730 } // Look back 2 years
     );
     
-    console.log('[IrysService] IrysFlip query results:', results);
-    const flipCount = results.reduce((sum, r) => sum + r.count, 0);
-    console.log('[IrysService] IrysFlip bet count:', flipCount);
+    onChainCount += primaryResults.reduce((sum, r) => sum + r.count, 0);
+    console.log('[IrysService] Primary contract BetPlaced count:', onChainCount);
     
-    return flipCount;
+    // Query secondary contract if multipleContracts is defined
+    if (irysFlipPreset.multipleContracts) {
+      for (const contract of irysFlipPreset.multipleContracts) {
+        if (contract.contractAddress !== irysFlipPreset.contractAddress) {
+          const secondaryResults = await queryUserOnChainData(
+            {
+              contractAddress: contract.contractAddress,
+              network: irysFlipPreset.network,
+              rpcUrl: irysFlipPreset.rpcUrl,
+              abis: contract.abis
+            },
+            walletAddress,
+            undefined,
+            { days: 730 }
+          );
+          
+          const secondaryCount = secondaryResults.reduce((sum, r) => sum + r.count, 0);
+          onChainCount += secondaryCount;
+          console.log(`[IrysService] Secondary contract ${contract.contractAddress} count:`, secondaryCount);
+        }
+      }
+    }
+    
+    // Return the maximum of Irys data count and on-chain count (avoid double counting)
+    const totalCount = Math.max(irysDataCount, onChainCount);
+    console.log('[IrysService] Total IrysFlip count:', totalCount);
+    
+    return totalCount;
   } catch (error) {
     console.error('[IrysService] Error querying IrysFlip count:', error);
     return 0;
