@@ -402,6 +402,7 @@ export const ON_CHAIN_PRESETS = [
     // Additional IrysFlip specific configuration
     multipleContracts: [
       {
+        name: 'IrysFlip Contract 1',
         contractAddress: '0x3ef1a34D98e7Eb2CEB089df23B306328f4a05Aa9',
         abis: [
           {
@@ -417,6 +418,7 @@ export const ON_CHAIN_PRESETS = [
         ]
       },
       {
+        name: 'IrysFlip Contract 2',
         contractAddress: '0xC9F9A1e0C2822663e31c0fCdF46aF0dc10081423',
         abis: [
           {
