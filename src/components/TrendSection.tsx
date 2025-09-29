@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChartLine, Earth } from 'lucide-react';
 import type { ChartType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
-import { APP_PRESETS, getPresetsByIds } from '../constants/appPresets';
+import { APP_PRESETS } from '../constants/appPresets';
+import { ON_CHAIN_PRESETS } from '../services/onChainService';
 import { fetchAllProjectsData } from '../services/dataService';
 import { 
   generateChartData, 
@@ -21,9 +22,12 @@ interface TrendSectionProps {
 }
 
 const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
+  // Combine storage and on-chain presets
+  const ALL_PRESETS = [...APP_PRESETS];
+  
   // Select all apps by default
   const [selectedApps, setSelectedApps] = useState<string[]>(
-    APP_PRESETS.map(preset => preset.id)
+    ALL_PRESETS.map(preset => preset.id)
   );
   const [chartType, setChartType] = useState<ChartType>('stacked');
   const [ecosystemChartType, setEcosystemChartType] = useState<ChartType>('stacked');
@@ -208,7 +212,29 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     }
   }, [selectedApps]);
 
-  const selectedPresets = getPresetsByIds(selectedApps);
+  // Helper function to get presets from both storage and on-chain
+  const getAllPresetsByIds = (ids: string[]) => {
+    return ids.map(id => {
+      const preset = ALL_PRESETS.find(p => p.id === id);
+      if (preset) return preset;
+      
+      // Check on-chain presets
+      const onChainPreset = ON_CHAIN_PRESETS.find(p => p.id === id);
+      if (onChainPreset) {
+        // Convert on-chain preset to match AppPreset interface
+        return {
+          id: onChainPreset.id,
+          name: onChainPreset.name,
+          tags: [],
+          color: onChainPreset.color,
+          icon: onChainPreset.icon || undefined
+        };
+      }
+      return null;
+    }).filter(Boolean) as any[];
+  };
+  
+  const selectedPresets = getAllPresetsByIds(selectedApps);
   const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod, chartType === 'stacked', undefined);
   const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod, ecosystemChartType === 'stacked', undefined);
   const chartData = generateChartData(individualFilteredData, selectedPresets, chartType);
@@ -314,7 +340,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
 
         <div className="app-selection">
           <div className="app-grid">
-            {APP_PRESETS.map(app => (
+            {ALL_PRESETS.map(app => (
               <button
                 key={app.id}
                 onClick={() => toggleApp(app.id)}
