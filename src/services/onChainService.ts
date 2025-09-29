@@ -5,6 +5,8 @@ import irysflipIcon from '../assets/irysflip.png';
 import irysSlotIcon from '../assets/irysslot.png';
 import irysCrushIcon from '../assets/irys-crush.png';
 import playHirysIcon from '../assets/playhirys.jpg';
+import irysTarotIcon from '../assets/irys-tarot.png';
+import irysForumIcon from '../assets/irys-forum.png';
 
 // 네트워크별 블록 생성 시간 (초)
 const BLOCK_TIME: { [key: string]: number } = {
@@ -701,6 +703,66 @@ export const ON_CHAIN_PRESETS = [
               { name: 'timestamp', type: 'uint256', indexed: false }
             ]
           }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'irys-tarot-card',
+    name: 'IrysTarotCard',
+    contractAddress: '0xaf34062dddfa12347b81a9d8eaff1b24a8f25215',
+    network: 'irys-testnet',
+    rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
+    description: 'IrysTarotCard - All events tracking',
+    color: '#7c3aed',
+    icon: irysTarotIcon,
+    abis: [] // 모든 이벤트 로그 수집
+  },
+  {
+    id: 'irys-forum',
+    name: 'IrysForum',
+    contractAddress: '0xbebfac28e35c7a70eae9df606199e45c85a73a9a',
+    network: 'irys-testnet',
+    rpcUrl: 'https://testnet-rpc.irys.xyz/v1/execution-rpc',
+    description: 'IrysForum - Community forum contract',
+    color: '#059669',
+    icon: irysForumIcon,
+    abis: [
+      {
+        name: 'PostCreated',
+        type: 'event' as const,
+        inputs: [
+          { name: 'postId', type: 'uint256', indexed: true },
+          { name: 'author', type: 'address', indexed: true },
+          { name: 'title', type: 'string', indexed: false },
+          { name: 'pointsEarned', type: 'uint256', indexed: false }
+        ]
+      },
+      {
+        name: 'CommentCreated',
+        type: 'event' as const,
+        inputs: [
+          { name: 'commentId', type: 'uint256', indexed: true },
+          { name: 'postId', type: 'uint256', indexed: true },
+          { name: 'author', type: 'address', indexed: true },
+          { name: 'pointsEarned', type: 'uint256', indexed: false }
+        ]
+      },
+      {
+        name: 'UsernameRegistered',
+        type: 'event' as const,
+        inputs: [
+          { name: 'user', type: 'address', indexed: true },
+          { name: 'username', type: 'string', indexed: false }
+        ]
+      },
+      {
+        name: 'PointsEarned',
+        type: 'event' as const,
+        inputs: [
+          { name: 'user', type: 'address', indexed: true },
+          { name: 'points', type: 'uint256', indexed: false },
+          { name: 'reason', type: 'string', indexed: false }
         ]
       }
     ]

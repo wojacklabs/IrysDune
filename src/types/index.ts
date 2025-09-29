@@ -4,6 +4,7 @@ export interface AppPreset {
   tags: Tag[];
   color: string;
   icon?: string;
+  additionalTags?: string[]; // For filtering purposes (e.g., Irys3D)
 }
 
 export interface Tag {

@@ -14,7 +14,11 @@ const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'irys-pfp': 'FwTTi9Sk5pv4e4UbPBNUjWHt94F5Y1XWhPbZuBHe1BQ9',
   'play-hirys': '78n3sD6YFSADU3tff2KbBwGu6BhqipYEr93fEPbubaap',
   'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit',
-  'irys-slot': 'B3aag66tJuhNmsqh3LPVj4kM1sGx9ZnzZu9Cm2ZbEdD9'
+  'irys-slot': 'B3aag66tJuhNmsqh3LPVj4kM1sGx9ZnzZu9Cm2ZbEdD9',
+  'irys-tarot-card': 'AtzCU6spPnjKHUXdwFnANZWiNFmvoYEaCYrHpRCrhBxN',
+  'irys-forum': '9NBhQtdPu7uCkQXov9mfWqtYusJ11ksyZpo6cn8sbPM2',
+  'irys-3d': '5xzH3xoCW6PaCjzdpYHQUj8y15rZZwQ1pkwxeeLEWUcG',
+  'irys-note': '2PKcFQ15NK3sLgp5XN5ijosFQPh6nbgdypFH9vLwzGgh'
 };
 
 // Data structure from the actual server data

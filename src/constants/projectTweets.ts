@@ -1,4 +1,5 @@
 import { APP_PRESETS } from './appPresets';
+import { ON_CHAIN_PRESETS } from '../services/onChainService';
 
 export interface ProjectTweet {
   projectId: string;
@@ -208,6 +209,38 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
       projectIcon: APP_PRESETS.find(p => p.id === 'play-hirys')?.icon || null,
       tweetUrl: 'https://x.com/0xsoros/status/1955914400076050510',
       tweetId: '1955914400076050510'
+    },
+    // IrysTarotCard
+    {
+      projectId: 'irys-tarot-card',
+      projectName: 'IrysTarotCard',
+      projectIcon: ON_CHAIN_PRESETS.find(p => p.id === 'irys-tarot-card')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/AtzCU6spPnjKHUXdwFnANZWiNFmvoYEaCYrHpRCrhBxN',
+      tweetId: 'irys-tarot-card-mutable' // Using mutable address as ID
+    },
+    // IrysForum
+    {
+      projectId: 'irys-forum',
+      projectName: 'IrysForum',
+      projectIcon: ON_CHAIN_PRESETS.find(p => p.id === 'irys-forum')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/9NBhQtdPu7uCkQXov9mfWqtYusJ11ksyZpo6cn8sbPM2',
+      tweetId: 'irys-forum-mutable' // Using mutable address as ID
+    },
+    // Irys3D
+    {
+      projectId: 'irys-3d',
+      projectName: 'Irys3D',
+      projectIcon: APP_PRESETS.find(p => p.id === 'irys-3d')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/5xzH3xoCW6PaCjzdpYHQUj8y15rZZwQ1pkwxeeLEWUcG',
+      tweetId: 'irys-3d-mutable' // Using mutable address as ID
+    },
+    // IrysNote
+    {
+      projectId: 'irys-note',
+      projectName: 'IrysNote',
+      projectIcon: APP_PRESETS.find(p => p.id === 'irys-note')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/2PKcFQ15NK3sLgp5XN5ijosFQPh6nbgdypFH9vLwzGgh',
+      tweetId: 'irys-note-mutable' // Using mutable address as ID
     }
 ];
 

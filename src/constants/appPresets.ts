@@ -12,6 +12,8 @@ import irysPfpIcon from '../assets/iryspfp.jpg';
 import playHirysIcon from '../assets/playhirys.jpg';
 import irysRealms from '../assets/irysrealms.jpg';
 import irysSlotIcon from '../assets/irysslot.png';
+import irys3dIcon from '../assets/irys-3d.webp';
+import irysNoteIcon from '../assets/irys-note.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -130,6 +132,26 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: 'magenta',
     icon: irysMemoryIcon
+  },
+  {
+    id: 'irys-3d',
+    name: 'Irys3D',
+    tags: [
+      { name: 'File-Type', value: 'image/jpeg' },
+      { name: 'File-Type', value: 'image/png' }
+    ],
+    additionalTags: ['File-Owner', 'File-Name', 'File-Size'],
+    color: '#8b5cf6',
+    icon: irys3dIcon
+  },
+  {
+    id: 'irys-note',
+    name: 'IrysNote',
+    tags: [
+      { name: 'app', value: 'IrysNote' }
+    ],
+    color: '#06b6d4',
+    icon: irysNoteIcon
   },
 ];
 
