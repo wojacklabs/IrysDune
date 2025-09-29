@@ -396,8 +396,6 @@ export function generateChartData(
   
   const labels = timestamps.map(formatDate);
 
-  // Check if multiple datasets
-  const isMultipleDatasets = queries.length > 1;
 
   // Helper function to calculate color brightness and determine text color
   function getContrastTextColor(backgroundColor: string): string {
@@ -591,40 +589,9 @@ export function generateChartData(
     return { labels, datasets };
   } else {
     // Line chart: daily values (not cumulative)
-    if (isMultipleDatasets) {
-      // Multiple datasets - convert to relative values
-      const globalMax = Math.max(...rawDatasets.flatMap(d => d.dataPoints));
-      const chartMinHeight = Math.max(10, globalMax * 0.1);
-
-      const datasets = rawDatasets.map(({ preset, dataPoints }) => {
-        const maxValue = Math.max(...dataPoints);
-        
-        const scaledDataPoints = dataPoints.map(value => {
-          if (maxValue === 0) return 0;
-          const relativeValue = (value / maxValue) * 100;
-          const scaledValue = Math.max(relativeValue, value > 0 ? chartMinHeight : 0);
-          return scaledValue;
-        });
-
-        return {
-          label: `${preset?.name || 'Unknown'} (Relative)`,
-          data: scaledDataPoints,
-          backgroundColor: 'transparent',
-          borderColor: preset?.color || '#94a3b8',
-          fill: false,
-          tension: 0.1,
-          yAxisID: 'relative',
-          pointRadius: 3,
-          pointHoverRadius: 6
-        };
-      });
-
-      return { labels, datasets };
-    } else {
-      // Single dataset - absolute values
-      const { preset, dataPoints } = rawDatasets[0] || { preset: null, dataPoints: [] };
-      
-      const datasets = [{
+    // Always use absolute values for all line charts
+    const datasets = rawDatasets.map(({ preset, dataPoints }) => {
+      return {
         label: `${preset?.name || 'Unknown'} (Daily)`,
         data: dataPoints,
         backgroundColor: 'transparent',
@@ -634,10 +601,10 @@ export function generateChartData(
         yAxisID: 'absolute',
         pointRadius: 3,
         pointHoverRadius: 6
-      }];
+      };
+    });
 
-      return { labels, datasets };
-    }
+    return { labels, datasets };
   }
 }
 
@@ -908,41 +875,6 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
             }
           }
         }
-      } : (isMultipleDatasets ? {
-        relative: {
-          type: 'linear' as const,
-          display: true,
-          position: 'left' as const,
-          title: {
-            display: !isMobile,
-            text: 'Relative Activity (%)',
-            font: {
-              family: 'Inter',
-              size: isMobile ? 10 : 12,
-              weight: 'bold' as const
-            },
-            color: '#64748b'
-          },
-          beginAtZero: true,
-          min: 0,
-          suggestedMax: 100, // Set max to 100% for relative charts
-          grid: {
-            color: 'rgba(148, 163, 184, 0.1)',
-            drawBorder: false,
-            display: !isMobile
-          },
-          ticks: {
-            font: {
-              family: 'Inter',
-              size: isMobile ? 9 : 10
-            },
-            color: '#64748b',
-            maxTicksLimit: isMobile ? 6 : 10,
-            callback: function(value: any) {
-              return value + '%';
-            }
-          }
-        }
       } : {
         absolute: {
           type: 'linear' as const,
@@ -981,7 +913,7 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
             }
           }
         }
-      }))
+      })
     },
     interaction: {
       mode: 'nearest' as const,
