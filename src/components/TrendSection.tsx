@@ -23,7 +23,16 @@ interface TrendSectionProps {
 
 const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   // Combine storage and on-chain presets
-  const ALL_PRESETS = [...APP_PRESETS];
+  const ALL_PRESETS = [
+    ...APP_PRESETS,
+    ...ON_CHAIN_PRESETS.filter(p => ['irys-tarot-card', 'irys-forum'].includes(p.id)).map(p => ({
+      id: p.id,
+      name: p.name,
+      tags: [],
+      color: p.color,
+      icon: p.icon || undefined
+    }))
+  ];
   
   // Select all apps by default
   const [selectedApps, setSelectedApps] = useState<string[]>(
