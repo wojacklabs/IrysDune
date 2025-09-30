@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChartLine, Earth } from 'lucide-react';
-import type { ChartType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
+import type { ChartType, DataDisplayType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
 import { ON_CHAIN_PRESETS } from '../services/onChainService';
 import { fetchAllProjectsData } from '../services/dataService';
@@ -15,7 +15,12 @@ import Chart from './Chart';
 import LoadingProgress from './LoadingProgress';
 
 
-type TimePeriod = '7d' | '30d' | '3M' | '6M';
+type TimePeriod = '7d' | '30d' | '3M' | '6M' | 'custom';
+
+interface DateRange {
+  startDate: Date;
+  endDate: Date;
+}
 
 interface TrendSectionProps {
   onDataUpdate?: (data: { [key: string]: QueryResult[] }) => void;
@@ -38,10 +43,28 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const [selectedApps, setSelectedApps] = useState<string[]>(
     ALL_PRESETS.map(preset => preset.id)
   );
-  const [chartType, setChartType] = useState<ChartType>('stacked');
-  const [ecosystemChartType, setEcosystemChartType] = useState<ChartType>('stacked');
+  // Data display type (absolute/cumulative) and chart shape (line/treemap)
+  const [dataDisplayType, setDataDisplayType] = useState<DataDisplayType>('cumulative');
+  const [ecosystemDataDisplayType, setEcosystemDataDisplayType] = useState<DataDisplayType>('cumulative');
+  // TODO: Implement chart shape selection (line vs treemap) in future update
+  // const [chartShape, setChartShape] = useState<ChartShape>('line');
+  // const [ecosystemChartShape, setEcosystemChartShape] = useState<ChartShape>('line');
+  
+  // For backward compatibility
+  const chartType = dataDisplayType === 'cumulative' ? 'stacked' : 'line' as ChartType;
+  const ecosystemChartType = ecosystemDataDisplayType === 'cumulative' ? 'stacked' : 'line' as ChartType;
   const [wholeTimePeriod, setWholeTimePeriod] = useState<TimePeriod>('30d');
   const [individualTimePeriod, setIndividualTimePeriod] = useState<TimePeriod>('30d');
+  const [wholeCustomDateRange, setWholeCustomDateRange] = useState<DateRange>({ 
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endDate: new Date() 
+  });
+  const [individualCustomDateRange, setIndividualCustomDateRange] = useState<DateRange>({ 
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endDate: new Date() 
+  });
+  const [showWholeCustomDatePicker, setShowWholeCustomDatePicker] = useState(false);
+  const [showIndividualCustomDatePicker, setShowIndividualCustomDatePicker] = useState(false);
   const [individualData, setIndividualData] = useState<{ [key: string]: QueryResult[] }>({});
   const [ecosystemData, setEcosystemData] = useState<{ [key: string]: QueryResult[] }>({});
   const [individualLoading, setIndividualLoading] = useState(false);
@@ -244,8 +267,30 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   };
   
   const selectedPresets = getAllPresetsByIds(selectedApps);
-  const individualFilteredData = filterDataByPeriod(individualData, individualTimePeriod, chartType === 'stacked', undefined);
-  const ecosystemFilteredData = filterDataByPeriod(ecosystemData, wholeTimePeriod, ecosystemChartType === 'stacked', undefined);
+  
+  // Use custom date range if selected
+  const individualDateRange = individualTimePeriod === 'custom' ? {
+    startDate: individualCustomDateRange.startDate.getTime(),
+    endDate: individualCustomDateRange.endDate.getTime()
+  } : undefined;
+  
+  const wholeDateRange = wholeTimePeriod === 'custom' ? {
+    startDate: wholeCustomDateRange.startDate.getTime(),
+    endDate: wholeCustomDateRange.endDate.getTime()
+  } : undefined;
+  
+  const individualFilteredData = filterDataByPeriod(
+    individualData, 
+    individualTimePeriod === 'custom' ? '30d' : individualTimePeriod, 
+    chartType === 'stacked', 
+    individualDateRange
+  );
+  const ecosystemFilteredData = filterDataByPeriod(
+    ecosystemData, 
+    wholeTimePeriod === 'custom' ? '30d' : wholeTimePeriod, 
+    ecosystemChartType === 'stacked', 
+    wholeDateRange
+  );
   const chartData = generateChartData(individualFilteredData, selectedPresets, chartType);
   const wholeEcosystemData = generateWholeEcosystemData(ecosystemFilteredData, ecosystemChartType);
   const shareText = generateShareText(selectedPresets, chartType);
@@ -270,13 +315,20 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
           <div className="header-actions">
             <div className="time-period-selector">
-              {(['7d', '30d', '3M', '6M'] as TimePeriod[]).map(period => (
+              {(['7d', '30d', '3M', '6M', 'custom'] as TimePeriod[]).map(period => (
                 <button
                   key={period}
-                  onClick={() => setWholeTimePeriod(period)}
+                  onClick={() => {
+                    setWholeTimePeriod(period);
+                    if (period === 'custom') {
+                      setShowWholeCustomDatePicker(true);
+                    } else {
+                      setShowWholeCustomDatePicker(false);
+                    }
+                  }}
                   className={`period-button ${wholeTimePeriod === period ? 'active' : ''}`}
                 >
-                  {period}
+                  {period === 'custom' ? 'Custom' : period}
                 </button>
               ))}
             </div>
@@ -292,6 +344,30 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         </div>
         
+        {showWholeCustomDatePicker && (
+          <div className="custom-date-picker">
+            <input
+              type="date"
+              value={wholeCustomDateRange.startDate.toISOString().split('T')[0]}
+              onChange={(e) => setWholeCustomDateRange({
+                ...wholeCustomDateRange,
+                startDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+            <span className="date-separator">to</span>
+            <input
+              type="date"
+              value={wholeCustomDateRange.endDate.toISOString().split('T')[0]}
+              onChange={(e) => setWholeCustomDateRange({
+                ...wholeCustomDateRange,
+                endDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+          </div>
+        )}
+        
         {ecosystemLoading ? (
           <LoadingProgress 
             progress={progress} 
@@ -303,7 +379,16 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             chartType={ecosystemChartType}
             title=""
             shareText={`Irys Whole Ecosystem Activity\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
-            onTypeChange={setEcosystemChartType}
+            onTypeChange={(type) => {
+              if (type === 'stacked') {
+                setEcosystemDataDisplayType('cumulative');
+              } else if (type === 'line') {
+                setEcosystemDataDisplayType('absolute');
+              } else if (type === 'treemap') {
+                // TODO: Handle treemap shape selection
+                // setEcosystemChartShape('treemap');
+              }
+            }}
             captureContainerRef={wholeEcosystemCardRef}
           />
         ) : (
@@ -326,13 +411,20 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
           <div className="header-actions">
             <div className="time-period-selector">
-              {(['7d', '30d', '3M', '6M'] as TimePeriod[]).map(period => (
+              {(['7d', '30d', '3M', '6M', 'custom'] as TimePeriod[]).map(period => (
                 <button
                   key={period}
-                  onClick={() => setIndividualTimePeriod(period)}
+                  onClick={() => {
+                    setIndividualTimePeriod(period);
+                    if (period === 'custom') {
+                      setShowIndividualCustomDatePicker(true);
+                    } else {
+                      setShowIndividualCustomDatePicker(false);
+                    }
+                  }}
                   className={`period-button ${individualTimePeriod === period ? 'active' : ''}`}
                 >
-                  {period}
+                  {period === 'custom' ? 'Custom' : period}
                 </button>
               ))}
             </div>
@@ -346,6 +438,30 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             </button>
           </div>
         </div>
+
+        {showIndividualCustomDatePicker && (
+          <div className="custom-date-picker">
+            <input
+              type="date"
+              value={individualCustomDateRange.startDate.toISOString().split('T')[0]}
+              onChange={(e) => setIndividualCustomDateRange({
+                ...individualCustomDateRange,
+                startDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+            <span className="date-separator">to</span>
+            <input
+              type="date"
+              value={individualCustomDateRange.endDate.toISOString().split('T')[0]}
+              onChange={(e) => setIndividualCustomDateRange({
+                ...individualCustomDateRange,
+                endDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+          </div>
+        )}
 
         <div className="app-selection">
           <div className="app-grid">
@@ -390,7 +506,16 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               chartType={chartType}
               title=""
               shareText={shareText}
-              onTypeChange={setChartType}
+              onTypeChange={(type) => {
+                if (type === 'stacked') {
+                  setDataDisplayType('cumulative');
+                } else if (type === 'line') {
+                  setDataDisplayType('absolute');
+                } else if (type === 'treemap') {
+                  // TODO: Handle treemap shape selection
+                  // setChartShape('treemap');
+                }
+              }}
               captureContainerRef={appsEcosystemCardRef}
             />
           ) : null

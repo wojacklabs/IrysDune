@@ -47,6 +47,8 @@ export interface CustomQuery {
 }
 
 export type ChartType = 'line' | 'stacked' | 'treemap';
+export type DataDisplayType = 'absolute' | 'cumulative';
+export type ChartShape = 'line' | 'treemap';
 
 export interface LoadingProgress {
   current: number;

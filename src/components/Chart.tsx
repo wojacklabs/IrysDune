@@ -329,7 +329,7 @@ const Chart: React.FC<ChartProps> = ({
                   onClick={() => onTypeChange(type)}
                   className={`chart-type-button ${chartType === type ? 'active' : ''}`}
                 >
-                  {type === 'line' ? 'Line' : type === 'stacked' ? 'Stacked' : 'Treemap'}
+                  {type === 'line' ? 'Absolute' : type === 'stacked' ? 'Cumulative' : 'Treemap'}
                 </button>
               ))}
             </div>
