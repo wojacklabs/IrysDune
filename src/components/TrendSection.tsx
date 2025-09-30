@@ -281,17 +281,24 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const individualFilteredData = filterDataByPeriod(
     individualData, 
     individualTimePeriod === 'custom' ? '30d' : individualTimePeriod, 
-    chartType === 'stacked', 
+    chartType === 'stacked' || chartShape === 'treemap', 
     individualDateRange
   );
   const ecosystemFilteredData = filterDataByPeriod(
     ecosystemData, 
     wholeTimePeriod === 'custom' ? '30d' : wholeTimePeriod, 
-    ecosystemChartType === 'stacked', 
+    ecosystemChartType === 'stacked' || ecosystemChartShape === 'treemap', 
     wholeDateRange
   );
-  const chartData = generateChartData(individualFilteredData, selectedPresets, chartType);
-  const wholeEcosystemData = generateWholeEcosystemData(ecosystemFilteredData, ecosystemChartType);
+  const chartData = generateChartData(
+    individualFilteredData, 
+    selectedPresets, 
+    chartShape === 'treemap' ? 'treemap' : chartType
+  );
+  const wholeEcosystemData = generateWholeEcosystemData(
+    ecosystemFilteredData, 
+    ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType
+  );
   const shareText = generateShareText(selectedPresets, chartType);
 
   // Check if we have data
