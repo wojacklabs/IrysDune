@@ -309,7 +309,6 @@ function App() {
                     </button>
                   </div>
                   
-                  <div className="dropdown-divider mobile-only"></div>
                   
                   {/* Mobile Wallet Section */}
                   <div className="mobile-wallet-section">
@@ -356,12 +355,10 @@ function App() {
                     )}
                   </div>
                   
-                  <div className="dropdown-divider mobile-only"></div>
                   
                   {/* My History (only show when wallet connected) */}
                   {walletAddress && (
                     <>
-                      <div className="dropdown-divider"></div>
                       <button
                         onClick={() => {
                           setActiveTab('my-history');
@@ -374,7 +371,6 @@ function App() {
                     </>
                   )}
                   
-                  <div className="dropdown-divider"></div>
                   
                   <div className="dropdown-item">
                     <span>Theme</span>
