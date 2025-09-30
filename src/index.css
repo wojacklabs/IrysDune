@@ -7773,15 +7773,55 @@ body.weather-stormy .dropdown-item-button:hover {
   color: var(--dark-text-secondary);
 }
 
+/* Chart Shape Selector Styles */
+.chart-shapes {
+  display: flex;
+  gap: 8px;
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.chart-shape-button {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chart-shape-button:hover {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.chart-shape-button.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
 /* Custom Date Picker Styles */
 .custom-date-picker {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  background: #f8fafc;
+  gap: 8px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  margin: 12px 0;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  margin-left: auto;
+  width: fit-content;
 }
 
 .date-input {
@@ -7809,9 +7849,32 @@ body.weather-stormy .dropdown-item-button:hover {
   font-size: 14px;
 }
 
+/* Dark mode for chart shapes */
+body.weather-stormy .chart-shapes {
+  border-left-color: rgba(71, 85, 105, 0.3);
+}
+
+body.weather-stormy .chart-shape-button {
+  border-color: rgba(71, 85, 105, 0.5);
+  color: #94a3b8;
+}
+
+body.weather-stormy .chart-shape-button:hover {
+  background: rgba(71, 85, 105, 0.2);
+  border-color: rgba(100, 116, 139, 0.8);
+  color: #e2e8f0;
+}
+
+body.weather-stormy .chart-shape-button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
 /* Dark mode for custom date picker */
 body.weather-stormy .custom-date-picker {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.5);
 }
 
 body.weather-stormy .date-input {

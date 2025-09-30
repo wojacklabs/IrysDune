@@ -13,7 +13,7 @@ import {
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap';
 import { Line, Chart as ChartReact } from 'react-chartjs-2';
 import { Download, Share2 } from 'lucide-react';
-import type { ChartData, ChartType } from '../types';
+import type { ChartData, ChartType, DataDisplayType, ChartShape } from '../types';
 import { captureAndShare, downloadImage, captureElement } from '../utils/captureUtils';
 import { getChartOptions } from '../utils/chartUtils';
 import { APP_PRESETS } from '../constants/appPresets';
@@ -41,6 +41,11 @@ interface ChartProps {
   hideTypeButtons?: boolean;
   hideActions?: boolean;
   captureContainerRef?: React.RefObject<HTMLElement | null>;
+  // New props for separated controls
+  dataDisplayType?: DataDisplayType;
+  chartShape?: ChartShape;
+  onDataDisplayTypeChange?: (type: DataDisplayType) => void;
+  onChartShapeChange?: (shape: ChartShape) => void;
 }
 
 const Chart: React.FC<ChartProps> = ({ 
@@ -51,7 +56,11 @@ const Chart: React.FC<ChartProps> = ({
   onTypeChange,
   hideTypeButtons = false,
   hideActions = false,
-  captureContainerRef
+  captureContainerRef,
+  dataDisplayType,
+  chartShape,
+  onDataDisplayTypeChange,
+  onChartShapeChange
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
@@ -322,17 +331,58 @@ const Chart: React.FC<ChartProps> = ({
       {(!hideTypeButtons || !hideActions) && (
         <div className="chart-header">
           {!hideTypeButtons && (
-            <div className="chart-types">
-              {chartTypeButtons.map(type => (
-                <button
-                  key={type}
-                  onClick={() => onTypeChange(type)}
-                  className={`chart-type-button ${chartType === type ? 'active' : ''}`}
-                >
-                  {type === 'line' ? 'Absolute' : type === 'stacked' ? 'Cumulative' : 'Treemap'}
-                </button>
-              ))}
-            </div>
+            <>
+              {/* Data Display Type Selector */}
+              {dataDisplayType && onDataDisplayTypeChange && (
+                <div className="chart-types">
+                  <button
+                    onClick={() => onDataDisplayTypeChange('absolute')}
+                    className={`chart-type-button ${dataDisplayType === 'absolute' ? 'active' : ''}`}
+                  >
+                    Absolute
+                  </button>
+                  <button
+                    onClick={() => onDataDisplayTypeChange('cumulative')}
+                    className={`chart-type-button ${dataDisplayType === 'cumulative' ? 'active' : ''}`}
+                  >
+                    Cumulative
+                  </button>
+                </div>
+              )}
+              
+              {/* Chart Shape Selector */}
+              {chartShape && onChartShapeChange && (
+                <div className="chart-shapes">
+                  <button
+                    onClick={() => onChartShapeChange('line')}
+                    className={`chart-shape-button ${chartShape === 'line' ? 'active' : ''}`}
+                  >
+                    📈 Line
+                  </button>
+                  <button
+                    onClick={() => onChartShapeChange('treemap')}
+                    className={`chart-shape-button ${chartShape === 'treemap' ? 'active' : ''}`}
+                  >
+                    ⬜ Treemap
+                  </button>
+                </div>
+              )}
+              
+              {/* Legacy buttons for backward compatibility */}
+              {!dataDisplayType && !chartShape && (
+                <div className="chart-types">
+                  {chartTypeButtons.map(type => (
+                    <button
+                      key={type}
+                      onClick={() => onTypeChange(type)}
+                      className={`chart-type-button ${chartType === type ? 'active' : ''}`}
+                    >
+                      {type === 'line' ? 'Absolute' : type === 'stacked' ? 'Cumulative' : 'Treemap'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
           {!hideActions && (
             <div className="chart-actions">
@@ -472,6 +522,8 @@ export default React.memo(Chart, (prevProps, nextProps) => {
     prevProps.shareText === nextProps.shareText &&
     prevProps.hideTypeButtons === nextProps.hideTypeButtons &&
     prevProps.hideActions === nextProps.hideActions &&
+    prevProps.dataDisplayType === nextProps.dataDisplayType &&
+    prevProps.chartShape === nextProps.chartShape &&
     JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
   );
 }); 

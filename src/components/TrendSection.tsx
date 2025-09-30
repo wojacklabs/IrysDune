@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw, ChartLine, Earth } from 'lucide-react';
-import type { ChartType, DataDisplayType, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
+import type { ChartType, DataDisplayType, ChartShape, QueryResult, LoadingProgress as LoadingProgressType } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
 import { ON_CHAIN_PRESETS } from '../services/onChainService';
 import { fetchAllProjectsData } from '../services/dataService';
@@ -46,13 +46,12 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   // Data display type (absolute/cumulative) and chart shape (line/treemap)
   const [dataDisplayType, setDataDisplayType] = useState<DataDisplayType>('cumulative');
   const [ecosystemDataDisplayType, setEcosystemDataDisplayType] = useState<DataDisplayType>('cumulative');
-  // TODO: Implement chart shape selection (line vs treemap) in future update
-  // const [chartShape, setChartShape] = useState<ChartShape>('line');
-  // const [ecosystemChartShape, setEcosystemChartShape] = useState<ChartShape>('line');
+  const [chartShape, setChartShape] = useState<ChartShape>('line');
+  const [ecosystemChartShape, setEcosystemChartShape] = useState<ChartShape>('line');
   
-  // For backward compatibility
-  const chartType = dataDisplayType === 'cumulative' ? 'stacked' : 'line' as ChartType;
-  const ecosystemChartType = ecosystemDataDisplayType === 'cumulative' ? 'stacked' : 'line' as ChartType;
+  // Combine data display type and chart shape to get ChartType
+  const chartType = chartShape === 'treemap' ? 'treemap' : (dataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
+  const ecosystemChartType = ecosystemChartShape === 'treemap' ? 'treemap' : (ecosystemDataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
   const [wholeTimePeriod, setWholeTimePeriod] = useState<TimePeriod>('30d');
   const [individualTimePeriod, setIndividualTimePeriod] = useState<TimePeriod>('30d');
   const [wholeCustomDateRange, setWholeCustomDateRange] = useState<DateRange>({ 
@@ -385,10 +384,13 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               } else if (type === 'line') {
                 setEcosystemDataDisplayType('absolute');
               } else if (type === 'treemap') {
-                // TODO: Handle treemap shape selection
-                // setEcosystemChartShape('treemap');
+                setEcosystemChartShape('treemap');
               }
             }}
+            dataDisplayType={ecosystemDataDisplayType}
+            chartShape={ecosystemChartShape}
+            onDataDisplayTypeChange={setEcosystemDataDisplayType}
+            onChartShapeChange={setEcosystemChartShape}
             captureContainerRef={wholeEcosystemCardRef}
           />
         ) : (
@@ -512,10 +514,13 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
                 } else if (type === 'line') {
                   setDataDisplayType('absolute');
                 } else if (type === 'treemap') {
-                  // TODO: Handle treemap shape selection
-                  // setChartShape('treemap');
+                  setChartShape('treemap');
                 }
               }}
+              dataDisplayType={dataDisplayType}
+              chartShape={chartShape}
+              onDataDisplayTypeChange={setDataDisplayType}
+              onChartShapeChange={setChartShape}
               captureContainerRef={appsEcosystemCardRef}
             />
           ) : null
