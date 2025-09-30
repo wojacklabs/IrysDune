@@ -389,9 +389,19 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             }}
             dataDisplayType={ecosystemDataDisplayType}
             chartShape={ecosystemChartShape}
-            onDataDisplayTypeChange={setEcosystemDataDisplayType}
-            onChartShapeChange={setEcosystemChartShape}
+            onDataDisplayTypeChange={(type) => {
+              setEcosystemDataDisplayType(type);
+              // Reset to line chart when selecting absolute/cumulative
+              if (ecosystemChartShape === 'treemap') {
+                setEcosystemChartShape('line');
+              }
+            }}
+            onChartShapeChange={(shape) => {
+              setEcosystemChartShape(shape);
+              // Keep current data display type when toggling treemap
+            }}
             captureContainerRef={wholeEcosystemCardRef}
+            hideTreemap={true}
           />
         ) : (
           <div className="empty-state">
@@ -519,8 +529,17 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               }}
               dataDisplayType={dataDisplayType}
               chartShape={chartShape}
-              onDataDisplayTypeChange={setDataDisplayType}
-              onChartShapeChange={setChartShape}
+              onDataDisplayTypeChange={(type) => {
+                setDataDisplayType(type);
+                // Reset to line chart when selecting absolute/cumulative
+                if (chartShape === 'treemap') {
+                  setChartShape('line');
+                }
+              }}
+              onChartShapeChange={(shape) => {
+                setChartShape(shape);
+                // Keep current data display type when toggling treemap
+              }}
               captureContainerRef={appsEcosystemCardRef}
             />
           ) : null

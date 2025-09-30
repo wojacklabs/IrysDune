@@ -21,7 +21,10 @@ function App() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [trendData, setTrendData] = useState<{ [key: string]: QueryResult[] }>({});
-  const [weatherState, setWeatherState] = useState<'clear' | 'stormy'>('clear');
+  const [themeState, setThemeState] = useState<'clear' | 'stormy' | 'rainbow'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved as 'clear' | 'stormy' | 'rainbow') || 'clear';
+  });
   const [fullscreenBackground, setFullscreenBackground] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,14 +39,21 @@ function App() {
     localStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
 
-  // Apply weather state class to body
+  // Apply theme class to body
   useEffect(() => {
-    if (weatherState === 'stormy') {
+    // Remove all theme classes
+    document.body.classList.remove('weather-stormy', 'theme-rainbow');
+    
+    // Add appropriate theme class
+    if (themeState === 'stormy') {
       document.body.classList.add('weather-stormy');
-    } else {
-      document.body.classList.remove('weather-stormy');
+    } else if (themeState === 'rainbow') {
+      document.body.classList.add('theme-rainbow');
     }
-  }, [weatherState]);
+    
+    // Save to localStorage
+    localStorage.setItem('theme', themeState);
+  }, [themeState]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -152,7 +162,7 @@ function App() {
   return (
     <div className="app">
       {/* Three.js cloud background */}
-      <CloudBackground weatherState={weatherState} />
+      <CloudBackground weatherState={themeState === 'stormy' ? 'stormy' : 'clear'} themeState={themeState} />
 
       {/* Header */}
       <header className="header">
@@ -367,16 +377,16 @@ function App() {
                   <div className="dropdown-divider"></div>
                   
                   <div className="dropdown-item">
-                    <span>DarkMode</span>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={weatherState === 'stormy'}
-                        onChange={(e) => setWeatherState(e.target.checked ? 'stormy' : 'clear')}
-                      />
-                      <span className="toggle-slider">
-                      </span>
-                    </label>
+                    <span>Theme</span>
+                    <select 
+                      className="theme-select"
+                      value={themeState}
+                      onChange={(e) => setThemeState(e.target.value as 'clear' | 'stormy' | 'rainbow')}
+                    >
+                      <option value="clear">☀️ Clear Sky</option>
+                      <option value="stormy">🌩️ Dark Storm</option>
+                      <option value="rainbow">🌀 Wormhole</option>
+                    </select>
                   </div>
                   
                   <div className="dropdown-item">

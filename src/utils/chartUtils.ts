@@ -177,10 +177,11 @@ export function filterDataByPeriod(
           ? timestamp + (24 * 60 * 60 * 1000) // Add 24 hours to include full day
           : timestamp;
         
-        // Calculate cumulative total up to this point
+        // Calculate cumulative total within the selected period only
         runningTotal = 0;
         sortedResults.forEach(result => {
-          if (result.timestamp <= effectiveTimestamp) {
+          // Only count data within the selected period
+          if (result.timestamp >= periodTimestamps[0] && result.timestamp <= effectiveTimestamp) {
             runningTotal += result.count;
           }
         });
@@ -446,13 +447,16 @@ export function generateChartData(
     queries.forEach(query => {
       const queryResults = data[query.id] || [];
       
-      // Use SAME calculation method as regular charts
-      const dataPoints = timestamps.map(timestamp => {
+      // For treemap, always use cumulative data within the selected time range
+      let cumulativeCount = 0;
+      timestamps.forEach(timestamp => {
         const result = queryResults.find(r => r.timestamp === timestamp);
-        return result ? result.count : 0;
+        if (result) {
+          cumulativeCount += result.count;
+        }
       });
       
-      const totalCount = dataPoints.reduce((sum, count) => sum + count, 0);
+      const totalCount = cumulativeCount;
       totalTransactions += totalCount;
       
       if (totalCount > 0) {
@@ -468,9 +472,30 @@ export function generateChartData(
       value: value,
       color: projectColors[index]
     })).sort((a, b) => b.value - a.value); // Sort descending by value
+    
+    // Debug log
+    console.log('[Treemap] Generated data:', sortedData);
+    console.log('[Treemap] Total projects:', sortedData.length);
+    console.log('[Treemap] Max value:', sortedData[0]?.value);
+    console.log('[Treemap] Min value:', sortedData[sortedData.length - 1]?.value);
+    
+    // Limit to top 15 projects for better visibility
+    const topProjects = sortedData.slice(0, 15);
+    const othersValue = sortedData.slice(15).reduce((sum, item) => sum + item.value, 0);
+    
+    // Add "Others" category if there are more projects
+    if (othersValue > 0) {
+      topProjects.push({
+        name: 'Others',
+        value: othersValue,
+        color: '#94a3b8'
+      });
+    }
+    
+    console.log('[Treemap] Showing top projects:', topProjects);
 
     // If no data, return empty chart structure for normal charts
-    if (treeValues.length === 0 || totalTransactions === 0) {
+    if (topProjects.length === 0 || totalTransactions === 0) {
       const now = Date.now();
       const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now];
       const emptyLabels = emptyTimestamps.map(formatDate);
@@ -487,16 +512,24 @@ export function generateChartData(
     }
 
     // Treemap structure using tree/key/groups format
+    // Ensure minimum value for visibility - use 2% of max for better visibility
+    const maxValue = Math.max(...topProjects.map(d => d.value));
+    const minValue = maxValue * 0.02; // 2% of max value
+    const adjustedData = topProjects.map(item => ({
+      ...item,
+      adjustedValue: Math.max(item.value, minValue)
+    }));
+    
     return {
       labels: [],
       datasets: [{
         label: 'Projects Activity',
         data: [], // Not used for treemap
-        tree: sortedData.map(item => item.value), // Simple number array
+        tree: adjustedData.map(item => item.adjustedValue), // Use adjusted values for display
         backgroundColor: (ctx: any) => {
           const index = ctx.dataIndex;
-          if (typeof index === 'number' && index < sortedData.length) {
-            const color = sortedData[index].color;
+          if (typeof index === 'number' && index < topProjects.length) {
+            const color = topProjects[index].color;
             return color;
           }
           return '#0ea5e9';
@@ -510,23 +543,31 @@ export function generateChartData(
           position: 'middle',
           color: (ctx: any) => {
             const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < sortedData.length) {
-              const backgroundColor = sortedData[index].color;
+            if (typeof index === 'number' && index < topProjects.length) {
+              const backgroundColor = topProjects[index].color;
               const textColor = getContrastTextColor(backgroundColor);
               return textColor;
             }
             return 'white';
           },
           font: {
-            size: 12,
+            size: (ctx: any) => {
+              // Dynamic font size based on rectangle size
+              const area = ctx.raw._data?.area || 0;
+              const totalArea = ctx.chart.width * ctx.chart.height;
+              const percentage = area / totalArea;
+              
+              // Minimum font size of 10, maximum of 16
+              return Math.max(10, Math.min(16, Math.sqrt(percentage * 1000)));
+            },
             weight: 'bold'
           },
           // Add text outline for better visibility
           backgroundColor: (ctx: any) => {
             // Add semi-transparent background behind text
             const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < sortedData.length) {
-              const bgColor = sortedData[index].color;
+            if (typeof index === 'number' && index < topProjects.length) {
+              const bgColor = topProjects[index].color;
               const textColor = getContrastTextColor(bgColor);
               // Return opposite color with transparency for outline effect
               return textColor === 'white' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
@@ -536,8 +577,9 @@ export function generateChartData(
           padding: 4,
           formatter: (ctx: any) => {
             const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < sortedData.length) {
-              const item = sortedData[index];
+            if (typeof index === 'number' && index < topProjects.length) {
+              const item = topProjects[index];
+              // Show actual value, not adjusted value
               return [item.name, item.value.toLocaleString()];
             }
             return '';

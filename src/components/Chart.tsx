@@ -46,6 +46,7 @@ interface ChartProps {
   chartShape?: ChartShape;
   onDataDisplayTypeChange?: (type: DataDisplayType) => void;
   onChartShapeChange?: (shape: ChartShape) => void;
+  hideTreemap?: boolean;
 }
 
 const Chart: React.FC<ChartProps> = ({ 
@@ -53,14 +54,15 @@ const Chart: React.FC<ChartProps> = ({
   chartType, 
   title, 
   shareText, 
-  onTypeChange,
+  onTypeChange, 
   hideTypeButtons = false,
   hideActions = false,
   captureContainerRef,
   dataDisplayType,
   chartShape,
   onDataDisplayTypeChange,
-  onChartShapeChange
+  onChartShapeChange,
+  hideTreemap = false
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
@@ -331,40 +333,30 @@ const Chart: React.FC<ChartProps> = ({
       {(!hideTypeButtons || !hideActions) && (
         <div className="chart-header">
           {!hideTypeButtons && (
-            <>
-              {/* Data Display Type Selector */}
-              {dataDisplayType && onDataDisplayTypeChange && (
+            <div className="chart-controls">
+              {/* Chart Type Controls */}
+              {dataDisplayType && onDataDisplayTypeChange && chartShape && onChartShapeChange && (
                 <div className="chart-types">
                   <button
                     onClick={() => onDataDisplayTypeChange('absolute')}
-                    className={`chart-type-button ${dataDisplayType === 'absolute' ? 'active' : ''}`}
+                    className={`chart-type-button ${dataDisplayType === 'absolute' && chartShape !== 'treemap' ? 'active' : ''}`}
                   >
                     Absolute
                   </button>
                   <button
                     onClick={() => onDataDisplayTypeChange('cumulative')}
-                    className={`chart-type-button ${dataDisplayType === 'cumulative' ? 'active' : ''}`}
+                    className={`chart-type-button ${dataDisplayType === 'cumulative' && chartShape !== 'treemap' ? 'active' : ''}`}
                   >
                     Cumulative
                   </button>
-                </div>
-              )}
-              
-              {/* Chart Shape Selector */}
-              {chartShape && onChartShapeChange && (
-                <div className="chart-shapes">
-                  <button
-                    onClick={() => onChartShapeChange('line')}
-                    className={`chart-shape-button ${chartShape === 'line' ? 'active' : ''}`}
-                  >
-                    📈 Line
-                  </button>
-                  <button
-                    onClick={() => onChartShapeChange('treemap')}
-                    className={`chart-shape-button ${chartShape === 'treemap' ? 'active' : ''}`}
-                  >
-                    ⬜ Treemap
-                  </button>
+                  {!hideTreemap && (
+                    <button
+                      onClick={() => onChartShapeChange(chartShape === 'treemap' ? 'line' : 'treemap')}
+                      className={`chart-type-button ${chartShape === 'treemap' ? 'active' : ''}`}
+                    >
+                      Treemap
+                    </button>
+                  )}
                 </div>
               )}
               
@@ -382,7 +374,7 @@ const Chart: React.FC<ChartProps> = ({
                   ))}
                 </div>
               )}
-            </>
+            </div>
           )}
           {!hideActions && (
             <div className="chart-actions">
