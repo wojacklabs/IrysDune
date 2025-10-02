@@ -18,7 +18,8 @@ const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'irys-tarot-card': 'AtzCU6spPnjKHUXdwFnANZWiNFmvoYEaCYrHpRCrhBxN',
   'irys-forum': '9NBhQtdPu7uCkQXov9mfWqtYusJ11ksyZpo6cn8sbPM2',
   'irys-3d': '5xzH3xoCW6PaCjzdpYHQUj8y15rZZwQ1pkwxeeLEWUcG',
-  'irys-note': '2PKcFQ15NK3sLgp5XN5ijosFQPh6nbgdypFH9vLwzGgh'
+  'irys-note': '2PKcFQ15NK3sLgp5XN5ijosFQPh6nbgdypFH9vLwzGgh',
+  'irys-vibe-coders-hub': 'AUQHGoMHyVgr2eQT46kTRLLRs63K3DzMFffatbsbvLWN'
 };
 
 // Data structure from the actual server data
