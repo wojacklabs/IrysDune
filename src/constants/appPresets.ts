@@ -14,6 +14,7 @@ import irysRealms from '../assets/irysrealms.jpg';
 import irysSlotIcon from '../assets/irysslot.png';
 import irys3dIcon from '../assets/irys-3d.webp';
 import irysNoteIcon from '../assets/irys-note.png';
+import irysVibeCodersHubIcon from '../assets/irysvibecodershub.jpg';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -152,6 +153,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#06b6d4',
     icon: irysNoteIcon
+  },
+  {
+    id: 'irys-vibe-coders-hub',
+    name: 'Irys Vibe Coders Hub',
+    tags: [
+      { name: 'App-Name', value: 'IrysVibeCodersHub' }
+    ],
+    color: '#f97316',
+    icon: irysVibeCodersHubIcon
   },
 ];
 
