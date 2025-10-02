@@ -115,8 +115,17 @@ export async function fetchAllProjectsData(progressCallback?: (progress: Loading
     try {
       console.log(`[DataService] Fetching data for project: ${projectId}`);
       
-      const projectData = await fetchProjectData(projectId);
-      results[projectId] = projectData;
+      const mutableData = await fetchMutableData(projectId);
+      if (mutableData) {
+        // Handle special case where API returns different projectId
+        // For irys-vibe-coders-hub, API returns "irysvibecodershub"
+        if (projectId === 'irys-vibe-coders-hub' && mutableData.projectId === 'irysvibecodershub') {
+          console.log(`[DataService] Mapping API projectId "${mutableData.projectId}" to local projectId "${projectId}"`);
+        }
+        results[projectId] = mutableData.data;
+      } else {
+        results[projectId] = [];
+      }
       
       completed++;
       console.log(`[DataService] Completed ${projectId} (${completed}/${projectIds.length})`);
