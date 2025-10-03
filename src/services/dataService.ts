@@ -4,7 +4,7 @@ import type { QueryResult, LoadingProgress } from '../types';
 const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'cm-note': 'BPJkksQCWERREdP1ftVAVQ38z429W5q8iKZ3oRNEsWZQ',
   'githirys': '9unbTk3ykt7aPiq8gKEj6Z9BDUUCLpufSNfpEnXiUnpJ',
-  'irys-names': 'F46W6UM5cL2eXvM3uFvttuAdsBf53cu97S6TAn3vDWz1',
+  'irys-names': 'EyVYXjojk7fygA56Gu3Ndcj6ueYqH1dXCfVBwRU52fgF',
   'bridgbox': 'DhW8NTY9BHy6w4JaBNDtycG4XFaAgk287D6fxnxhkDkd',
   'irysdune': '9eCDDCox81c6dsjjgcZ7bvs6Yf7VNfBVGeS7AevvSR7R',
   'irys-proof-board': 'FeihLByeu1DukYLdwpzwyV1D4MRcU47j6oRQjXHvubB5',
