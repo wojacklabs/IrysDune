@@ -257,6 +257,22 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
       projectIcon: APP_PRESETS.find(p => p.id === 'irys-pinter')?.icon || null,
       tweetUrl: 'https://gateway.irys.xyz/mutable/3rpucfSC6JVWhbkscVkFP6KGKzaaWiJFsszRJNfDU5To',
       tweetId: 'irys-pinter-mutable' // Using mutable address as ID
+    },
+    // Seedback
+    {
+      projectId: 'seedback',
+      projectName: 'Seedback',
+      projectIcon: APP_PRESETS.find(p => p.id === 'seedback')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/8B4SKBJfamH5WT4eGLtQDYJYmbX9ihenNdgmAAtsz5mo',
+      tweetId: 'seedback-mutable' // Using mutable address as ID
+    },
+    // Irys Drive
+    {
+      projectId: 'irys-drive',
+      projectName: 'Irys Drive',
+      projectIcon: APP_PRESETS.find(p => p.id === 'irys-drive')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/9PnF5Z8AuWbbQKV6wL7EKQLquNhTvDv6pr6gYzXbfUxm',
+      tweetId: 'irys-drive-mutable' // Using mutable address as ID
     }
 ];
 

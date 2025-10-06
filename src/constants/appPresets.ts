@@ -16,6 +16,8 @@ import irys3dIcon from '../assets/irys-3d.webp';
 import irysNoteIcon from '../assets/irys-note.png';
 import irysVibeCodersHubIcon from '../assets/irysvibecodershub.jpg';
 import irysPinterIcon from '../assets/irys-pinter.png';
+import seedbackIcon from '../assets/seed-back.jpg';
+import irysDriveIcon from '../assets/irys-drive.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -172,6 +174,24 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#40E0D0',
     icon: irysPinterIcon
+  },
+  {
+    id: 'seedback',
+    name: 'Seedback',
+    tags: [
+      { name: 'App-Name', value: 'Seedback' }
+    ],
+    color: '#22c55e',
+    icon: seedbackIcon
+  },
+  {
+    id: 'irys-drive',
+    name: 'Irys Drive',
+    tags: [
+      { name: 'App-Name', value: 'IrysDrive' }
+    ],
+    color: '#0ea5e9',
+    icon: irysDriveIcon
   },
 ];
 

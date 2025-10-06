@@ -215,6 +215,18 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'dev',
     projectId: 'irys-vibe-coders-hub'
   },
+  // Seedback
+  {
+    tags: [{ name: 'App-Name', value: 'Seedback' }],
+    activityId: 'storage',
+    projectId: 'seedback'
+  },
+  // Irys Drive
+  {
+    tags: [{ name: 'App-Name', value: 'IrysDrive' }],
+    activityId: 'storage',
+    projectId: 'irys-drive'
+  },
 ];
 
 // 온체인 이벤트를 activity로 매핑
