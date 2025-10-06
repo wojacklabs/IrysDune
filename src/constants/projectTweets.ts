@@ -249,6 +249,14 @@ export const PROJECT_TWEETS: ProjectTweet[] = [
       projectIcon: APP_PRESETS.find(p => p.id === 'irys-vibe-coders-hub')?.icon || null,
       tweetUrl: 'https://gateway.irys.xyz/mutable/AUQHGoMHyVgr2eQT46kTRLLRs63K3DzMFffatbsbvLWN',
       tweetId: 'irys-vibe-coders-hub-mutable' // Using mutable address as ID
+    },
+    // Irys Pinter
+    {
+      projectId: 'irys-pinter',
+      projectName: 'Irys Pinter',
+      projectIcon: APP_PRESETS.find(p => p.id === 'irys-pinter')?.icon || null,
+      tweetUrl: 'https://gateway.irys.xyz/mutable/3rpucfSC6JVWhbkscVkFP6KGKzaaWiJFsszRJNfDU5To',
+      tweetId: 'irys-pinter-mutable' // Using mutable address as ID
     }
 ];
 

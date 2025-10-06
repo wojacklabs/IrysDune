@@ -15,6 +15,7 @@ import irysSlotIcon from '../assets/irysslot.png';
 import irys3dIcon from '../assets/irys-3d.webp';
 import irysNoteIcon from '../assets/irys-note.png';
 import irysVibeCodersHubIcon from '../assets/irysvibecodershub.jpg';
+import irysPinterIcon from '../assets/irys-pinter.png';
 
 export const APP_PRESETS: AppPreset[] = [
   {
@@ -162,6 +163,15 @@ export const APP_PRESETS: AppPreset[] = [
     ],
     color: '#f97316',
     icon: irysVibeCodersHubIcon
+  },
+  {
+    id: 'irys-pinter',
+    name: 'Irys Pinter',
+    tags: [
+      { name: 'App-Name', value: 'Irys-Pinter' }
+    ],
+    color: '#40E0D0',
+    icon: irysPinterIcon
   },
 ];
 

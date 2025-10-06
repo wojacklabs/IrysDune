@@ -168,6 +168,12 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'gaming',
     projectId: 'irys-memory'
   },
+  // Irys Pinter
+  {
+    tags: [{ name: 'App-Name', value: 'Irys-Pinter' }],
+    activityId: 'social',
+    projectId: 'irys-pinter'
+  },
 ];
 
 // 온체인 이벤트를 activity로 매핑
