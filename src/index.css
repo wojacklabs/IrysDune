@@ -639,6 +639,10 @@ body.weather-stormy .cache-indicator {
   background: #334155;
 }
 
+body.weather-stormy .pagination-controls {
+  color: #94a3b8;
+}
+
 body.weather-stormy .source-badge.storage-badge {
   background: #1e40af;
 }
@@ -1201,8 +1205,64 @@ body.weather-stormy .pagination-btn {
 
 body.weather-stormy .endpoint-tag {
   background-color: #334155;
+  color: #e2e8f0;
+  border: 1px solid #475569;
 }
-  
+
+body.weather-stormy .event-tag {
+  background-color: #1e3a8a;
+  color: #dbeafe;
+  border: 1px solid #3b82f6;
+}
+
+body.weather-stormy .tx-id {
+  color: #94a3b8;
+}
+
+body.weather-stormy .contract-name {
+  color: #e2e8f0;
+}
+
+body.weather-stormy .activity-name {
+  color: #cbd5e1;
+}
+
+body.weather-stormy .network-badge {
+  background-color: #334155;
+  color: #cbd5e1;
+  border: 1px solid #475569;
+}
+
+body.weather-stormy .my-history-section .contract-name {
+  color: #e2e8f0;
+}
+
+body.weather-stormy .my-history-section .activity-name {
+  color: #cbd5e1;
+}
+
+body.weather-stormy .my-history-section .tx-id {
+  color: #94a3b8;
+}
+
+body.weather-stormy .project-icon-placeholder {
+  background: #334155;
+  color: #94a3b8;
+  border: 1px solid #475569;
+}
+
+body.weather-stormy .summary-item {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+body.weather-stormy .summary-label {
+  color: #94a3b8;
+}
+
+body.weather-stormy .summary-value {
+  color: #e2e8f0;
+}
 
 body.weather-stormy .pagination-btn:hover:not(:disabled) {
   background: #475569;

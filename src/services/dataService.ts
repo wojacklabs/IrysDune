@@ -12,6 +12,7 @@ const PROJECT_MUTABLE_ADDRESSES: { [key: string]: string } = {
   'irys-crush': '5eFGjKARxZ9eQ2krUnGK3M1FjcRabH69jFfzFz3ckV8q',
   'irys-memory': '9um9YHT8cdJmHPXYVtxMDLSY1xzs4eXiX5df8Mc4dyxL',
   'irys-pfp': 'FwTTi9Sk5pv4e4UbPBNUjWHt94F5Y1XWhPbZuBHe1BQ9',
+  'irys-pinter': '3rpucfSC6JVWhbkscVkFP6KGKzaaWiJFsszRJNfDU5To',
   'play-hirys': '78n3sD6YFSADU3tff2KbBwGu6BhqipYEr93fEPbubaap',
   'irys-realms': '3HM28iD2k13qCw1yyV5stqZy1yD3jCEgeg9RsbMuVrit',
   'irys-slot': 'B3aag66tJuhNmsqh3LPVj4kM1sGx9ZnzZu9Cm2ZbEdD9',

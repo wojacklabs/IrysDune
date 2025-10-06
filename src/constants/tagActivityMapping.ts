@@ -174,6 +174,47 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'social',
     projectId: 'irys-pinter'
   },
+  // IrysCrush
+  {
+    tags: [{ name: 'App', value: 'IrysCrush' }],
+    activityId: 'gaming',
+    projectId: 'irys-crush'
+  },
+  // IrysSlot
+  {
+    tags: [{ name: 'App', value: 'IrysSlot' }],
+    activityId: 'gaming',
+    projectId: 'irys-slot'
+  },
+  // PlayHirys
+  {
+    tags: [{ name: 'App', value: 'PlayHirys' }],
+    activityId: 'gaming',
+    projectId: 'play-hirys'
+  },
+  // Irys3D
+  {
+    tags: [{ name: 'File-Type', value: 'image/jpeg' }],
+    activityId: 'storage',
+    projectId: 'irys-3d'
+  },
+  {
+    tags: [{ name: 'File-Type', value: 'image/png' }],
+    activityId: 'storage',
+    projectId: 'irys-3d'
+  },
+  // IrysNote
+  {
+    tags: [{ name: 'app', value: 'IrysNote' }],
+    activityId: 'social',
+    projectId: 'irys-note'
+  },
+  // Irys Vibe Coders Hub
+  {
+    tags: [{ name: 'App-Name', value: 'IrysVibeCodersHub' }],
+    activityId: 'dev',
+    projectId: 'irys-vibe-coders-hub'
+  },
 ];
 
 // 온체인 이벤트를 activity로 매핑
