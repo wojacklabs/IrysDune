@@ -431,14 +431,8 @@ export function generateChartData(
 
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
-    // Get all unique timestamps and sort them (same as regular charts)
-    const allTimestamps = new Set<number>();
-    Object.values(data).forEach(results => {
-      results.forEach(result => allTimestamps.add(result.timestamp));
-    });
-    const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
-    
-    // Generate treemap data for each project using SAME method as regular charts
+    // For treemap, use the last cumulative value from the filtered data
+    // This ensures consistency with the cumulative chart
     const treeValues: number[] = [];
     const projectNames: string[] = [];
     const projectColors: string[] = [];
@@ -447,22 +441,20 @@ export function generateChartData(
     queries.forEach(query => {
       const queryResults = data[query.id] || [];
       
-      // For treemap, always use cumulative data within the selected time range
-      let cumulativeCount = 0;
-      timestamps.forEach(timestamp => {
-        const result = queryResults.find(r => r.timestamp === timestamp);
-        if (result) {
-          cumulativeCount += result.count;
+      // For treemap, get the last value from the filtered cumulative data
+      // The data passed here is already filtered by period and contains cumulative values
+      if (queryResults.length > 0) {
+        // Get the last result which contains the final cumulative value for this period
+        const lastResult = queryResults[queryResults.length - 1];
+        const totalCount = lastResult.count;
+        
+        totalTransactions += totalCount;
+        
+        if (totalCount > 0) {
+          treeValues.push(totalCount);
+          projectNames.push(query.name);
+          projectColors.push(query.color);
         }
-      });
-      
-      const totalCount = cumulativeCount;
-      totalTransactions += totalCount;
-      
-      if (totalCount > 0) {
-        treeValues.push(totalCount);
-        projectNames.push(query.name);
-        projectColors.push(query.color);
       }
     });
     
