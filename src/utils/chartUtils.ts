@@ -1118,6 +1118,8 @@ export function generateCategoryGrowthData(
       });
     }
     
+    // For cumulative (stacked) chart, we need to add the cumulative values directly
+    // For line chart, we need the individual counts
     results.forEach(result => {
       if (categoryData[categoryId][result.timestamp] !== undefined) {
         categoryData[categoryId][result.timestamp] += result.count;
@@ -1132,17 +1134,11 @@ export function generateCategoryGrowthData(
       const data = timestamps.map(timestamp => categoryData[categoryId][timestamp] || 0);
       
       if (chartType === 'stacked') {
-        // For stacked chart, make data cumulative
-        let cumulative = 0;
-        const cumulativeData = data.map(count => {
-          cumulative += count;
-          return cumulative;
-        });
-        
-        
+        // For stacked chart, the data is already cumulative from each project
+        // Just use it directly
         return {
           label: category.name,
-          data: cumulativeData,
+          data: data,
           backgroundColor: category.color + '80', // Add transparency
           borderColor: category.color,
           borderWidth: 2,
