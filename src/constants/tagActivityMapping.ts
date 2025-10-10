@@ -17,19 +17,19 @@ export interface TagActivityMapping {
 
 // Activity category definitions
 export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
-  'social': {
-    id: 'social',
-    name: 'Social',
+  'community': {
+    id: 'community',
+    name: 'Community',
     color: '#d4a574',
-    icon: '💬',
-    description: 'Social media and communication'
+    icon: '👥',
+    description: 'Social and community applications'
   },
-  'dev': {
-    id: 'dev',
-    name: 'Dev',
-    color: '#333333',
-    icon: '💻',
-    description: 'Code repositories and development'
+  'productivity': {
+    id: 'productivity',
+    name: 'Productivity',
+    color: '#10b981',
+    icon: '⚡',
+    description: 'Productivity and utility tools'
   },
   'identity': {
     id: 'identity',
@@ -38,40 +38,19 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
     icon: '🆔',
     description: 'Identity and naming services'
   },
-  'email': {
-    id: 'email',
-    name: 'Email',
-    color: '#ff3142',
-    icon: '📧',
-    description: 'Email and messaging'
-  },
-  'analytics': {
-    id: 'analytics',
-    name: 'Analytics',
-    color: '#0284c7',
-    icon: '📊',
-    description: 'Data analytics and visualization'
-  },
-  'proof': {
-    id: 'proof',
-    name: 'Proof',
-    color: '#1affe8',
-    icon: '✅',
-    description: 'Proof and verification'
-  },
-  'gaming': {
-    id: 'gaming',
-    name: 'Gaming',
+  'game': {
+    id: 'game',
+    name: 'Game',
     color: '#ef4444',
     icon: '🎮',
     description: 'Gaming and entertainment'
   },
-  'storage': {
-    id: 'storage',
-    name: 'Storage',
-    color: '#10b981',
-    icon: '💾',
-    description: 'File storage and management'
+  'data': {
+    id: 'data',
+    name: 'Data',
+    color: '#0284c7',
+    icon: '📊',
+    description: 'Data analytics and storage'
   },
   'other': {
     id: 'other',
@@ -79,152 +58,153 @@ export const ACTIVITY_CATEGORIES: { [key: string]: ActivityCategory } = {
     color: '#6b7280',
     icon: '📦',
     description: 'Uncategorized activities'
-  },
-  'faucet': {
-    id: 'faucet',
-    name: 'Faucet',
-    color: '#9333ea',
-    icon: '💧',
-    description: 'Faucet token distribution'
   }
 };
 
 // Tag combination to activity category mapping
 export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
+  // Community Category
   // CM Note
   {
     tags: [{ name: 'App-Name', value: 'irys-cm-note-unified' }],
-    activityId: 'social',
+    activityId: 'community',
     projectId: 'cm-note'
   },
+  // Irys Realms
   {
     tags: [{ name: 'App-Name', value: 'Irys Realms' }],
-    activityId: 'gaming',
+    activityId: 'community',
     projectId: 'irys-realms'
   },
+  // Productivity Category
+  // GitHirys
   {
     tags: [{ name: 'App-Name', value: 'irys-git' }],
-    activityId: 'dev',
+    activityId: 'productivity',
     projectId: 'githirys'
   },
   {
     tags: [{ name: 'App-Name', value: 'irys-git-nickname' }],
-    activityId: 'dev',
+    activityId: 'productivity',
     projectId: 'githirys'
   },
+  // Identity Category
   // Irys Name Service
   {
     tags: [{ name: 'App-Name', value: 'Irys-Names' }],
     activityId: 'identity',
     projectId: 'irys-names'
   },
-    {
-      tags: [{ name: 'IrysPFP-Data-Type', value: 'image' }],
-      activityId: 'identity',
-      projectId: 'irys-pfp'
-    },
+  // Irys PFP
+  {
+    tags: [{ name: 'IrysPFP-Data-Type', value: 'image' }],
+    activityId: 'community',
+    projectId: 'irys-pfp'
+  },
   // BridgeBox
   {
     tags: [{ name: 'App-Name', value: 'Bridgbox-Email-Lit' }],
-    activityId: 'email',
+    activityId: 'productivity',
     projectId: 'bridgbox'
   },
+  // Data Category
   // IrysDune
   {
     tags: [{ name: 'App-Name', value: 'irys-dune-server' }],
-    activityId: 'analytics',
+    activityId: 'data',
     projectId: 'irysdune'
   },
   {
     tags: [{ name: 'App-Name', value: 'IrysDune' }],
-    activityId: 'analytics',
+    activityId: 'data',
     projectId: 'irysdune'
   },
   {
     tags: [{ name: 'App-Name', value: 'IrysDune-Badge-NFT' }],
-    activityId: 'analytics',
+    activityId: 'data',
     projectId: 'irysdune'
   },
   {
     tags: [{ name: 'App-Name', value: 'IrysDune-Event-NFT' }],
-    activityId: 'analytics',
+    activityId: 'data',
     projectId: 'irysdune'
   },
   // IrysProof Board
   {
     tags: [{ name: 'App', value: 'IRYS Proofboard' }],
-    activityId: 'proof',
+    activityId: 'productivity',
     projectId: 'irys-proof-board'
   },
+  // Game Category
   // IrysFlip
   {
     tags: [{ name: 'App-Name', value: 'IrysFlip' }],
-    activityId: 'gaming',
+    activityId: 'game',
     projectId: 'irysflip'
   },
   // IrysMemory
   {
     tags: [{ name: 'App-Name', value: 'IrysMemoryGameByPrmak' }],
-    activityId: 'gaming',
+    activityId: 'game',
     projectId: 'irys-memory'
   },
   // Irys Pinter
   {
     tags: [{ name: 'App-Name', value: 'Irys-Pinter' }],
-    activityId: 'social',
+    activityId: 'productivity',
     projectId: 'irys-pinter'
   },
   // IrysCrush
   {
     tags: [{ name: 'App', value: 'IrysCrush' }],
-    activityId: 'gaming',
+    activityId: 'game',
     projectId: 'irys-crush'
   },
   // IrysSlot
   {
     tags: [{ name: 'App', value: 'IrysSlot' }],
-    activityId: 'gaming',
+    activityId: 'game',
     projectId: 'irys-slot'
   },
   // PlayHirys
   {
     tags: [{ name: 'App', value: 'PlayHirys' }],
-    activityId: 'gaming',
+    activityId: 'game',
     projectId: 'play-hirys'
   },
   // Irys3D
   {
     tags: [{ name: 'File-Type', value: 'image/jpeg' }],
-    activityId: 'storage',
+    activityId: 'data',
     projectId: 'irys-3d'
   },
   {
     tags: [{ name: 'File-Type', value: 'image/png' }],
-    activityId: 'storage',
+    activityId: 'data',
     projectId: 'irys-3d'
   },
   // IrysNote
   {
     tags: [{ name: 'app', value: 'IrysNote' }],
-    activityId: 'social',
+    activityId: 'productivity',
     projectId: 'irys-note'
   },
   // Irys Vibe Coders Hub
   {
     tags: [{ name: 'App-Name', value: 'IrysVibeCodersHub' }],
-    activityId: 'dev',
+    activityId: 'community',
     projectId: 'irys-vibe-coders-hub'
   },
   // Seedback
   {
     tags: [{ name: 'App-Name', value: 'Seedback' }],
-    activityId: 'storage',
+    activityId: 'community',
     projectId: 'seedback'
   },
   // Irys Drive
   {
     tags: [{ name: 'App-Name', value: 'IrysDrive' }],
-    activityId: 'storage',
+    activityId: 'productivity',
     projectId: 'irys-drive'
   },
 ];

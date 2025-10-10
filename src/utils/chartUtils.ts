@@ -999,6 +999,156 @@ export function calculateTotalActivity(data: { [key: string]: QueryResult[] }): 
   return total;
 }
 
+export function generateCategoryGrowthData(
+  data: { [key: string]: QueryResult[] },
+  chartType: ChartType = 'stacked'
+): ChartData {
+  // Import category mappings
+  const { ACTIVITY_CATEGORIES, TAG_ACTIVITY_MAPPINGS } = require('../constants/tagActivityMapping');
+  
+  // Get all unique timestamps
+  const allTimestamps = new Set<number>();
+  Object.values(data).forEach(results => {
+    results.forEach(result => allTimestamps.add(result.timestamp));
+  });
+  
+  const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+  
+  if (timestamps.length === 0) {
+    const now = Date.now();
+    const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now];
+    return { labels: emptyTimestamps.map(formatDate), datasets: [] };
+  }
+  
+  const labels = timestamps.map(formatDate);
+  
+  // Check if we need to generate treemap data
+  if (chartType === 'treemap') {
+    // For category treemap, group by category
+    const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
+    
+    Object.entries(data).forEach(([projectId, results]) => {
+      // Find the category for this project
+      const mapping = TAG_ACTIVITY_MAPPINGS.find((m: any) => m.projectId === projectId);
+      const categoryId = mapping ? mapping.activityId : 'other';
+      const category = ACTIVITY_CATEGORIES[categoryId];
+      
+      if (category) {
+        const totalCount = results.reduce((sum, result) => sum + result.count, 0);
+        if (!categoryTotals[categoryId]) {
+          categoryTotals[categoryId] = {
+            count: 0,
+            color: category.color,
+            name: category.name
+          };
+        }
+        categoryTotals[categoryId].count += totalCount;
+      }
+    });
+
+    const treeMapData = Object.entries(categoryTotals).map(([categoryId, info]) => ({
+      label: info.name,
+      data: info.count,
+      backgroundColor: info.color,
+      key: categoryId,
+      groups: ['root'],
+      value: info.count
+    }));
+
+    return {
+      labels: [],
+      datasets: [{
+        label: 'Categories',
+        data: treeMapData,
+        backgroundColor: (ctx: any) => {
+          const dataItem = ctx.raw;
+          return dataItem.backgroundColor || '#0ea5e9';
+        },
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderWidth: 2,
+        spacing: 1,
+        key: 'value',
+        groups: ['groups'],
+        captions: {
+          align: 'center',
+          display: true,
+          color: 'white',
+          font: {
+            size: 14,
+            weight: 'bold'
+          },
+          formatter: (ctx: any) => {
+            return ctx.raw.label;
+          }
+        }
+      }]
+    };
+  }
+  
+  // Initialize category data structure
+  const categoryData: { [categoryId: string]: { [timestamp: number]: number } } = {};
+  
+  // Process each project's data
+  Object.entries(data).forEach(([projectId, results]) => {
+    // Find the category for this project
+    const mapping = TAG_ACTIVITY_MAPPINGS.find((m: any) => m.projectId === projectId);
+    const categoryId = mapping ? mapping.activityId : 'other';
+    
+    if (!categoryData[categoryId]) {
+      categoryData[categoryId] = {};
+      timestamps.forEach(ts => {
+        categoryData[categoryId][ts] = 0;
+      });
+    }
+    
+    results.forEach(result => {
+      if (categoryData[categoryId][result.timestamp] !== undefined) {
+        categoryData[categoryId][result.timestamp] += result.count;
+      }
+    });
+  });
+  
+  // Create datasets for each category
+  const datasets = Object.entries(ACTIVITY_CATEGORIES)
+    .filter(([categoryId]) => categoryData[categoryId]) // Only include categories with data
+    .map(([categoryId, category]) => {
+      const data = timestamps.map(timestamp => categoryData[categoryId][timestamp] || 0);
+      
+      if (chartType === 'stacked') {
+        // For stacked chart, make data cumulative
+        let cumulative = 0;
+        const cumulativeData = data.map(count => {
+          cumulative += count;
+          return cumulative;
+        });
+        
+        return {
+          label: category.name,
+          data: cumulativeData,
+          backgroundColor: category.color + '80', // Add transparency
+          borderColor: category.color,
+          borderWidth: 2,
+          fill: true,
+          yAxisID: 'cumulative'
+        };
+      } else {
+        // Line chart (absolute values)
+        return {
+          label: category.name,
+          data: data,
+          backgroundColor: 'transparent',
+          borderColor: category.color,
+          borderWidth: 3,
+          fill: false,
+          tension: 0.1,
+          yAxisID: 'absolute'
+        };
+      }
+    });
+  
+  return { labels, datasets };
+}
+
 export function calculateGrowthRate(data: QueryResult[]): number {
   if (data.length < 2) return 0;
   

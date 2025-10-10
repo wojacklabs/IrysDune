@@ -8,6 +8,7 @@ import {
   generateChartData, 
   generateShareText, 
   generateWholeEcosystemData,
+  generateCategoryGrowthData,
   filterDataByPeriod 
 } from '../utils/chartUtils';
 import { getCachedData, saveCacheData, getCacheAge } from '../services/storageService';
@@ -48,12 +49,16 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const [ecosystemDataDisplayType, setEcosystemDataDisplayType] = useState<DataDisplayType>('cumulative');
   const [chartShape, setChartShape] = useState<ChartShape>('line');
   const [ecosystemChartShape, setEcosystemChartShape] = useState<ChartShape>('line');
+  const [categoryDataDisplayType, setCategoryDataDisplayType] = useState<DataDisplayType>('cumulative');
+  const [categoryChartShape, setCategoryChartShape] = useState<ChartShape>('line');
   
   // Combine data display type and chart shape to get ChartType
   const chartType = chartShape === 'treemap' ? 'treemap' : (dataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
   const ecosystemChartType = ecosystemChartShape === 'treemap' ? 'treemap' : (ecosystemDataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
+  const categoryChartType = categoryChartShape === 'treemap' ? 'treemap' : (categoryDataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
   const [wholeTimePeriod, setWholeTimePeriod] = useState<TimePeriod>('30d');
   const [individualTimePeriod, setIndividualTimePeriod] = useState<TimePeriod>('30d');
+  const [categoryTimePeriod, setCategoryTimePeriod] = useState<TimePeriod>('30d');
   const [wholeCustomDateRange, setWholeCustomDateRange] = useState<DateRange>({ 
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     endDate: new Date() 
@@ -62,8 +67,13 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
     endDate: new Date() 
   });
+  const [categoryCustomDateRange, setCategoryCustomDateRange] = useState<DateRange>({ 
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    endDate: new Date() 
+  });
   const [showWholeCustomDatePicker, setShowWholeCustomDatePicker] = useState(false);
   const [showIndividualCustomDatePicker, setShowIndividualCustomDatePicker] = useState(false);
+  const [showCategoryCustomDatePicker, setShowCategoryCustomDatePicker] = useState(false);
   const [individualData, setIndividualData] = useState<{ [key: string]: QueryResult[] }>({});
   const [ecosystemData, setEcosystemData] = useState<{ [key: string]: QueryResult[] }>({});
   const [individualLoading, setIndividualLoading] = useState(false);
@@ -76,6 +86,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   // Add refs for ecosystem cards
   const wholeEcosystemCardRef = useRef<HTMLDivElement>(null);
   const appsEcosystemCardRef = useRef<HTMLDivElement>(null);
+  const categoryGrowthCardRef = useRef<HTMLDivElement>(null);
 
   const toggleApp = (appId: string) => {
     setSelectedApps(prev => 
@@ -299,6 +310,24 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     ecosystemFilteredData, 
     ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType
   );
+  
+  const categoryDateRange = categoryTimePeriod === 'custom' ? {
+    startDate: categoryCustomDateRange.startDate.getTime(),
+    endDate: categoryCustomDateRange.endDate.getTime()
+  } : undefined;
+  
+  const categoryFilteredData = filterDataByPeriod(
+    ecosystemData, 
+    categoryTimePeriod === 'custom' ? '30d' : categoryTimePeriod, 
+    categoryChartType === 'stacked' || categoryChartShape === 'treemap', 
+    categoryDateRange
+  );
+  
+  const categoryGrowthData = generateCategoryGrowthData(
+    categoryFilteredData,
+    categoryChartShape === 'treemap' ? 'treemap' : categoryChartType
+  );
+  
   const shareText = generateShareText(selectedPresets, chartType);
 
   // Check if we have data
@@ -550,6 +579,105 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               captureContainerRef={appsEcosystemCardRef}
             />
           ) : null
+        )}
+      </div>
+
+      {/* Category Growth Section */}
+      <div className="card ecosystem-card" ref={categoryGrowthCardRef}>
+        <div className="ecosystem-header">
+          <div className="ecosystem-title">
+            <ChartLine className="ecosystem-icon" size={20} />
+            <h3>Category Growth</h3>
+          </div>
+          <div className="header-actions">
+            <div className="time-period-selector">
+              {(['7d', '30d', '3M', '6M', 'custom'] as TimePeriod[]).map(period => (
+                <button
+                  key={period}
+                  onClick={() => {
+                    setCategoryTimePeriod(period);
+                    if (period === 'custom') {
+                      setShowCategoryCustomDatePicker(true);
+                    } else {
+                      setShowCategoryCustomDatePicker(false);
+                    }
+                  }}
+                  className={`period-button ${categoryTimePeriod === period ? 'active' : ''}`}
+                >
+                  {period === 'custom' ? 'Custom' : period}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {showCategoryCustomDatePicker && (
+          <div className="custom-date-picker">
+            <input
+              type="date"
+              value={categoryCustomDateRange.startDate.toISOString().split('T')[0]}
+              onChange={(e) => setCategoryCustomDateRange({
+                ...categoryCustomDateRange,
+                startDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+            <span className="date-separator">to</span>
+            <input
+              type="date"
+              value={categoryCustomDateRange.endDate.toISOString().split('T')[0]}
+              onChange={(e) => setCategoryCustomDateRange({
+                ...categoryCustomDateRange,
+                endDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+          </div>
+        )}
+
+        {ecosystemLoading ? (
+          <LoadingProgress 
+            progress={progress} 
+            message="Loading category data..."
+          />
+        ) : hasEcosystemData ? (
+          <Chart
+            data={categoryGrowthData}
+            chartType={categoryChartType}
+            title=""
+            shareText={`Irys Category Growth Analysis\n\nPeriod: ${categoryTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
+            onTypeChange={(type) => {
+              if (type === 'stacked') {
+                setCategoryDataDisplayType('cumulative');
+              } else if (type === 'line') {
+                setCategoryDataDisplayType('absolute');
+              } else if (type === 'treemap') {
+                setCategoryChartShape('treemap');
+              }
+            }}
+            dataDisplayType={categoryDataDisplayType}
+            chartShape={categoryChartShape}
+            onDataDisplayTypeChange={(type) => {
+              setCategoryDataDisplayType(type);
+              // Reset to line chart when selecting absolute/cumulative
+              if (categoryChartShape === 'treemap') {
+                setCategoryChartShape('line');
+              }
+            }}
+            onChartShapeChange={(shape) => {
+              setCategoryChartShape(shape);
+              // Keep current data display type when toggling treemap
+            }}
+            captureContainerRef={categoryGrowthCardRef}
+          />
+        ) : (
+          <div className="empty-state">
+            <ChartLine className="empty-icon" />
+            <div className="empty-title">Loading category data...</div>
+            <div className="empty-description">
+              Please wait while we fetch the data
+            </div>
+          </div>
         )}
       </div>
     </div>
