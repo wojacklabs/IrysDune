@@ -11,6 +11,7 @@ import {
   generateCategoryGrowthData,
   filterDataByPeriod 
 } from '../utils/chartUtils';
+import { ACTIVITY_CATEGORIES, TAG_ACTIVITY_MAPPINGS } from '../constants/tagActivityMapping';
 import { getCachedData, saveCacheData, getCacheAge } from '../services/storageService';
 import Chart from './Chart';
 import LoadingProgress from './LoadingProgress';
@@ -94,6 +95,14 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
         ? prev.filter(id => id !== appId)
         : [...prev, appId]
     );
+  };
+
+  // Get category for a project
+  const getProjectCategory = (projectId: string) => {
+    const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === projectId);
+    const categoryId = mapping ? mapping.activityId : 'other';
+    const category = ACTIVITY_CATEGORIES[categoryId];
+    return category || ACTIVITY_CATEGORIES.other;
   };
 
   // Load all preset apps data for Whole Ecosystem
@@ -450,138 +459,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
         )}
       </div>
 
-      {/* Individual Apps Section */}
-      <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
-        <div className="ecosystem-header">
-          <div className="ecosystem-title">
-            <ChartLine className="ecosystem-icon" size={20} />
-            <h3>Ecosystem Trends</h3>
-          </div>
-          <div className="header-actions">
-            <div className="time-period-selector">
-              {(['7d', '30d', '3M', '6M', 'custom'] as TimePeriod[]).map(period => (
-                <button
-                  key={period}
-                  onClick={() => {
-                    setIndividualTimePeriod(period);
-                    if (period === 'custom') {
-                      setShowIndividualCustomDatePicker(true);
-                    } else {
-                      setShowIndividualCustomDatePicker(false);
-                    }
-                  }}
-                  className={`period-button ${individualTimePeriod === period ? 'active' : ''}`}
-                >
-                  {period === 'custom' ? 'Custom' : period}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={refreshIndividual}
-              disabled={individualLoading}
-              className="button button-secondary button-sm"
-            >
-              <RefreshCw size={16} className={individualLoading ? 'spin' : ''} />
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        {showIndividualCustomDatePicker && (
-          <div className="custom-date-picker">
-            <input
-              type="date"
-              value={individualCustomDateRange.startDate.toISOString().split('T')[0]}
-              onChange={(e) => setIndividualCustomDateRange({
-                ...individualCustomDateRange,
-                startDate: new Date(e.target.value)
-              })}
-              className="date-input"
-            />
-            <span className="date-separator">to</span>
-            <input
-              type="date"
-              value={individualCustomDateRange.endDate.toISOString().split('T')[0]}
-              onChange={(e) => setIndividualCustomDateRange({
-                ...individualCustomDateRange,
-                endDate: new Date(e.target.value)
-              })}
-              className="date-input"
-            />
-          </div>
-        )}
-
-        <div className="app-selection">
-          <div className="app-grid">
-            {ALL_PRESETS.map(app => (
-              <button
-                key={app.id}
-                onClick={() => toggleApp(app.id)}
-                className={`app-card ${selectedApps.includes(app.id) ? 'selected' : ''}`}
-              >
-                <div className="app-card-content">
-                  {app.icon && (
-                    <img src={app.icon} alt={app.name} className="app-icon-img" />
-                  )}
-                  <div className="app-info">
-                    <div className="app-name">{app.name}</div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {selectedApps.length === 0 && (
-          <div className="empty-state">
-            <ChartLine className="empty-icon" />
-            <div className="empty-title">Select at least one application</div>
-            <div className="empty-description">
-              Choose applications to view their activity trends
-            </div>
-          </div>
-        )}
-        
-        {selectedApps.length > 0 && (
-          individualLoading ? (
-            <LoadingProgress 
-              progress={progress} 
-              message="Loading trend data..."
-            />
-          ) : hasIndividualData ? (
-            <Chart
-              data={chartData}
-              chartType={chartType}
-              title=""
-              shareText={shareText}
-              onTypeChange={(type) => {
-                if (type === 'stacked') {
-                  setDataDisplayType('cumulative');
-                } else if (type === 'line') {
-                  setDataDisplayType('absolute');
-                } else if (type === 'treemap') {
-                  setChartShape('treemap');
-                }
-              }}
-              dataDisplayType={dataDisplayType}
-              chartShape={chartShape}
-              onDataDisplayTypeChange={(type) => {
-                setDataDisplayType(type);
-                // Reset to line chart when selecting absolute/cumulative
-                if (chartShape === 'treemap') {
-                  setChartShape('line');
-                }
-              }}
-              onChartShapeChange={(shape) => {
-                setChartShape(shape);
-                // Keep current data display type when toggling treemap
-              }}
-              captureContainerRef={appsEcosystemCardRef}
-            />
-          ) : null
-        )}
-      </div>
-
       {/* Category Growth Section */}
       <div className="card ecosystem-card" ref={categoryGrowthCardRef}>
         <div className="ecosystem-header">
@@ -608,6 +485,14 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
                 </button>
               ))}
             </div>
+            <button
+              onClick={handleManualRefresh}
+              disabled={ecosystemLoading || isRefreshing}
+              className="button button-secondary button-sm"
+            >
+              <RefreshCw size={16} className={ecosystemLoading || isRefreshing ? 'spin' : ''} />
+              Refresh
+            </button>
           </div>
         </div>
 
@@ -678,6 +563,149 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               Please wait while we fetch the data
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Dapp Growth Section */}
+      <div className="card ecosystem-card" ref={appsEcosystemCardRef}>
+        <div className="ecosystem-header">
+          <div className="ecosystem-title">
+            <ChartLine className="ecosystem-icon" size={20} />
+            <h3>Dapp Growth</h3>
+          </div>
+          <div className="header-actions">
+            <div className="time-period-selector">
+              {(['7d', '30d', '3M', '6M', 'custom'] as TimePeriod[]).map(period => (
+                <button
+                  key={period}
+                  onClick={() => {
+                    setIndividualTimePeriod(period);
+                    if (period === 'custom') {
+                      setShowIndividualCustomDatePicker(true);
+                    } else {
+                      setShowIndividualCustomDatePicker(false);
+                    }
+                  }}
+                  className={`period-button ${individualTimePeriod === period ? 'active' : ''}`}
+                >
+                  {period === 'custom' ? 'Custom' : period}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={refreshIndividual}
+              disabled={individualLoading}
+              className="button button-secondary button-sm"
+            >
+              <RefreshCw size={16} className={individualLoading ? 'spin' : ''} />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {showIndividualCustomDatePicker && (
+          <div className="custom-date-picker">
+            <input
+              type="date"
+              value={individualCustomDateRange.startDate.toISOString().split('T')[0]}
+              onChange={(e) => setIndividualCustomDateRange({
+                ...individualCustomDateRange,
+                startDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+            <span className="date-separator">to</span>
+            <input
+              type="date"
+              value={individualCustomDateRange.endDate.toISOString().split('T')[0]}
+              onChange={(e) => setIndividualCustomDateRange({
+                ...individualCustomDateRange,
+                endDate: new Date(e.target.value)
+              })}
+              className="date-input"
+            />
+          </div>
+        )}
+
+        <div className="app-selection">
+          <div className="app-grid">
+            {ALL_PRESETS.map(app => {
+              const category = getProjectCategory(app.id);
+              return (
+                <button
+                  key={app.id}
+                  onClick={() => toggleApp(app.id)}
+                  className={`app-card ${selectedApps.includes(app.id) ? 'selected' : ''}`}
+                >
+                  <div className="app-card-content">
+                    {app.icon && (
+                      <img src={app.icon} alt={app.name} className="app-icon-img" />
+                    )}
+                    <div className="app-info">
+                      <div className="app-name">{app.name}</div>
+                      <div className="app-category" style={{ 
+                        fontSize: '11px', 
+                        color: category.color,
+                        marginTop: '2px',
+                        opacity: 0.8
+                      }}>
+                        {category.name}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {selectedApps.length === 0 && (
+          <div className="empty-state">
+            <ChartLine className="empty-icon" />
+            <div className="empty-title">Select at least one application</div>
+            <div className="empty-description">
+              Choose applications to view their activity trends
+            </div>
+          </div>
+        )}
+        
+        {selectedApps.length > 0 && (
+          individualLoading ? (
+            <LoadingProgress 
+              progress={progress} 
+              message="Loading trend data..."
+            />
+          ) : hasIndividualData ? (
+            <Chart
+              data={chartData}
+              chartType={chartType}
+              title=""
+              shareText={shareText}
+              onTypeChange={(type) => {
+                if (type === 'stacked') {
+                  setDataDisplayType('cumulative');
+                } else if (type === 'line') {
+                  setDataDisplayType('absolute');
+                } else if (type === 'treemap') {
+                  setChartShape('treemap');
+                }
+              }}
+              dataDisplayType={dataDisplayType}
+              chartShape={chartShape}
+              onDataDisplayTypeChange={(type) => {
+                setDataDisplayType(type);
+                // Reset to line chart when selecting absolute/cumulative
+                if (chartShape === 'treemap') {
+                  setChartShape('line');
+                }
+              }}
+              onChartShapeChange={(shape) => {
+                setChartShape(shape);
+                // Keep current data display type when toggling treemap
+              }}
+              captureContainerRef={appsEcosystemCardRef}
+            />
+          ) : null
         )}
       </div>
     </div>
