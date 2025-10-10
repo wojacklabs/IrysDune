@@ -520,6 +520,38 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
 
+        <div className="app-selection">
+          <div className="app-grid">
+            {ALL_PRESETS.map(app => {
+              const category = getProjectCategory(app.id);
+              return (
+                <div
+                  key={app.id}
+                  className="app-card"
+                  style={{ cursor: 'default', opacity: 0.9 }}
+                >
+                  <div className="app-card-content">
+                    {app.icon && (
+                      <img src={app.icon} alt={app.name} className="app-icon-img" />
+                    )}
+                    <div className="app-info">
+                      <div className="app-name">{app.name}</div>
+                      <div className="app-category" style={{ 
+                        fontSize: '11px', 
+                        color: category.color,
+                        marginTop: '2px',
+                        opacity: 0.8
+                      }}>
+                        {category.name}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {ecosystemLoading ? (
           <LoadingProgress 
             progress={progress} 
@@ -629,33 +661,22 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
 
         <div className="app-selection">
           <div className="app-grid">
-            {ALL_PRESETS.map(app => {
-              const category = getProjectCategory(app.id);
-              return (
-                <button
-                  key={app.id}
-                  onClick={() => toggleApp(app.id)}
-                  className={`app-card ${selectedApps.includes(app.id) ? 'selected' : ''}`}
-                >
-                  <div className="app-card-content">
-                    {app.icon && (
-                      <img src={app.icon} alt={app.name} className="app-icon-img" />
-                    )}
-                    <div className="app-info">
-                      <div className="app-name">{app.name}</div>
-                      <div className="app-category" style={{ 
-                        fontSize: '11px', 
-                        color: category.color,
-                        marginTop: '2px',
-                        opacity: 0.8
-                      }}>
-                        {category.name}
-                      </div>
-                    </div>
+            {ALL_PRESETS.map(app => (
+              <button
+                key={app.id}
+                onClick={() => toggleApp(app.id)}
+                className={`app-card ${selectedApps.includes(app.id) ? 'selected' : ''}`}
+              >
+                <div className="app-card-content">
+                  {app.icon && (
+                    <img src={app.icon} alt={app.name} className="app-icon-img" />
+                  )}
+                  <div className="app-info">
+                    <div className="app-name">{app.name}</div>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
