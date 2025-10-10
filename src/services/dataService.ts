@@ -156,39 +156,7 @@ export async function fetchAllProjectsData(progressCallback?: (progress: Loading
         if (projectId === 'irys-vibe-coders-hub' && mutableData.projectId === 'irysvibecodershub') {
           console.log(`[DataService] Mapping API projectId "${mutableData.projectId}" to local projectId "${projectId}"`);
         }
-        
-        // Check if this is irys-names which has cumulative data
-        if (projectId === 'irys-names') {
-          console.log(`[DataService] Processing irys-names cumulative data`);
-          // For irys-names, the count values are already cumulative
-          // We need to convert to incremental values
-          const incrementalData: QueryResult[] = [];
-          
-          for (let i = 0; i < mutableData.data.length; i++) {
-            if (i === 0) {
-              // First data point uses its count as-is
-              incrementalData.push({
-                timestamp: mutableData.data[i].timestamp,
-                count: mutableData.data[i].count
-              });
-            } else {
-              // Subsequent points use the difference from previous
-              const increment = mutableData.data[i].count - mutableData.data[i-1].count;
-              // Only add if there's a positive increment
-              if (increment > 0) {
-                incrementalData.push({
-                  timestamp: mutableData.data[i].timestamp,
-                  count: increment
-                });
-              }
-            }
-          }
-          
-          console.log(`[DataService] Converted ${mutableData.data.length} cumulative points to ${incrementalData.length} incremental points`);
-          results[projectId] = incrementalData;
-        } else {
-          results[projectId] = mutableData.data;
-        }
+        results[projectId] = mutableData.data;
       } else {
         results[projectId] = [];
       }
