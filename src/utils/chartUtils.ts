@@ -1022,7 +1022,6 @@ export function generateCategoryGrowthData(
   
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
-    console.log('[generateCategoryGrowthData] Generating treemap with data projects:', Object.keys(data));
     // For category treemap, group by category
     const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
     
@@ -1033,10 +1032,14 @@ export function generateCategoryGrowthData(
       const category = ACTIVITY_CATEGORIES[categoryId];
       
       if (category) {
-        const totalCount = results.reduce((sum, result) => sum + result.count, 0);
-        if (categoryId === 'identity') {
-          console.log(`[generateCategoryGrowthData] Identity project ${projectId}: ${totalCount} total`);
+        // For treemap, we want the final cumulative value (last data point)
+        // since the data is already filtered and processed as cumulative
+        let totalCount = 0;
+        if (results.length > 0) {
+          // Get the last (most recent) value which is the cumulative total
+          totalCount = results[results.length - 1].count;
         }
+        
         if (!categoryTotals[categoryId]) {
           categoryTotals[categoryId] = {
             count: 0,
@@ -1048,7 +1051,6 @@ export function generateCategoryGrowthData(
       }
     });
     
-    console.log('[generateCategoryGrowthData] Final category totals:', categoryTotals);
     
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0) // 0인 카테고리 제외
@@ -1081,13 +1083,15 @@ export function generateCategoryGrowthData(
           font: {
             size: 14,
             weight: 'bold'
-          },
-          formatter: (ctx: any) => {
-            const item = ctx.raw || ctx;
-            const label = item.label || '';
-            const value = item.value || item.data || 0;
-            return `${label}\n${value.toLocaleString()}`;
           }
+        },
+        formatter: (ctx: any) => {
+          if (ctx && ctx.raw) {
+            const label = ctx.raw.label || '';
+            const value = ctx.raw.value || ctx.raw.data || 0;
+            return [`${label}`, `${value.toLocaleString()}`];
+          }
+          return '';
         }
       }]
     };

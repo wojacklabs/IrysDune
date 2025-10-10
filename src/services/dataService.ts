@@ -97,8 +97,39 @@ export async function fetchProjectData(projectId: string): Promise<QueryResult[]
   }
   
   // Convert the actual data to our QueryResult format
-  // The data.data array already has timestamps in milliseconds
-  return data.data; // Already in correct format with timestamp and count
+  // Check if this is irys-names which has cumulative data
+  if (projectId === 'irys-names') {
+    console.log(`[DataService] Processing irys-names cumulative data`);
+    // For irys-names, the count values are already cumulative
+    // We need to convert to incremental values
+    const incrementalData: QueryResult[] = [];
+    
+    for (let i = 0; i < data.data.length; i++) {
+      if (i === 0) {
+        // First data point uses its count as-is
+        incrementalData.push({
+          timestamp: data.data[i].timestamp,
+          count: data.data[i].count
+        });
+      } else {
+        // Subsequent points use the difference from previous
+        const increment = data.data[i].count - data.data[i-1].count;
+        // Only add if there's a positive increment
+        if (increment > 0) {
+          incrementalData.push({
+            timestamp: data.data[i].timestamp,
+            count: increment
+          });
+        }
+      }
+    }
+    
+    console.log(`[DataService] Converted ${data.data.length} cumulative points to ${incrementalData.length} incremental points`);
+    return incrementalData;
+  }
+  
+  // For other projects, data is already in correct format
+  return data.data;
 }
 
 // Fetch all projects in parallel

@@ -512,7 +512,47 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
 
-        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+        <div className="category-projects-container" style={{ 
+          marginTop: '20px', 
+          marginBottom: '20px',
+          padding: '20px',
+          backgroundColor: 'var(--bg-secondary)',
+          borderRadius: '16px',
+          border: '1px solid var(--border-color)'
+        }}>
+          <style dangerouslySetInnerHTML={{ __html: `
+            .category-projects-container {
+              --bg-secondary: rgba(248, 250, 252, 0.5);
+              --border-color: rgba(226, 232, 240, 0.8);
+              --text-primary: #1e293b;
+              --text-secondary: #64748b;
+            }
+            
+            .dark-mode .category-projects-container {
+              --bg-secondary: rgba(30, 41, 59, 0.5);
+              --border-color: rgba(71, 85, 105, 0.3);
+              --text-primary: #f1f5f9;
+              --text-secondary: #cbd5e1;
+            }
+            
+            .wormhole-mode .category-projects-container {
+              --bg-secondary: rgba(88, 28, 135, 0.1);
+              --border-color: rgba(168, 85, 247, 0.2);
+              --text-primary: #f3e8ff;
+              --text-secondary: #e9d5ff;
+            }
+            
+            .category-project-pill {
+              transition: all 0.2s ease;
+              cursor: default;
+            }
+            
+            .category-project-pill:hover {
+              transform: translateY(-1px);
+              filter: brightness(1.1);
+            }
+          ` }} />
+          
           {Object.entries(ACTIVITY_CATEGORIES).map(([categoryId, category]) => {
             const projectsInCategory = ALL_PRESETS.filter(app => {
               const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === app.id);
@@ -524,32 +564,60 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
             return (
               <div key={categoryId} style={{ marginBottom: '16px' }}>
                 <div style={{ 
-                  fontSize: '13px', 
-                  fontWeight: '600',
+                  fontSize: '11px', 
+                  fontWeight: '700',
                   color: category.color,
-                  marginBottom: '8px',
+                  marginBottom: '10px',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
+                  letterSpacing: '0.08em',
+                  opacity: 0.9,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}>
+                  <span style={{ 
+                    width: '16px', 
+                    height: '2px', 
+                    backgroundColor: category.color,
+                    borderRadius: '1px'
+                  }} />
                   {category.name}
                 </div>
                 <div style={{ 
                   display: 'flex', 
                   flexWrap: 'wrap', 
-                  gap: '8px',
-                  paddingLeft: '12px'
+                  gap: '6px',
+                  paddingLeft: '24px'
                 }}>
                   {projectsInCategory.map(app => (
-                    <div key={app.id} style={{
-                      fontSize: '12px',
-                      padding: '4px 8px',
-                      backgroundColor: category.color + '10',
-                      borderLeft: `3px solid ${category.color}`,
-                      borderRadius: '2px',
-                      color: '#333',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {app.name}
+                    <div 
+                      key={app.id} 
+                      className="category-project-pill"
+                      style={{
+                        fontSize: '11px',
+                        padding: '5px 12px',
+                        backgroundColor: category.color + '12',
+                        border: `1px solid ${category.color}25`,
+                        borderRadius: '20px',
+                        color: 'var(--text-primary)',
+                        fontWeight: '500',
+                        whiteSpace: 'nowrap',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <span style={{ position: 'relative', zIndex: 1 }}>
+                        {app.name}
+                      </span>
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        background: `linear-gradient(135deg, ${category.color}08 0%, transparent 100%)`,
+                        pointerEvents: 'none'
+                      }} />
                     </div>
                   ))}
                 </div>
