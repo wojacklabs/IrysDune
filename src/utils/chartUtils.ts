@@ -566,16 +566,16 @@ export function generateChartData(
             }
             return 'rgba(0, 0, 0, 0.5)';
           },
-          padding: 4,
-          formatter: (ctx: any) => {
-            const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < topProjects.length) {
-              const item = topProjects[index];
-              // Show actual value, not adjusted value
-              return [item.name, item.value.toLocaleString()];
-            }
-            return '';
+          padding: 4
+        },
+        formatter: (ctx: any) => {
+          const index = ctx.dataIndex;
+          if (typeof index === 'number' && index < topProjects.length) {
+            const item = topProjects[index];
+            // Show actual value, not adjusted value
+            return [item.name, item.value.toLocaleString()];
           }
+          return '';
         }
       }]
     };
@@ -1083,15 +1083,15 @@ export function generateCategoryGrowthData(
           font: {
             size: 14,
             weight: 'bold'
+          },
+          formatter: (ctx: any) => {
+            if (ctx && ctx.raw) {
+              const label = ctx.raw.label || '';
+              const value = ctx.raw.value || ctx.raw.data || 0;
+              return [`${label}`, `${value.toLocaleString()}`];
+            }
+            return '';
           }
-        },
-        formatter: (ctx: any) => {
-          if (ctx && ctx.raw) {
-            const label = ctx.raw.label || '';
-            const value = ctx.raw.value || ctx.raw.data || 0;
-            return [`${label}`, `${value.toLocaleString()}`];
-          }
-          return '';
         }
       }]
     };
