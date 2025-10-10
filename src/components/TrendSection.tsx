@@ -97,14 +97,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     );
   };
 
-  // Get category for a project
-  const getProjectCategory = (projectId: string) => {
-    const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === projectId);
-    const categoryId = mapping ? mapping.activityId : 'other';
-    const category = ACTIVITY_CATEGORIES[categoryId];
-    return category || ACTIVITY_CATEGORIES.other;
-  };
-
   // Load all preset apps data for Whole Ecosystem
   const loadEcosystemData = async (forceRefresh: boolean = false) => {
     setEcosystemLoading(true);
