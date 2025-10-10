@@ -1022,7 +1022,7 @@ export function generateCategoryGrowthData(
   
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
-    // For category treemap, group by category
+    // For category treemap, simply sum all values for each project and group by category
     const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
     
     Object.entries(data).forEach(([projectId, results]) => {
@@ -1032,16 +1032,8 @@ export function generateCategoryGrowthData(
       const category = ACTIVITY_CATEGORIES[categoryId];
       
       if (category && results && Array.isArray(results)) {
-        // For treemap, we want the final cumulative value (last data point)
-        // since the data is already filtered and processed as cumulative
-        let totalCount = 0;
-        if (results.length > 0) {
-          // Get the last (most recent) value which is the cumulative total
-          const lastResult = results[results.length - 1];
-          if (lastResult && typeof lastResult.count === 'number') {
-            totalCount = lastResult.count;
-          }
-        }
+        // Simply sum all count values for this project
+        const totalCount = results.reduce((sum, result) => sum + (result.count || 0), 0);
         
         if (!categoryTotals[categoryId]) {
           categoryTotals[categoryId] = {

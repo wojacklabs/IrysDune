@@ -320,7 +320,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   const categoryFilteredData = filterDataByPeriod(
     ecosystemData, 
     categoryTimePeriod === 'custom' ? '30d' : categoryTimePeriod, 
-    categoryChartType === 'stacked' || categoryChartShape === 'treemap', 
+    categoryChartType === 'stacked', 
     categoryDateRange
   );
   
