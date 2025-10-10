@@ -1022,6 +1022,7 @@ export function generateCategoryGrowthData(
   
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
+    console.log('[generateCategoryGrowthData] Generating treemap with data projects:', Object.keys(data));
     // For category treemap, group by category
     const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
     
@@ -1033,6 +1034,9 @@ export function generateCategoryGrowthData(
       
       if (category) {
         const totalCount = results.reduce((sum, result) => sum + result.count, 0);
+        if (categoryId === 'identity') {
+          console.log(`[generateCategoryGrowthData] Identity project ${projectId}: ${totalCount} total`);
+        }
         if (!categoryTotals[categoryId]) {
           categoryTotals[categoryId] = {
             count: 0,
@@ -1044,29 +1048,29 @@ export function generateCategoryGrowthData(
       }
     });
     
-    const treeMapData = Object.entries(categoryTotals).map(([categoryId, info]) => ({
-      label: info.name,
-      data: info.count,
-      backgroundColor: info.color,
-      key: categoryId,
-      value: info.count
-    }));
+    console.log('[generateCategoryGrowthData] Final category totals:', categoryTotals);
+    
+    const treeMapData = Object.entries(categoryTotals)
+      .filter(([_, info]) => info.count > 0) // 0인 카테고리 제외
+      .map(([categoryId, info]) => ({
+        label: info.name,
+        data: info.count,
+        backgroundColor: info.color,
+        key: categoryId,
+        value: info.count
+      }));
 
     return {
-      labels: [],
+      labels: treeMapData.map(item => item.label),
       datasets: [{
         label: 'Categories',
         data: treeMapData,
-        backgroundColor: (ctx: any) => {
-          const dataItem = ctx.raw;
-          return dataItem.backgroundColor || '#0ea5e9';
-        },
+        backgroundColor: treeMapData.map(item => item.backgroundColor),
         borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
         spacing: 1,
         key: 'value',
-        captions: {
-          align: 'center',
+        labels: {
           display: true,
           color: 'white',
           font: {
@@ -1074,7 +1078,10 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            return ctx.raw.label;
+            const item = ctx.raw || ctx;
+            const label = item.label || '';
+            const value = item.value || item.data || 0;
+            return `${label}\n${value.toLocaleString()}`;
           }
         }
       }]
