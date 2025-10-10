@@ -1065,7 +1065,12 @@ export function generateCategoryGrowthData(
       datasets: [{
         label: 'Categories',
         data: treeMapData,
-        backgroundColor: treeMapData.map(item => item.backgroundColor),
+        backgroundColor: (ctx: any) => {
+          if (ctx && ctx.dataIndex !== undefined) {
+            return treeMapData[ctx.dataIndex]?.backgroundColor || '#0ea5e9';
+          }
+          return '#0ea5e9';
+        },
         borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
         spacing: 1,
