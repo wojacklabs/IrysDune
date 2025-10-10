@@ -512,11 +512,23 @@ export function generateChartData(
       adjustedValue: Math.max(item.value, minValue)
     }));
     
+    const treeMapData = topProjects.map((item) => ({
+      label: item.name,
+      data: item.value,
+      backgroundColor: item.color,
+      key: item.name,
+      value: item.value,
+      // treemap에서 사용하는 속성들 추가
+      x: item.name,
+      y: item.value,
+      v: item.value
+    }));
+    
     return {
       labels: [],
       datasets: [{
         label: 'Projects Activity',
-        data: [], // Not used for treemap
+        data: treeMapData,
         tree: adjustedData.map(item => item.adjustedValue), // Use adjusted values for display
         backgroundColor: (ctx: any) => {
           const index = ctx.dataIndex;
@@ -569,11 +581,12 @@ export function generateChartData(
           padding: 4
         },
         formatter: (ctx: any) => {
-          const index = ctx.dataIndex;
-          if (typeof index === 'number' && index < topProjects.length) {
-            const item = topProjects[index];
-            // Show actual value, not adjusted value
-            return [item.name, item.value.toLocaleString()];
+          // 올바른 데이터 접근 방식
+          const data = ctx.chart.data.datasets[0].data[ctx.dataIndex];
+          if (data) {
+            const name = data.label || '';
+            const value = data.value || 0;
+            return [name, value.toLocaleString()];
           }
           return '';
         }
@@ -789,6 +802,30 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
   
   // Check if mobile
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+  
+  // Treemap chart has different options
+  if (chartType === 'treemap') {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            title: function(context: any) {
+              return context[0]?.raw?.label || '';
+            },
+            label: function(context: any) {
+              const value = context.raw?.value || context.raw?.data || 0;
+              return `Count: ${value.toLocaleString()}`;
+            }
+          }
+        }
+      }
+    };
+  }
   
   const baseOptions = {
     responsive: true,
@@ -1059,7 +1096,11 @@ export function generateCategoryGrowthData(
         data: info.count,
         backgroundColor: info.color,
         key: categoryId,
-        value: info.count
+        value: info.count,
+        // treemap에서 사용하는 속성들 추가
+        x: info.name,
+        y: info.count,
+        v: info.count
       }));
 
     return {
@@ -1085,9 +1126,11 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            if (ctx && ctx.raw) {
-              const label = ctx.raw.label || '';
-              const value = ctx.raw.value || ctx.raw.data || 0;
+            // 올바른 데이터 접근 방식
+            const data = ctx.chart.data.datasets[0].data[ctx.dataIndex];
+            if (data) {
+              const label = data.label || '';
+              const value = data.value || 0;
               return [`${label}`, `${value.toLocaleString()}`];
             }
             return '';
