@@ -171,25 +171,24 @@ export function filterDataByPeriod(
       });
       
       // Generate cumulative data
-      let runningTotal = 0;
       const mappedData = periodTimestamps.map((timestamp, index) => {
         // For the last timestamp, include all data up to end of day
         const effectiveTimestamp = index === periodTimestamps.length - 1 
           ? timestamp + (24 * 60 * 60 * 1000) // Add 24 hours to include full day
           : timestamp;
         
-        // Calculate cumulative total within the selected period only
-        runningTotal = 0;
+        // Calculate cumulative total for this timestamp
+        let cumulativeTotal = 0;
         sortedResults.forEach(result => {
-          // Only count data within the selected period
+          // Only count data within the selected period and up to this timestamp
           if (result.timestamp >= periodTimestamps[0] && result.timestamp <= effectiveTimestamp) {
-            runningTotal += result.count;
+            cumulativeTotal += result.count;
           }
         });
         
         return {
           timestamp,
-          count: runningTotal
+          count: cumulativeTotal
         };
       });
       
@@ -1044,7 +1043,7 @@ export function generateCategoryGrowthData(
         categoryTotals[categoryId].count += totalCount;
       }
     });
-
+    
     const treeMapData = Object.entries(categoryTotals).map(([categoryId, info]) => ({
       label: info.name,
       data: info.count,
@@ -1066,7 +1065,6 @@ export function generateCategoryGrowthData(
         borderWidth: 2,
         spacing: 1,
         key: 'value',
-        groups: ['groups'],
         captions: {
           align: 'center',
           display: true,
@@ -1092,6 +1090,10 @@ export function generateCategoryGrowthData(
     const mapping = TAG_ACTIVITY_MAPPINGS.find((m: any) => m.projectId === projectId);
     const categoryId = mapping ? mapping.activityId : 'other';
     
+    // Skip projects without proper mapping
+    if (!mapping && projectId !== 'other') {
+      return;
+    }
     
     if (!categoryData[categoryId]) {
       categoryData[categoryId] = {};
@@ -1120,6 +1122,7 @@ export function generateCategoryGrowthData(
           cumulative += count;
           return cumulative;
         });
+        
         
         return {
           label: category.name,
