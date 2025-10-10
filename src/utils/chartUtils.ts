@@ -180,8 +180,8 @@ export function filterDataByPeriod(
         // Calculate cumulative total for this timestamp
         let cumulativeTotal = 0;
         sortedResults.forEach(result => {
-          // Only count data within the selected period and up to this timestamp
-          if (result.timestamp >= periodTimestamps[0] && result.timestamp <= effectiveTimestamp) {
+          // Count all data up to this timestamp (including historical data)
+          if (result.timestamp <= effectiveTimestamp) {
             cumulativeTotal += result.count;
           }
         });
@@ -1031,13 +1031,16 @@ export function generateCategoryGrowthData(
       const categoryId = mapping ? mapping.activityId : 'other';
       const category = ACTIVITY_CATEGORIES[categoryId];
       
-      if (category) {
+      if (category && results && Array.isArray(results)) {
         // For treemap, we want the final cumulative value (last data point)
         // since the data is already filtered and processed as cumulative
         let totalCount = 0;
         if (results.length > 0) {
           // Get the last (most recent) value which is the cumulative total
-          totalCount = results[results.length - 1].count;
+          const lastResult = results[results.length - 1];
+          if (lastResult && typeof lastResult.count === 'number') {
+            totalCount = lastResult.count;
+          }
         }
         
         if (!categoryTotals[categoryId]) {
@@ -1062,14 +1065,28 @@ export function generateCategoryGrowthData(
         value: info.count
       }));
 
+    // If no data, return empty dataset
+    if (treeMapData.length === 0) {
+      return {
+        labels: [],
+        datasets: [{
+          label: 'No Data',
+          data: [],
+          backgroundColor: '#e2e8f0',
+          borderColor: 'rgba(255, 255, 255, 0.5)',
+          borderWidth: 2
+        }]
+      };
+    }
+
     return {
       labels: treeMapData.map(item => item.label),
       datasets: [{
         label: 'Categories',
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          if (ctx && ctx.dataIndex !== undefined) {
-            return treeMapData[ctx.dataIndex]?.backgroundColor || '#0ea5e9';
+          if (ctx && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+            return treeMapData[ctx.dataIndex].backgroundColor || '#0ea5e9';
           }
           return '#0ea5e9';
         },
@@ -1083,15 +1100,15 @@ export function generateCategoryGrowthData(
           font: {
             size: 14,
             weight: 'bold'
+          },
+          formatter: (ctx: any) => {
+            if (ctx && ctx.raw) {
+              const label = ctx.raw.label || '';
+              const value = ctx.raw.value || ctx.raw.data || 0;
+              return [`${label}`, `${value.toLocaleString()}`];
+            }
+            return '';
           }
-        },
-        formatter: (ctx: any) => {
-          if (ctx && ctx.raw) {
-            const label = ctx.raw.label || '';
-            const value = ctx.raw.value || ctx.raw.data || 0;
-            return [`${label}`, `${value.toLocaleString()}`];
-          }
-          return '';
         }
       }]
     };
