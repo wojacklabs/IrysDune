@@ -1050,7 +1050,6 @@ export function generateCategoryGrowthData(
       data: info.count,
       backgroundColor: info.color,
       key: categoryId,
-      groups: ['root'],
       value: info.count
     }));
 
@@ -1092,6 +1091,7 @@ export function generateCategoryGrowthData(
     // Find the category for this project
     const mapping = TAG_ACTIVITY_MAPPINGS.find((m: any) => m.projectId === projectId);
     const categoryId = mapping ? mapping.activityId : 'other';
+    
     
     if (!categoryData[categoryId]) {
       categoryData[categoryId] = {};

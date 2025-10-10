@@ -201,6 +201,18 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
     activityId: 'community',
     projectId: 'seedback'
   },
+  // IrysTarotCard (온체인)
+  {
+    tags: [],
+    activityId: 'community',
+    projectId: 'irys-tarot-card'
+  },
+  // IrysForum (온체인)
+  {
+    tags: [],
+    activityId: 'community',
+    projectId: 'irys-forum'
+  },
   // Irys Drive
   {
     tags: [{ name: 'App-Name', value: 'IrysDrive' }],
@@ -212,26 +224,26 @@ export const TAG_ACTIVITY_MAPPINGS: TagActivityMapping[] = [
 // 온체인 이벤트를 activity로 매핑
 export const EVENT_ACTIVITY_MAPPINGS: { [eventName: string]: string } = {
   // IrysFlip
-  'BetPlaced': 'gaming-bet',
+  'BetPlaced': 'game',
   // IrysCrush
-  'PlayerRegistered': 'identity',
-  'ScoreUpdated': 'gaming-score',
-  'RoomCreated': 'gaming-room',
-  'PlayerJoinedRoom': 'gaming-room',
-  'GameStarted': 'gaming',
-  'GameFinished': 'gaming',
-  'PvPGameFinished': 'gaming',
+  'PlayerRegistered': 'game',
+  'ScoreUpdated': 'game',
+  'RoomCreated': 'game',
+  'PlayerJoinedRoom': 'game',
+  'GameStarted': 'game',
+  'GameFinished': 'game',
+  'PvPGameFinished': 'game',
   // Uniswap
-  'PoolCreated': 'defi',
+  'PoolCreated': 'other',
   // Aave
-  'Supply': 'defi',
-  'Borrow': 'defi',
+  'Supply': 'other',
+  'Borrow': 'other',
   // Lens
-  'ProfileCreated': 'identity',
+  'ProfileCreated': 'other',
   // Default
-  'Transfer': 'storage',
+  'Transfer': 'other',
   // Faucet
-  'Faucet Claim': 'faucet'
+  'Faucet Claim': 'other'
 };
 
 // 온체인 이벤트로부터 activity 가져오기

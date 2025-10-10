@@ -520,36 +520,50 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
 
-        <div className="app-selection">
-          <div className="app-grid">
-            {ALL_PRESETS.map(app => {
-              const category = getProjectCategory(app.id);
-              return (
-                <div
-                  key={app.id}
-                  className="app-card"
-                  style={{ cursor: 'default', opacity: 0.9 }}
-                >
-                  <div className="app-card-content">
-                    {app.icon && (
-                      <img src={app.icon} alt={app.name} className="app-icon-img" />
-                    )}
-                    <div className="app-info">
-                      <div className="app-name">{app.name}</div>
-                      <div className="app-category" style={{ 
-                        fontSize: '11px', 
-                        color: category.color,
-                        marginTop: '2px',
-                        opacity: 0.8
-                      }}>
-                        {category.name}
-                      </div>
-                    </div>
-                  </div>
+        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+          {Object.entries(ACTIVITY_CATEGORIES).map(([categoryId, category]) => {
+            const projectsInCategory = ALL_PRESETS.filter(app => {
+              const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === app.id);
+              return mapping && mapping.activityId === categoryId;
+            });
+            
+            if (projectsInCategory.length === 0) return null;
+            
+            return (
+              <div key={categoryId} style={{ marginBottom: '16px' }}>
+                <div style={{ 
+                  fontSize: '13px', 
+                  fontWeight: '600',
+                  color: category.color,
+                  marginBottom: '8px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {category.name}
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '8px',
+                  paddingLeft: '12px'
+                }}>
+                  {projectsInCategory.map(app => (
+                    <div key={app.id} style={{
+                      fontSize: '12px',
+                      padding: '4px 8px',
+                      backgroundColor: category.color + '10',
+                      borderLeft: `3px solid ${category.color}`,
+                      borderRadius: '2px',
+                      color: '#333',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {app.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {ecosystemLoading ? (
