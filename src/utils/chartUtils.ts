@@ -1,5 +1,6 @@
 import type { QueryResult, ChartData, ChartType, AppPreset, CustomQuery } from '../types';
 import { APP_PRESETS } from '../constants/appPresets';
+import { ACTIVITY_CATEGORIES, TAG_ACTIVITY_MAPPINGS } from '../constants/tagActivityMapping';
 
 export function formatDate(timestamp: number): string {
   // timestamp is now in milliseconds
@@ -1003,8 +1004,6 @@ export function generateCategoryGrowthData(
   data: { [key: string]: QueryResult[] },
   chartType: ChartType = 'stacked'
 ): ChartData {
-  // Import category mappings
-  const { ACTIVITY_CATEGORIES, TAG_ACTIVITY_MAPPINGS } = require('../constants/tagActivityMapping');
   
   // Get all unique timestamps
   const allTimestamps = new Set<number>();
