@@ -523,14 +523,12 @@ export function generateChartData(
       labels: [],
       datasets: [{
         label: 'Projects Activity',
-        // treemap은 tree 속성에 값 배열을 사용
-        tree: topProjects.map(item => item.value),
+        // Chart.js treemap은 data에 객체 배열을 사용
         data: treemapData,
         backgroundColor: (ctx: any) => {
-          const index = ctx.dataIndex;
-          if (typeof index === 'number' && index < topProjects.length) {
-            const color = topProjects[index].color;
-            return color;
+          console.log(`[generateChartData] backgroundColor called, ctx:`, ctx);
+          if (ctx.raw && ctx.raw.backgroundColor) {
+            return ctx.raw.backgroundColor;
           }
           return '#0ea5e9';
         },
@@ -577,12 +575,13 @@ export function generateChartData(
           padding: 4
         },
         formatter: (ctx: any) => {
-          const index = ctx.dataIndex;
-          console.log(`[generateChartData] DApp formatter called with index: ${index}, ctx:`, ctx);
-          if (typeof index === 'number' && index < topProjects.length) {
-            const item = topProjects[index];
-            console.log(`[generateChartData] DApp formatter returning:`, [item.name, item.value.toLocaleString()]);
-            return [item.name, item.value.toLocaleString()];
+          console.log(`[generateChartData] DApp formatter called, ctx:`, ctx);
+          // Chart.js treemap에서는 raw 데이터에 직접 접근
+          if (ctx.raw) {
+            const label = ctx.raw.label || '';
+            const value = ctx.raw.value || 0;
+            console.log(`[generateChartData] DApp formatter returning:`, [label, value.toLocaleString()]);
+            return [label, value.toLocaleString()];
           }
           console.log('[generateChartData] DApp formatter returning empty');
           return '';
@@ -1120,13 +1119,14 @@ export function generateCategoryGrowthData(
       labels: [],
       datasets: [{
         label: 'Categories',
-        // treemap 데이터는 tree 속성을 사용
-        tree: treeMapData.map(d => d.value),
+        // Chart.js treemap은 data에 객체 배열을 사용
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          const index = ctx.dataIndex;
-          console.log(`[generateCategoryGrowthData] backgroundColor called with index: ${index}`);
-          return treeMapData[index]?.backgroundColor || '#0ea5e9';
+          console.log(`[generateCategoryGrowthData] backgroundColor called, ctx:`, ctx);
+          if (ctx.raw && ctx.raw.backgroundColor) {
+            return ctx.raw.backgroundColor;
+          }
+          return '#0ea5e9';
         },
         borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
@@ -1140,12 +1140,13 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            const index = ctx.dataIndex;
-            console.log(`[generateCategoryGrowthData] formatter called with index: ${index}, ctx:`, ctx);
-            if (typeof index === 'number' && treeMapData[index]) {
-              const item = treeMapData[index];
-              console.log(`[generateCategoryGrowthData] formatter returning:`, [item.label, item.value.toLocaleString()]);
-              return [item.label, item.value.toLocaleString()];
+            console.log(`[generateCategoryGrowthData] formatter called, ctx:`, ctx);
+            // Chart.js treemap에서는 raw 데이터에 직접 접근
+            if (ctx.raw) {
+              const label = ctx.raw.label || '';
+              const value = ctx.raw.value || 0;
+              console.log(`[generateCategoryGrowthData] formatter returning:`, [label, value.toLocaleString()]);
+              return [label, value.toLocaleString()];
             }
             return '';
           }
