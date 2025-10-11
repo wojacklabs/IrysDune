@@ -509,26 +509,21 @@ export function generateChartData(
 
     // Treemap structure using tree/key/groups format
     
+    // topProjects is already sorted by value in descending order
     const treemapData = topProjects.map((item) => ({
-      value: item.value,
       label: item.name,
+      value: item.value,
       backgroundColor: item.color
     }));
     
-    console.log('[generateChartData] Treemap data structure:', treemapData);
     
     const result = {
       labels: [],
       datasets: [{
         label: 'Projects Activity',
-        // Chart.js treemap은 data에 객체 배열을 사용
         data: treemapData,
         backgroundColor: (ctx: any) => {
-          const index = ctx.dataIndex;
-          if (index !== undefined && treemapData[index]) {
-            return treemapData[index].backgroundColor;
-          }
-          return '#0ea5e9';
+          return ctx.raw?.backgroundColor || '#0ea5e9';
         },
         borderColor: 'rgba(255, 255, 255, 0.8)',
         borderWidth: 2,
@@ -538,26 +533,15 @@ export function generateChartData(
           align: 'center' as const,
           position: 'middle' as const,
           formatter: (ctx: any) => {
-            const index = ctx.dataIndex;
-            console.log(`[generateChartData] DApp formatter called, index: ${index}`);
-            console.log(`[generateChartData] DApp formatter called, ctx:`, ctx);
-            
-            if (index !== undefined && treemapData[index]) {
-              const item = treemapData[index];
+            const item = ctx.raw;
+            if (item) {
               return [item.label, item.value.toLocaleString()];
             }
-            
-            // Fallback to parsed data
-            const value = ctx.parsed || 0;
-            return ['', value.toLocaleString()];
+            return '';
           },
           color: (ctx: any) => {
-            const index = ctx.dataIndex;
-            if (index !== undefined && treemapData[index]) {
-              const bgColor = treemapData[index].backgroundColor;
-              return getContrastTextColor(bgColor);
-            }
-            return 'white';
+            const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
+            return getContrastTextColor(bgColor);
           },
           font: {
             size: 12,
@@ -1081,67 +1065,43 @@ export function generateCategoryGrowthData(
     
     console.log('[generateCategoryGrowthData] Category totals:', categoryTotals);
     
+    // Sort by value in descending order for better treemap layout
     const treeMapData = Object.entries(categoryTotals)
-      .filter(([_, info]) => info.count > 0) // 0인 카테고리 제외
+      .filter(([_, info]) => info.count > 0)
+      .sort((a, b) => b[1].count - a[1].count) // Sort by count descending
       .map(([categoryId, info]) => ({
-        // Chart.js treemap은 value를 기본값으로 사용
-        value: info.count,
-        // 라벨 정보
         label: info.name,
-        // 색상
+        value: info.count,
         backgroundColor: info.color,
-        // 추가 정보
-        categoryId: categoryId,
-        raw: {
-          v: info.count,
-          label: info.name
-        }
+        categoryId: categoryId
       }));
 
-    console.log('[generateCategoryGrowthData] TreeMap data:', treeMapData);
 
     const result = {
       labels: [],
       datasets: [{
         label: 'Categories',
-        // Chart.js treemap은 data에 객체 배열을 사용
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          const index = ctx.dataIndex;
-          if (index !== undefined && treeMapData[index]) {
-            return treeMapData[index].backgroundColor;
-          }
-          return '#0ea5e9';
+          return ctx.raw?.backgroundColor || '#0ea5e9';
         },
-        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderColor: 'rgba(255, 255, 255, 0.8)',
         borderWidth: 2,
         spacing: 1,
-        key: 'value',
         labels: {
           display: true,
           align: 'center' as const,
           position: 'middle' as const,
           formatter: (ctx: any) => {
-            const index = ctx.dataIndex;
-            console.log(`[generateCategoryGrowthData] formatter called, index: ${index}`);
-            console.log(`[generateCategoryGrowthData] formatter called, ctx:`, ctx);
-            
-            if (index !== undefined && treeMapData[index]) {
-              const item = treeMapData[index];
+            const item = ctx.raw;
+            if (item) {
               return [item.label, item.value.toLocaleString()];
             }
-            
-            // Fallback to parsed data
-            const value = ctx.parsed || 0;
-            return ['', value.toLocaleString()];
+            return '';
           },
           color: (ctx: any) => {
-            const index = ctx.dataIndex;
-            if (index !== undefined && treeMapData[index]) {
-              const bgColor = treeMapData[index].backgroundColor;
-              return getContrastTextColor(bgColor);
-            }
-            return 'white';
+            const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
+            return getContrastTextColor(bgColor);
           },
           font: {
             size: 14,

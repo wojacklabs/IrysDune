@@ -67,8 +67,9 @@ const Chart: React.FC<ChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  // Create a unique key based on chart type and data
-  const chartKey = `${chartType}-${JSON.stringify(data.labels?.slice(0, 3))}-${data.datasets?.length || 0}`;
+  // Create a unique key based on chart type, title, and data size
+  // Don't include data content to prevent unnecessary re-renders
+  const chartKey = `${chartType}-${title}-${data.datasets?.length || 0}`;
 
   // Store loaded images to avoid reloading
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: HTMLImageElement }>({});
@@ -395,7 +396,6 @@ const Chart: React.FC<ChartProps> = ({
         <div style={{ position: 'relative', height: '250px', minHeight: '250px', maxHeight: '250px', overflow: 'hidden' }}>
           {chartType === 'treemap' ? (
             <>
-            {console.log('[Chart Component] Rendering treemap with data:', data)}
             <ChartReact
               key={chartKey}
               ref={(ref) => {
@@ -506,7 +506,8 @@ const Chart: React.FC<ChartProps> = ({
 };
 
 export default React.memo(Chart, (prevProps, nextProps) => {
-  // Custom comparison to prevent re-renders unless data or chartType changes
+  // Custom comparison to prevent re-renders unless significant props change
+  // Don't compare data deeply as it causes unnecessary re-renders
   return (
     prevProps.chartType === nextProps.chartType &&
     prevProps.title === nextProps.title &&
@@ -515,6 +516,6 @@ export default React.memo(Chart, (prevProps, nextProps) => {
     prevProps.hideActions === nextProps.hideActions &&
     prevProps.dataDisplayType === nextProps.dataDisplayType &&
     prevProps.chartShape === nextProps.chartShape &&
-    JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
+    prevProps.data.datasets?.length === nextProps.data.datasets?.length
   );
 }); 
