@@ -512,11 +512,8 @@ export function generateChartData(
     // topProjects is already sorted by value in descending order
     const treemapData = topProjects.map((item) => ({
       label: item.name,
-      data: item.value,
-      backgroundColor: item.color,
-      key: item.name,
-      groups: ['root'],
-      value: item.value
+      value: item.value,
+      backgroundColor: item.color
     }));
     
     
@@ -533,7 +530,6 @@ export function generateChartData(
         borderWidth: 2,
         spacing: 1,
         key: 'value',
-        groups: ['groups'],
         captions: {
           align: 'center',
           display: true,
@@ -546,7 +542,11 @@ export function generateChartData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            return ctx.raw.label;
+            const item = ctx.raw;
+            if (item) {
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
           }
         },
         labels: {
@@ -1072,13 +1072,11 @@ export function generateCategoryGrowthData(
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0)
       .sort((a, b) => b[1].count - a[1].count) // Sort by count descending
-      .map(([_, info]) => ({
+      .map(([categoryId, info]) => ({
         label: info.name,
-        data: info.count,
+        value: info.count,
         backgroundColor: info.color,
-        key: info.name,
-        groups: ['root'],
-        value: info.count
+        categoryId: categoryId
       }));
 
 
@@ -1095,7 +1093,6 @@ export function generateCategoryGrowthData(
         borderWidth: 2,
         spacing: 1,
         key: 'value',
-        groups: ['groups'],
         captions: {
           align: 'center',
           display: true,
@@ -1108,7 +1105,11 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            return ctx.raw.label;
+            const item = ctx.raw;
+            if (item) {
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
           }
         },
         labels: {
