@@ -512,8 +512,11 @@ export function generateChartData(
     // topProjects is already sorted by value in descending order
     const treemapData = topProjects.map((item) => ({
       label: item.name,
-      value: item.value,
-      backgroundColor: item.color
+      data: item.value,
+      backgroundColor: item.color,
+      key: item.name,
+      groups: ['root'],
+      value: item.value
     }));
     
     
@@ -530,6 +533,7 @@ export function generateChartData(
         borderWidth: 2,
         spacing: 1,
         key: 'value',
+        groups: ['groups'],
         captions: {
           align: 'center',
           display: true,
@@ -542,11 +546,7 @@ export function generateChartData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
+            return ctx.raw.label;
           }
         },
         labels: {
@@ -1072,11 +1072,13 @@ export function generateCategoryGrowthData(
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0)
       .sort((a, b) => b[1].count - a[1].count) // Sort by count descending
-      .map(([categoryId, info]) => ({
+      .map(([_, info]) => ({
         label: info.name,
-        value: info.count,
+        data: info.count,
         backgroundColor: info.color,
-        categoryId: categoryId
+        key: info.name,
+        groups: ['root'],
+        value: info.count
       }));
 
 
@@ -1093,6 +1095,7 @@ export function generateCategoryGrowthData(
         borderWidth: 2,
         spacing: 1,
         key: 'value',
+        groups: ['groups'],
         captions: {
           align: 'center',
           display: true,
@@ -1105,11 +1108,7 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
+            return ctx.raw.label;
           }
         },
         labels: {
