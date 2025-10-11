@@ -394,6 +394,8 @@ const Chart: React.FC<ChartProps> = ({
       <div ref={chartRef} className="chart-wrapper">
         <div style={{ position: 'relative', height: '250px', minHeight: '250px', maxHeight: '250px', overflow: 'hidden' }}>
           {chartType === 'treemap' ? (
+            <>
+            {console.log('[Chart Component] Rendering treemap with data:', data)}
             <ChartReact
               key={chartKey}
               ref={(ref) => {
@@ -475,6 +477,7 @@ const Chart: React.FC<ChartProps> = ({
                 }
               }}
             />
+            </>
           ) : (
             <Line 
               key={chartKey}

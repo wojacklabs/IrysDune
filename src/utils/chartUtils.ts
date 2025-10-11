@@ -431,6 +431,9 @@ export function generateChartData(
 
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
+    console.log('[generateChartData] Starting DApp Growth treemap generation');
+    console.log('[generateChartData] Queries:', queries.map(q => q.name));
+    
     // For treemap, use the last cumulative value from the filtered data
     // This ensures consistency with the cumulative chart
     const treeValues: number[] = [];
@@ -440,6 +443,7 @@ export function generateChartData(
     
     queries.forEach(query => {
       const queryResults = data[query.id] || [];
+      console.log(`[generateChartData] ${query.name} - results length: ${queryResults.length}`);
       
       // For treemap, get the last value from the filtered cumulative data
       // The data passed here is already filtered by period and contains cumulative values
@@ -447,6 +451,8 @@ export function generateChartData(
         // Get the last result which contains the final cumulative value for this period
         const lastResult = queryResults[queryResults.length - 1];
         const totalCount = lastResult.count;
+        
+        console.log(`[generateChartData] ${query.name} - total count: ${totalCount}`);
         
         totalTransactions += totalCount;
         
@@ -466,10 +472,10 @@ export function generateChartData(
     })).sort((a, b) => b.value - a.value); // Sort descending by value
     
     // Debug log
-    console.log('[Treemap] Generated data:', sortedData);
-    console.log('[Treemap] Total projects:', sortedData.length);
-    console.log('[Treemap] Max value:', sortedData[0]?.value);
-    console.log('[Treemap] Min value:', sortedData[sortedData.length - 1]?.value);
+    console.log('[generateChartData] Sorted data:', sortedData);
+    console.log('[generateChartData] Total projects:', sortedData.length);
+    console.log('[generateChartData] Max value:', sortedData[0]?.value);
+    console.log('[generateChartData] Min value:', sortedData[sortedData.length - 1]?.value);
     
     // Limit to top 15 projects for better visibility
     const topProjects = sortedData.slice(0, 15);
@@ -484,7 +490,7 @@ export function generateChartData(
       });
     }
     
-    console.log('[Treemap] Showing top projects:', topProjects);
+    console.log('[generateChartData] Top projects:', topProjects);
 
     // If no data, return empty chart structure for normal charts
     if (topProjects.length === 0 || totalTransactions === 0) {
@@ -505,17 +511,21 @@ export function generateChartData(
 
     // Treemap structure using tree/key/groups format
     
-    return {
+    const treemapData = topProjects.map((item) => ({
+      value: item.value,
+      label: item.name,
+      backgroundColor: item.color
+    }));
+    
+    console.log('[generateChartData] Treemap data structure:', treemapData);
+    
+    const result = {
       labels: [],
       datasets: [{
         label: 'Projects Activity',
         // treemap은 tree 속성에 값 배열을 사용
         tree: topProjects.map(item => item.value),
-        data: topProjects.map((item) => ({
-          value: item.value,
-          label: item.name,
-          backgroundColor: item.color
-        })),
+        data: treemapData,
         backgroundColor: (ctx: any) => {
           const index = ctx.dataIndex;
           if (typeof index === 'number' && index < topProjects.length) {
@@ -568,14 +578,20 @@ export function generateChartData(
         },
         formatter: (ctx: any) => {
           const index = ctx.dataIndex;
+          console.log(`[generateChartData] DApp formatter called with index: ${index}, ctx:`, ctx);
           if (typeof index === 'number' && index < topProjects.length) {
             const item = topProjects[index];
+            console.log(`[generateChartData] DApp formatter returning:`, [item.name, item.value.toLocaleString()]);
             return [item.name, item.value.toLocaleString()];
           }
+          console.log('[generateChartData] DApp formatter returning empty');
           return '';
         }
       }]
     };
+    
+    console.log('[generateChartData] Final DApp treemap result:', result);
+    return result;
   }
 
   // Calculate data for each preset
@@ -1043,6 +1059,9 @@ export function generateCategoryGrowthData(
   
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
+    console.log('[generateCategoryGrowthData] Starting treemap generation');
+    console.log('[generateCategoryGrowthData] Input data:', Object.keys(data));
+    
     // For category treemap, group by category
     const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
     
@@ -1052,6 +1071,8 @@ export function generateCategoryGrowthData(
       const categoryId = mapping ? mapping.activityId : 'other';
       const category = ACTIVITY_CATEGORIES[categoryId];
       
+      console.log(`[generateCategoryGrowthData] Project: ${projectId}, Category: ${categoryId}, Results length: ${results.length}`);
+      
       if (category) {
         // For treemap, we want the final cumulative value (last data point)
         // since the data is already filtered and processed as cumulative
@@ -1060,6 +1081,8 @@ export function generateCategoryGrowthData(
           // Get the last (most recent) value which is the cumulative total
           totalCount = results[results.length - 1].count;
         }
+        
+        console.log(`[generateCategoryGrowthData] ${projectId} total count: ${totalCount}`);
         
         if (!categoryTotals[categoryId]) {
           categoryTotals[categoryId] = {
@@ -1072,6 +1095,7 @@ export function generateCategoryGrowthData(
       }
     });
     
+    console.log('[generateCategoryGrowthData] Category totals:', categoryTotals);
     
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0) // 0인 카테고리 제외
@@ -1090,7 +1114,9 @@ export function generateCategoryGrowthData(
         }
       }));
 
-    return {
+    console.log('[generateCategoryGrowthData] TreeMap data:', treeMapData);
+
+    const result = {
       labels: [],
       datasets: [{
         label: 'Categories',
@@ -1099,6 +1125,7 @@ export function generateCategoryGrowthData(
         data: treeMapData,
         backgroundColor: (ctx: any) => {
           const index = ctx.dataIndex;
+          console.log(`[generateCategoryGrowthData] backgroundColor called with index: ${index}`);
           return treeMapData[index]?.backgroundColor || '#0ea5e9';
         },
         borderColor: 'rgba(255, 255, 255, 0.5)',
@@ -1114,8 +1141,10 @@ export function generateCategoryGrowthData(
           },
           formatter: (ctx: any) => {
             const index = ctx.dataIndex;
+            console.log(`[generateCategoryGrowthData] formatter called with index: ${index}, ctx:`, ctx);
             if (typeof index === 'number' && treeMapData[index]) {
               const item = treeMapData[index];
+              console.log(`[generateCategoryGrowthData] formatter returning:`, [item.label, item.value.toLocaleString()]);
               return [item.label, item.value.toLocaleString()];
             }
             return '';
@@ -1123,6 +1152,9 @@ export function generateCategoryGrowthData(
         }
       }]
     };
+    
+    console.log('[generateCategoryGrowthData] Final result:', result);
+    return result;
   }
   
   // Initialize category data structure
