@@ -523,31 +523,34 @@ export function generateChartData(
         label: 'Projects Activity',
         data: treemapData,
         backgroundColor: (ctx: any) => {
-          return ctx.raw?.backgroundColor || '#0ea5e9';
+          const dataItem = ctx.raw;
+          return dataItem?.backgroundColor || '#0ea5e9';
         },
-        borderColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
         spacing: 1,
-        labels: {
+        key: 'value',
+        captions: {
+          align: 'center',
           display: true,
-          align: 'center' as const,
-          position: 'middle' as const,
-          formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
-          },
           color: (ctx: any) => {
             const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
             return getContrastTextColor(bgColor);
           },
           font: {
             size: 12,
-            weight: 'bold' as const
+            weight: 'bold'
           },
-          padding: 4
+          formatter: (ctx: any) => {
+            const item = ctx.raw;
+            if (item) {
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
+          }
+        },
+        labels: {
+          display: false
         }
       }]
     };
@@ -1083,30 +1086,34 @@ export function generateCategoryGrowthData(
         label: 'Categories',
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          return ctx.raw?.backgroundColor || '#0ea5e9';
+          const dataItem = ctx.raw;
+          return dataItem?.backgroundColor || '#0ea5e9';
         },
-        borderColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
         spacing: 1,
-        labels: {
+        key: 'value',
+        captions: {
+          align: 'center',
           display: true,
-          align: 'center' as const,
-          position: 'middle' as const,
-          formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
-          },
           color: (ctx: any) => {
             const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
             return getContrastTextColor(bgColor);
           },
           font: {
             size: 14,
-            weight: 'bold' as const
+            weight: 'bold'
+          },
+          formatter: (ctx: any) => {
+            const item = ctx.raw;
+            if (item) {
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
           }
+        },
+        labels: {
+          display: false
         }
       }]
     };
