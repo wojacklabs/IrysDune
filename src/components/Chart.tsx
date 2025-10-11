@@ -64,12 +64,27 @@ const Chart: React.FC<ChartProps> = ({
   onChartShapeChange,
   hideTreemap = false
 }) => {
+  console.log('[Chart Component] Rendering with:', {
+    chartType,
+    title,
+    datasetCount: data.datasets?.length,
+    dataDisplayType,
+    chartShape
+  });
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  // Create a unique key based on chart type, title, and data size
-  // Don't include data content to prevent unnecessary re-renders
-  const chartKey = `${chartType}-${title}-${data.datasets?.length || 0}`;
+  // Create a stable key based on chart type and title
+  // Avoid including data in the key as it causes unnecessary re-renders
+  const chartKey = `${chartType}-${title}`;
+  
+  console.log('[Chart Component] Rendering with:', {
+    chartType,
+    title,
+    chartKey,
+    datasetCount: data.datasets?.length,
+    firstDatasetLength: data.datasets?.[0]?.data?.length
+  });
 
   // Store loaded images to avoid reloading
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: HTMLImageElement }>({});
@@ -198,7 +213,33 @@ const Chart: React.FC<ChartProps> = ({
       },
       legend: {
         ...baseOptions.plugins.legend,
-        display: false // Hide legend since we're showing logos
+        display: data.datasets.length > 1, // Show legend when there are multiple datasets
+        position: 'bottom' as const,
+        align: 'center' as const,
+        labels: {
+          usePointStyle: true,
+          pointStyle: chartType === 'stacked' ? 'rect' : 'circle',
+          padding: 15,
+          font: {
+            size: 11,
+            family: 'Inter'
+          },
+          generateLabels: (chart: any) => {
+            const datasets = chart.data.datasets;
+            return datasets.map((dataset: any, i: number) => {
+              // For stacked charts, use borderColor (which is opaque) instead of backgroundColor (which may have transparency)
+              const color = chartType === 'stacked' ? dataset.borderColor : (dataset.backgroundColor || dataset.borderColor);
+              return {
+                text: dataset.label?.replace(' (Cumulative)', '').replace(' (Daily)', '').replace(' (Relative)', ''),
+                fillStyle: color,
+                strokeStyle: dataset.borderColor,
+                lineWidth: chartType === 'line' ? 2 : 0,
+                hidden: !chart.isDatasetVisible(i),
+                datasetIndex: i
+              };
+            });
+          }
+        }
       },
       tooltip: {
         ...baseOptions.plugins.tooltip,
@@ -393,9 +434,8 @@ const Chart: React.FC<ChartProps> = ({
       )}
       
       <div ref={chartRef} className="chart-wrapper">
-        <div style={{ position: 'relative', height: '250px', minHeight: '250px', maxHeight: '250px', overflow: 'hidden' }}>
+        <div className="chart-canvas-container">
           {chartType === 'treemap' ? (
-            <>
             <ChartReact
               key={chartKey}
               ref={(ref) => {
@@ -415,6 +455,9 @@ const Chart: React.FC<ChartProps> = ({
                   easing: 'easeInOutQuart' as const
                 },
                 plugins: {
+                  legend: {
+                    display: false
+                  },
                   title: {
                     display: !!title,
                     text: title,
@@ -426,58 +469,39 @@ const Chart: React.FC<ChartProps> = ({
                     color: '#1e293b',
                     padding: { bottom: 20 }
                   },
-                  legend: {
-                    display: false
-                  },
                   tooltip: {
                     displayColors: false,
                     callbacks: {
                       title: (items: any) => {
                         const item = items[0];
+                        const dataIndex = item.dataIndex;
+                        const dataset = item.dataset;
                         
-                        // For treemap with tree/key/groups structure
-                        if (item?.raw?.name) {
-                          return item.raw.name;
+                        // Access from tree array
+                        if (dataset?.tree && dataset.tree[dataIndex]) {
+                          return dataset.tree[dataIndex].label || '';
                         }
-                        
-                        // Fallback for other structures
-                        if (typeof item.dataIndex === 'number' && data.labels) {
-                          return data.labels[item.dataIndex] || '';
-                        }
-                        
-                        return item?.raw?.x || item?.raw?.project || item?.dataset?.label || '';
+                        // Fallback
+                        return item?.raw?.label || '';
                       },
                       label: (item: any) => {
-                        // For treemap with tree/key/groups structure
-                        if (item?.raw?.value !== undefined) {
-                          const value = item.raw.value;
-                          return `Transactions: ${value.toLocaleString()}`;
-                        }
+                        const dataIndex = item.dataIndex;
+                        const dataset = item.dataset;
                         
-                        // Try other structures
-                        let value = 0;
-                        if (item.raw?.v !== undefined) {
-                          value = item.raw.v;
-                        } else if (item.raw?.y !== undefined) {
-                          value = item.raw.y;
-                        } else if (item.parsed !== undefined) {
-                          value = item.parsed;
-                        } else if (item.formattedValue !== undefined) {
-                          value = item.formattedValue;
-                        } else if (typeof item.dataIndex === 'number' && data.datasets?.[0]?.tree) {
-                          // Fallback to tree data
-                          const treeItem = data.datasets[0].tree[item.dataIndex];
-                          value = treeItem?.value || 0;
+                        // Access from tree array
+                        if (dataset?.tree && dataset.tree[dataIndex]) {
+                          const value = dataset.tree[dataIndex].value || 0;
+                          return `Count: ${value.toLocaleString()}`;
                         }
-                        
-                        return `Transactions: ${typeof value === 'number' ? value.toLocaleString() : value}`;
+                        // Fallback
+                        const value = item.raw?.value || 0;
+                        return `Count: ${value.toLocaleString()}`;
                       }
                     }
                   }
                 }
-              }}
+              } as any}
             />
-            </>
           ) : (
             <Line 
               key={chartKey}
@@ -505,17 +529,4 @@ const Chart: React.FC<ChartProps> = ({
   );
 };
 
-export default React.memo(Chart, (prevProps, nextProps) => {
-  // Custom comparison to prevent re-renders unless significant props change
-  // Don't compare data deeply as it causes unnecessary re-renders
-  return (
-    prevProps.chartType === nextProps.chartType &&
-    prevProps.title === nextProps.title &&
-    prevProps.shareText === nextProps.shareText &&
-    prevProps.hideTypeButtons === nextProps.hideTypeButtons &&
-    prevProps.hideActions === nextProps.hideActions &&
-    prevProps.dataDisplayType === nextProps.dataDisplayType &&
-    prevProps.chartShape === nextProps.chartShape &&
-    prevProps.data.datasets?.length === nextProps.data.datasets?.length
-  );
-}); 
+export default Chart; 

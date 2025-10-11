@@ -7,7 +7,6 @@ import { fetchAllProjectsData } from '../services/dataService';
 import { 
   generateChartData, 
   generateShareText, 
-  generateWholeEcosystemData,
   generateCategoryGrowthData,
   filterDataByPeriod 
 } from '../utils/chartUtils';
@@ -47,16 +46,18 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
   );
   // Data display type (absolute/cumulative) and chart shape (line/treemap)
   const [dataDisplayType, setDataDisplayType] = useState<DataDisplayType>('cumulative');
-  const [ecosystemDataDisplayType, setEcosystemDataDisplayType] = useState<DataDisplayType>('cumulative');
+  const [ecosystemDataDisplayType] = useState<DataDisplayType>('cumulative');
   const [chartShape, setChartShape] = useState<ChartShape>('line');
-  const [ecosystemChartShape, setEcosystemChartShape] = useState<ChartShape>('line');
-  const [categoryDataDisplayType, setCategoryDataDisplayType] = useState<DataDisplayType>('cumulative');
-  const [categoryChartShape, setCategoryChartShape] = useState<ChartShape>('line');
+  const [ecosystemChartShape] = useState<ChartShape>('line');
+  // Each category has its own display type and chart shape
+  const [categoryDisplayTypes, setCategoryDisplayTypes] = useState<{ [key: string]: DataDisplayType }>({});
+  const [categoryChartShapes, setCategoryChartShapes] = useState<{ [key: string]: ChartShape }>({});
   
   // Combine data display type and chart shape to get ChartType
   const chartType = chartShape === 'treemap' ? 'treemap' : (dataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
+  console.log('[TrendSection] DApp Growth chart type:', chartType, 'shape:', chartShape, 'display:', dataDisplayType);
   const ecosystemChartType = ecosystemChartShape === 'treemap' ? 'treemap' : (ecosystemDataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
-  const categoryChartType = categoryChartShape === 'treemap' ? 'treemap' : (categoryDataDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
+  console.log('[TrendSection] Whole Ecosystem chart type:', ecosystemChartType, 'shape:', ecosystemChartShape, 'display:', ecosystemDataDisplayType);
   const [wholeTimePeriod, setWholeTimePeriod] = useState<TimePeriod>('30d');
   const [individualTimePeriod, setIndividualTimePeriod] = useState<TimePeriod>('30d');
   const [categoryTimePeriod, setCategoryTimePeriod] = useState<TimePeriod>('30d');
@@ -302,12 +303,15 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     ecosystemChartType === 'stacked' || ecosystemChartShape === 'treemap', 
     wholeDateRange
   );
+  console.log('[TrendSection] Generating DApp chart data, period:', individualTimePeriod, 'chartType:', chartShape === 'treemap' ? 'treemap' : chartType);
   const chartData = generateChartData(
     individualFilteredData, 
     selectedPresets, 
     chartShape === 'treemap' ? 'treemap' : chartType
   );
-  const wholeEcosystemData = generateWholeEcosystemData(
+  console.log('[TrendSection] DApp chart data generated:', chartData);
+  // Whole Ecosystem now shows category-based cumulative area chart
+  const wholeEcosystemData = generateCategoryGrowthData(
     ecosystemFilteredData, 
     ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType
   );
@@ -317,16 +321,13 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     endDate: categoryCustomDateRange.endDate.getTime()
   } : undefined;
   
+  // For category charts, we need filtered data based on each category's settings
+  // But we'll prepare a single filtered dataset and use it for all categories
   const categoryFilteredData = filterDataByPeriod(
     ecosystemData, 
     categoryTimePeriod === 'custom' ? '30d' : categoryTimePeriod, 
-    categoryChartType === 'stacked' || categoryChartShape === 'treemap', 
+    true, // Always use cumulative for filtering
     categoryDateRange
-  );
-  
-  const categoryGrowthData = generateCategoryGrowthData(
-    categoryFilteredData,
-    categoryChartShape === 'treemap' ? 'treemap' : categoryChartType
   );
   
   const shareText = generateShareText(selectedPresets, chartType);
@@ -412,33 +413,12 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
         ) : hasEcosystemData ? (
           <Chart
             data={wholeEcosystemData}
-            chartType={ecosystemChartType}
+            chartType="stacked"
             title=""
-            shareText={`Irys Whole Ecosystem Activity\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
-            onTypeChange={(type) => {
-              if (type === 'stacked') {
-                setEcosystemDataDisplayType('cumulative');
-              } else if (type === 'line') {
-                setEcosystemDataDisplayType('absolute');
-              } else if (type === 'treemap') {
-                setEcosystemChartShape('treemap');
-              }
-            }}
-            dataDisplayType={ecosystemDataDisplayType}
-            chartShape={ecosystemChartShape}
-            onDataDisplayTypeChange={(type) => {
-              setEcosystemDataDisplayType(type);
-              // Reset to line chart when selecting absolute/cumulative
-              if (ecosystemChartShape === 'treemap') {
-                setEcosystemChartShape('line');
-              }
-            }}
-            onChartShapeChange={(shape) => {
-              setEcosystemChartShape(shape);
-              // Keep current data display type when toggling treemap
-            }}
+            shareText={`Irys Whole Ecosystem Activity by Category\n\nPeriod: ${wholeTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
             captureContainerRef={wholeEcosystemCardRef}
-            hideTreemap={true}
+            hideTypeButtons={true}
+            onTypeChange={() => {}}
           />
         ) : (
           <div className="empty-state">
@@ -512,155 +492,175 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
           </div>
         )}
 
-        <div className="category-projects-container" style={{ 
-          marginTop: '20px', 
-          marginBottom: '20px',
-          padding: '20px',
-          backgroundColor: 'var(--bg-secondary)',
-          borderRadius: '16px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <style dangerouslySetInnerHTML={{ __html: `
-            .category-projects-container {
-              --bg-secondary: rgba(248, 250, 252, 0.5);
-              --border-color: rgba(226, 232, 240, 0.8);
-              --text-primary: #1e293b;
-              --text-secondary: #64748b;
-            }
-            
-            .dark-mode .category-projects-container {
-              --bg-secondary: rgba(30, 41, 59, 0.5);
-              --border-color: rgba(71, 85, 105, 0.3);
-              --text-primary: #f1f5f9;
-              --text-secondary: #cbd5e1;
-            }
-            
-            .wormhole-mode .category-projects-container {
-              --bg-secondary: rgba(88, 28, 135, 0.1);
-              --border-color: rgba(168, 85, 247, 0.2);
-              --text-primary: #f3e8ff;
-              --text-secondary: #e9d5ff;
-            }
-            
-            .category-project-pill {
-              transition: all 0.2s ease;
-              cursor: default;
-            }
-            
-            .category-project-pill:hover {
-              transform: translateY(-1px);
-              filter: brightness(1.1);
-            }
-          ` }} />
-          
-          {Object.entries(ACTIVITY_CATEGORIES).map(([categoryId, category]) => {
-            const projectsInCategory = ALL_PRESETS.filter(app => {
-              const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === app.id);
-              return mapping && mapping.activityId === categoryId;
-            });
-            
-            if (projectsInCategory.length === 0) return null;
-            
-            return (
-              <div key={categoryId} style={{ marginBottom: '16px' }}>
-                <div style={{ 
-                  fontSize: '11px', 
-                  fontWeight: '700',
-                  color: category.color,
-                  marginBottom: '10px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  opacity: 0.9,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span style={{ 
-                    width: '16px', 
-                    height: '2px', 
-                    backgroundColor: category.color,
-                    borderRadius: '1px'
-                  }} />
-                  {category.name}
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '6px',
-                  paddingLeft: '24px'
-                }}>
-                  {projectsInCategory.map(app => (
-                    <div 
-                      key={app.id} 
-                      className="category-project-pill"
-                      style={{
-                        fontSize: '11px',
-                        padding: '5px 12px',
-                        backgroundColor: category.color + '12',
-                        border: `1px solid ${category.color}25`,
-                        borderRadius: '20px',
-                        color: 'var(--text-primary)',
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      <span style={{ position: 'relative', zIndex: 1 }}>
-                        {app.name}
-                      </span>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        background: `linear-gradient(135deg, ${category.color}08 0%, transparent 100%)`,
-                        pointerEvents: 'none'
-                      }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
         {ecosystemLoading ? (
           <LoadingProgress 
             progress={progress} 
             message="Loading category data..."
           />
         ) : hasEcosystemData ? (
-          <Chart
-            data={categoryGrowthData}
-            chartType={categoryChartType}
-            title=""
-            shareText={`Irys Category Growth Analysis\n\nPeriod: ${categoryTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
-            onTypeChange={(type) => {
-              if (type === 'stacked') {
-                setCategoryDataDisplayType('cumulative');
-              } else if (type === 'line') {
-                setCategoryDataDisplayType('absolute');
-              } else if (type === 'treemap') {
-                setCategoryChartShape('treemap');
+          <div className="category-charts-grid">
+            <style dangerouslySetInnerHTML={{ __html: `
+              .category-charts-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+                gap: 20px;
+                margin-top: 20px;
               }
-            }}
-            dataDisplayType={categoryDataDisplayType}
-            chartShape={categoryChartShape}
-            onDataDisplayTypeChange={(type) => {
-              setCategoryDataDisplayType(type);
-              // Reset to line chart when selecting absolute/cumulative
-              if (categoryChartShape === 'treemap') {
-                setCategoryChartShape('line');
+              
+              @media (max-width: 900px) {
+                .category-charts-grid {
+                  grid-template-columns: 1fr;
+                  gap: 16px;
+                  margin-top: 16px;
+                }
               }
-            }}
-            onChartShapeChange={(shape) => {
-              setCategoryChartShape(shape);
-              // Keep current data display type when toggling treemap
-            }}
-            captureContainerRef={categoryGrowthCardRef}
-          />
+              
+              .category-chart-item {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 20px;
+                min-height: 350px;
+                display: flex;
+                flex-direction: column;
+              }
+              
+              @media (max-width: 768px) {
+                .category-chart-item {
+                  padding: 12px;
+                  border-radius: 12px;
+                  min-height: auto;
+                  height: auto;
+                }
+              }
+              
+              .category-chart-item .chart-wrapper {
+                flex: 1;
+                min-height: 300px;
+                width: 100%;
+                overflow: visible;
+              }
+              
+              .category-chart-item .chart-canvas-container {
+                height: 250px;
+                min-height: 250px;
+                flex-shrink: 0;
+              }
+              
+              @media (max-width: 768px) {
+                .category-chart-item .chart-wrapper {
+                  min-height: 200px;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  padding: 0 !important;
+                }
+                
+                .category-chart-item .chart-canvas-container {
+                  height: 180px !important;
+                  min-height: 180px !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                }
+              }
+              
+              .category-chart-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid var(--border-color);
+              }
+              
+              @media (max-width: 768px) {
+                .category-chart-header {
+                  gap: 8px;
+                  margin-bottom: 12px;
+                  padding-bottom: 8px;
+                  border-bottom-width: 1px;
+                }
+              }
+              
+              .category-chart-title {
+                font-size: 14px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+              }
+              
+              @media (max-width: 768px) {
+                .category-chart-title {
+                  font-size: 12px;
+                  letter-spacing: 0.03em;
+                }
+              }
+            ` }} />
+            
+            {Object.entries(ACTIVITY_CATEGORIES).map(([categoryId, category]) => {
+              // Get projects for this category
+              const projectsInCategory = ALL_PRESETS.filter(app => {
+                const mapping = TAG_ACTIVITY_MAPPINGS.find(m => m.projectId === app.id);
+                return mapping && mapping.activityId === categoryId;
+              });
+              
+              if (projectsInCategory.length === 0) return null;
+              
+              // Get this category's display settings (default to cumulative/line)
+              const categoryDisplayType = categoryDisplayTypes[categoryId] || 'cumulative';
+              const categoryChartShape = categoryChartShapes[categoryId] || 'line';
+              const categoryChartType = categoryChartShape === 'treemap' ? 'treemap' : (categoryDisplayType === 'cumulative' ? 'stacked' : 'line') as ChartType;
+              
+              // Generate chart data for this category's projects
+              const categoryProjectsData = generateChartData(
+                categoryFilteredData,
+                projectsInCategory,
+                categoryChartType
+              );
+              
+              return (
+                <div key={categoryId} className="category-chart-item">
+                  <div className="category-chart-header">
+                    <div style={{
+                      width: '4px',
+                      height: '20px',
+                      backgroundColor: category.color,
+                      borderRadius: '2px'
+                    }} />
+                    <span className="category-chart-title" style={{ color: category.color }}>
+                      {category.name}
+                    </span>
+                  </div>
+                  <Chart
+                    data={categoryProjectsData}
+                    chartType={categoryChartType}
+                    title=""
+                    shareText={`Irys ${category.name} Category\n\nPeriod: ${categoryTimePeriod}\n\n#Irys #Web3 #Analytics #IrysDune\n\nmade by @wojacklabs`}
+                    dataDisplayType={categoryDisplayType}
+                    chartShape={categoryChartShape}
+                    onTypeChange={(type) => {
+                      if (type === 'stacked') {
+                        setCategoryDisplayTypes({ ...categoryDisplayTypes, [categoryId]: 'cumulative' });
+                      } else if (type === 'line') {
+                        setCategoryDisplayTypes({ ...categoryDisplayTypes, [categoryId]: 'absolute' });
+                      } else if (type === 'treemap') {
+                        setCategoryChartShapes({ ...categoryChartShapes, [categoryId]: 'treemap' });
+                      }
+                    }}
+                    onDataDisplayTypeChange={(type) => {
+                      setCategoryDisplayTypes({ ...categoryDisplayTypes, [categoryId]: type });
+                      if (categoryChartShapes[categoryId] === 'treemap') {
+                        setCategoryChartShapes({ ...categoryChartShapes, [categoryId]: 'line' });
+                      }
+                    }}
+                    onChartShapeChange={(shape) => {
+                      setCategoryChartShapes({ ...categoryChartShapes, [categoryId]: shape });
+                    }}
+                    hideActions={true}
+                  />
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div className="empty-state">
             <ChartLine className="empty-icon" />
@@ -685,6 +685,7 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
                 <button
                   key={period}
                   onClick={() => {
+                    console.log('[TrendSection] DApp period changing from', individualTimePeriod, 'to', period);
                     setIndividualTimePeriod(period);
                     if (period === 'custom') {
                       setShowIndividualCustomDatePicker(true);
@@ -796,7 +797,6 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
               }}
               onChartShapeChange={(shape) => {
                 setChartShape(shape);
-                // Keep current data display type when toggling treemap
               }}
               captureContainerRef={appsEcosystemCardRef}
             />

@@ -431,6 +431,8 @@ export function generateChartData(
   if (chartType === 'treemap') {
     console.log('[generateChartData] Starting DApp Growth treemap generation');
     console.log('[generateChartData] Queries:', queries.map(q => q.name));
+    console.log('[generateChartData] Raw data keys:', Object.keys(data));
+    console.log('[generateChartData] Timestamps count:', timestamps.length);
     
     // For treemap, use the last cumulative value from the filtered data
     // This ensures consistency with the cumulative chart
@@ -510,11 +512,15 @@ export function generateChartData(
     // Treemap structure using tree/key/groups format
     
     // topProjects is already sorted by value in descending order
-    const treemapData = topProjects.map((item) => ({
-      label: item.name,
-      value: item.value,
-      backgroundColor: item.color
-    }));
+    const treemapData = topProjects.map((item, index) => {
+      console.log(`[generateChartData] Treemap item ${index}:`, item);
+      return {
+        label: item.name,
+        value: item.value,
+        backgroundColor: item.color
+      };
+    });
+    console.log('[generateChartData] Final treemapData:', treemapData);
     
     
     const result = {
@@ -522,38 +528,47 @@ export function generateChartData(
       datasets: [{
         label: 'Projects Activity',
         data: treemapData,
-        backgroundColor: (ctx: any) => {
-          const dataItem = ctx.raw;
-          return dataItem?.backgroundColor || '#0ea5e9';
-        },
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-        borderWidth: 2,
-        spacing: 1,
+        tree: treemapData,
         key: 'value',
-        captions: {
-          align: 'center',
+        groups: ['label'],
+        spacing: 1,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: (ctx: any) => {
+          // Access data from the tree array using dataIndex
+          if (ctx.type === 'data' && ctx.dataIndex !== undefined && treemapData[ctx.dataIndex]) {
+            return treemapData[ctx.dataIndex].backgroundColor;
+          }
+          return '#0ea5e9';
+        },
+        labels: {
           display: true,
+          overflow: true,
+          position: 'top',
+          align: 'center',
+          formatter: (ctx: any) => {
+            // Access data from the tree array using dataIndex
+            if (ctx.type === 'data' && ctx.dataIndex !== undefined && treemapData[ctx.dataIndex]) {
+              const item = treemapData[ctx.dataIndex];
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
+          },
           color: (ctx: any) => {
-            const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
-            return getContrastTextColor(bgColor);
+            // Access data from the tree array using dataIndex
+            if (ctx.type === 'data' && ctx.dataIndex !== undefined && treemapData[ctx.dataIndex]) {
+              const bgColor = treemapData[ctx.dataIndex].backgroundColor;
+              return getContrastTextColor(bgColor);
+            }
+            return 'white';
           },
           font: {
             size: 12,
             weight: 'bold'
-          },
-          formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
           }
-        },
-        labels: {
-          display: false
         }
       }]
-    };
+    } as any;
     
     console.log('[generateChartData] Final DApp treemap result:', result);
     return result;
@@ -673,11 +688,8 @@ export function generateWholeEcosystemData(
 
     const treeMapData = Object.entries(projectTotals).map(([name, info]) => ({
       label: name,
-      data: info.count,
-      backgroundColor: info.color,
-      key: name,
-      groups: ['root'],
-      value: info.count
+      value: info.count,
+      backgroundColor: info.color
     }));
 
     return {
@@ -685,29 +697,40 @@ export function generateWholeEcosystemData(
       datasets: [{
         label: 'Ecosystem Projects',
         data: treeMapData,
-        backgroundColor: (ctx: any) => {
-          const dataItem = ctx.raw;
-          return dataItem.backgroundColor || '#0ea5e9';
-        },
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-        borderWidth: 2,
-        spacing: 1,
+        tree: treeMapData,
         key: 'value',
-        groups: ['groups'],
-        captions: {
-          align: 'center',
+        groups: ['label'],
+        spacing: 1,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: (ctx: any) => {
+          // Access data from the tree array using dataIndex
+          if (ctx.type === 'data' && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+            return treeMapData[ctx.dataIndex].backgroundColor;
+          }
+          return '#0ea5e9';
+        },
+        labels: {
           display: true,
+          overflow: true,
+          position: 'top',
+          align: 'center',
+          formatter: (ctx: any) => {
+            // Access data from the tree array using dataIndex
+            if (ctx.type === 'data' && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+              const item = treeMapData[ctx.dataIndex];
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
+          },
           color: 'white',
           font: {
             size: 14,
             weight: 'bold'
-          },
-          formatter: (ctx: any) => {
-            return ctx.raw.label;
           }
         }
       }]
-    };
+    } as any;
   }
 
   // Sum all counts for each timestamp
@@ -782,11 +805,7 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           callbacks: {
             title: function(context: any) {
               const item = context[0];
-              // Access the label directly from raw data
-              if (item?.raw?.label) {
-                return item.raw.label;
-              }
-              return '';
+              return item?.raw?.label || '';
             },
             label: function(context: any) {
               const value = context.raw?.value || 0;
@@ -884,6 +903,7 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           type: 'linear' as const,
           display: true,
           position: 'left' as const,
+          stacked: true, // Enable stacking for cumulative charts
           title: {
             display: !isMobile,
             text: 'Cumulative Transactions',
@@ -1032,6 +1052,8 @@ export function generateCategoryGrowthData(
   if (chartType === 'treemap') {
     console.log('[generateCategoryGrowthData] Starting treemap generation');
     console.log('[generateCategoryGrowthData] Input data:', Object.keys(data));
+    console.log('[generateCategoryGrowthData] ChartType:', chartType);
+    console.log('[generateCategoryGrowthData] Raw data sample:', Object.entries(data).slice(0, 2));
     
     // For category treemap, group by category
     const categoryTotals: { [key: string]: { count: number, color: string, name: string } } = {};
@@ -1072,12 +1094,15 @@ export function generateCategoryGrowthData(
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0)
       .sort((a, b) => b[1].count - a[1].count) // Sort by count descending
-      .map(([categoryId, info]) => ({
-        label: info.name,
-        value: info.count,
-        backgroundColor: info.color,
-        categoryId: categoryId
-      }));
+      .map(([categoryId, info], index) => {
+        console.log(`[generateCategoryGrowthData] Category ${index}:`, categoryId, info);
+        return {
+          label: info.name,
+          value: info.count,
+          backgroundColor: info.color
+        };
+      });
+    console.log('[generateCategoryGrowthData] Final treeMapData:', treeMapData);
 
 
     const result = {
@@ -1085,38 +1110,47 @@ export function generateCategoryGrowthData(
       datasets: [{
         label: 'Categories',
         data: treeMapData,
-        backgroundColor: (ctx: any) => {
-          const dataItem = ctx.raw;
-          return dataItem?.backgroundColor || '#0ea5e9';
-        },
-        borderColor: 'rgba(255, 255, 255, 0.5)',
-        borderWidth: 2,
-        spacing: 1,
+        tree: treeMapData,
         key: 'value',
-        captions: {
-          align: 'center',
+        groups: ['label'],
+        spacing: 1,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        backgroundColor: (ctx: any) => {
+          // Access data from the tree array using dataIndex
+          if (ctx.type === 'data' && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+            return treeMapData[ctx.dataIndex].backgroundColor;
+          }
+          return '#0ea5e9';
+        },
+        labels: {
           display: true,
+          overflow: true,
+          position: 'top',
+          align: 'center',
+          formatter: (ctx: any) => {
+            // Access data from the tree array using dataIndex
+            if (ctx.type === 'data' && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+              const item = treeMapData[ctx.dataIndex];
+              return [item.label, item.value.toLocaleString()];
+            }
+            return '';
+          },
           color: (ctx: any) => {
-            const bgColor = ctx.raw?.backgroundColor || '#0ea5e9';
-            return getContrastTextColor(bgColor);
+            // Access data from the tree array using dataIndex
+            if (ctx.type === 'data' && ctx.dataIndex !== undefined && treeMapData[ctx.dataIndex]) {
+              const bgColor = treeMapData[ctx.dataIndex].backgroundColor;
+              return getContrastTextColor(bgColor);
+            }
+            return 'white';
           },
           font: {
             size: 14,
             weight: 'bold'
-          },
-          formatter: (ctx: any) => {
-            const item = ctx.raw;
-            if (item) {
-              return [item.label, item.value.toLocaleString()];
-            }
-            return '';
           }
-        },
-        labels: {
-          display: false
         }
       }]
-    };
+    } as any;
     
     console.log('[generateCategoryGrowthData] Final result:', result);
     return result;
@@ -1160,7 +1194,7 @@ export function generateCategoryGrowthData(
       
       if (chartType === 'stacked') {
         // For stacked chart, the data is already cumulative from each project
-        // Just use it directly
+        // Just use it directly - this creates a stacked area chart with absolute values
         return {
           label: category.name,
           data: data,
