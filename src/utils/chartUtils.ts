@@ -524,9 +524,9 @@ export function generateChartData(
         // Chart.js treemap은 data에 객체 배열을 사용
         data: treemapData,
         backgroundColor: (ctx: any) => {
-          console.log(`[generateChartData] backgroundColor called, ctx:`, ctx);
-          if (ctx.raw && ctx.raw.backgroundColor) {
-            return ctx.raw.backgroundColor;
+          const index = ctx.dataIndex;
+          if (index !== undefined && treemapData[index]) {
+            return treemapData[index].backgroundColor;
           }
           return '#0ea5e9';
         },
@@ -535,38 +535,33 @@ export function generateChartData(
         spacing: 1,
         labels: {
           display: true,
-          align: 'center',
-          position: 'middle',
+          align: 'center' as const,
+          position: 'middle' as const,
           formatter: (ctx: any) => {
+            const index = ctx.dataIndex;
+            console.log(`[generateChartData] DApp formatter called, index: ${index}`);
             console.log(`[generateChartData] DApp formatter called, ctx:`, ctx);
-            // Chart.js treemap에서는 raw 데이터에 직접 접근
-            if (ctx.raw) {
-              const label = ctx.raw.label || '';
-              const value = ctx.raw.value || 0;
-              console.log(`[generateChartData] DApp formatter returning:`, [label, value.toLocaleString()]);
-              return [label, value.toLocaleString()];
+            
+            if (index !== undefined && treemapData[index]) {
+              const item = treemapData[index];
+              return [item.label, item.value.toLocaleString()];
             }
-            console.log('[generateChartData] DApp formatter returning empty');
-            return '';
+            
+            // Fallback to parsed data
+            const value = ctx.parsed || 0;
+            return ['', value.toLocaleString()];
           },
           color: (ctx: any) => {
-            if (ctx.raw && ctx.raw.backgroundColor) {
-              const textColor = getContrastTextColor(ctx.raw.backgroundColor);
-              return textColor;
+            const index = ctx.dataIndex;
+            if (index !== undefined && treemapData[index]) {
+              const bgColor = treemapData[index].backgroundColor;
+              return getContrastTextColor(bgColor);
             }
             return 'white';
           },
           font: {
-            size: (ctx: any) => {
-              // Dynamic font size based on rectangle size
-              const area = ctx.raw._data?.area || 0;
-              const totalArea = ctx.chart.width * ctx.chart.height;
-              const percentage = area / totalArea;
-              
-              // Minimum font size of 10, maximum of 16
-              return Math.max(10, Math.min(16, Math.sqrt(percentage * 1000)));
-            },
-            weight: 'bold'
+            size: 12,
+            weight: 'bold' as const
           },
           padding: 4
         }
@@ -1112,9 +1107,9 @@ export function generateCategoryGrowthData(
         // Chart.js treemap은 data에 객체 배열을 사용
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          console.log(`[generateCategoryGrowthData] backgroundColor called, ctx:`, ctx);
-          if (ctx.raw && ctx.raw.backgroundColor) {
-            return ctx.raw.backgroundColor;
+          const index = ctx.dataIndex;
+          if (index !== undefined && treeMapData[index]) {
+            return treeMapData[index].backgroundColor;
           }
           return '#0ea5e9';
         },
@@ -1124,27 +1119,33 @@ export function generateCategoryGrowthData(
         key: 'value',
         labels: {
           display: true,
+          align: 'center' as const,
+          position: 'middle' as const,
           formatter: (ctx: any) => {
+            const index = ctx.dataIndex;
+            console.log(`[generateCategoryGrowthData] formatter called, index: ${index}`);
             console.log(`[generateCategoryGrowthData] formatter called, ctx:`, ctx);
-            // Chart.js treemap에서는 raw 데이터에 직접 접근
-            if (ctx.raw) {
-              const label = ctx.raw.label || '';
-              const value = ctx.raw.value || 0;
-              console.log(`[generateCategoryGrowthData] formatter returning:`, [label, value.toLocaleString()]);
-              return [label, value.toLocaleString()];
+            
+            if (index !== undefined && treeMapData[index]) {
+              const item = treeMapData[index];
+              return [item.label, item.value.toLocaleString()];
             }
-            return '';
+            
+            // Fallback to parsed data
+            const value = ctx.parsed || 0;
+            return ['', value.toLocaleString()];
           },
           color: (ctx: any) => {
-            if (ctx.raw && ctx.raw.backgroundColor) {
-              const textColor = getContrastTextColor(ctx.raw.backgroundColor);
-              return textColor;
+            const index = ctx.dataIndex;
+            if (index !== undefined && treeMapData[index]) {
+              const bgColor = treeMapData[index].backgroundColor;
+              return getContrastTextColor(bgColor);
             }
             return 'white';
           },
           font: {
             size: 14,
-            weight: 'bold'
+            weight: 'bold' as const
           }
         }
       }]
