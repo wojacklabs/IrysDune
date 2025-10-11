@@ -504,32 +504,18 @@ export function generateChartData(
     }
 
     // Treemap structure using tree/key/groups format
-    // Ensure minimum value for visibility - use 2% of max for better visibility
-    const maxValue = Math.max(...topProjects.map(d => d.value));
-    const minValue = maxValue * 0.02; // 2% of max value
-    const adjustedData = topProjects.map(item => ({
-      ...item,
-      adjustedValue: Math.max(item.value, minValue)
-    }));
-    
-    const treeMapData = topProjects.map((item) => ({
-      label: item.name,
-      data: item.value,
-      backgroundColor: item.color,
-      key: item.name,
-      value: item.value,
-      // treemap에서 사용하는 속성들 추가
-      x: item.name,
-      y: item.value,
-      v: item.value
-    }));
     
     return {
       labels: [],
       datasets: [{
         label: 'Projects Activity',
-        data: treeMapData,
-        tree: adjustedData.map(item => item.adjustedValue), // Use adjusted values for display
+        // treemap은 tree 속성에 값 배열을 사용
+        tree: topProjects.map(item => item.value),
+        data: topProjects.map((item) => ({
+          value: item.value,
+          label: item.name,
+          backgroundColor: item.color
+        })),
         backgroundColor: (ctx: any) => {
           const index = ctx.dataIndex;
           if (typeof index === 'number' && index < topProjects.length) {
@@ -581,12 +567,10 @@ export function generateChartData(
           padding: 4
         },
         formatter: (ctx: any) => {
-          // 올바른 데이터 접근 방식
-          const data = ctx.chart.data.datasets[0].data[ctx.dataIndex];
-          if (data) {
-            const name = data.label || '';
-            const value = data.value || 0;
-            return [name, value.toLocaleString()];
+          const index = ctx.dataIndex;
+          if (typeof index === 'number' && index < topProjects.length) {
+            const item = topProjects[index];
+            return [item.name, item.value.toLocaleString()];
           }
           return '';
         }
@@ -1092,27 +1076,30 @@ export function generateCategoryGrowthData(
     const treeMapData = Object.entries(categoryTotals)
       .filter(([_, info]) => info.count > 0) // 0인 카테고리 제외
       .map(([categoryId, info]) => ({
-        label: info.name,
-        data: info.count,
-        backgroundColor: info.color,
-        key: categoryId,
+        // Chart.js treemap은 value를 기본값으로 사용
         value: info.count,
-        // treemap에서 사용하는 속성들 추가
-        x: info.name,
-        y: info.count,
-        v: info.count
+        // 라벨 정보
+        label: info.name,
+        // 색상
+        backgroundColor: info.color,
+        // 추가 정보
+        categoryId: categoryId,
+        raw: {
+          v: info.count,
+          label: info.name
+        }
       }));
 
     return {
-      labels: treeMapData.map(item => item.label),
+      labels: [],
       datasets: [{
         label: 'Categories',
+        // treemap 데이터는 tree 속성을 사용
+        tree: treeMapData.map(d => d.value),
         data: treeMapData,
         backgroundColor: (ctx: any) => {
-          if (ctx && ctx.dataIndex !== undefined) {
-            return treeMapData[ctx.dataIndex]?.backgroundColor || '#0ea5e9';
-          }
-          return '#0ea5e9';
+          const index = ctx.dataIndex;
+          return treeMapData[index]?.backgroundColor || '#0ea5e9';
         },
         borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 2,
@@ -1126,12 +1113,10 @@ export function generateCategoryGrowthData(
             weight: 'bold'
           },
           formatter: (ctx: any) => {
-            // 올바른 데이터 접근 방식
-            const data = ctx.chart.data.datasets[0].data[ctx.dataIndex];
-            if (data) {
-              const label = data.label || '';
-              const value = data.value || 0;
-              return [`${label}`, `${value.toLocaleString()}`];
+            const index = ctx.dataIndex;
+            if (typeof index === 'number' && treeMapData[index]) {
+              const item = treeMapData[index];
+              return [item.label, item.value.toLocaleString()];
             }
             return '';
           }

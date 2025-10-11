@@ -67,12 +67,8 @@ const Chart: React.FC<ChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<any>(null);
   const [isCapturing, setIsCapturing] = useState(false);
-  const [renderKey, setRenderKey] = useState(0);
-
-  // Force re-render when chart type changes
-  useEffect(() => {
-    setRenderKey(prev => prev + 1);
-  }, [chartType]);
+  // Create a unique key based on chart type and data
+  const chartKey = `${chartType}-${JSON.stringify(data.labels?.slice(0, 3))}-${data.datasets?.length || 0}`;
 
   // Store loaded images to avoid reloading
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: HTMLImageElement }>({});
@@ -399,7 +395,7 @@ const Chart: React.FC<ChartProps> = ({
         <div style={{ position: 'relative', height: '250px', minHeight: '250px', maxHeight: '250px', overflow: 'hidden' }}>
           {chartType === 'treemap' ? (
             <ChartReact
-              key={`treemap-${renderKey}`}
+              key={chartKey}
               ref={(ref) => {
                 chartInstanceRef.current = ref;
                 // Store chart instance on canvas element for capture
@@ -481,7 +477,7 @@ const Chart: React.FC<ChartProps> = ({
             />
           ) : (
             <Line 
-              key={`line-${renderKey}`}
+              key={chartKey}
               ref={(ref) => {
                 chartInstanceRef.current = ref;
                 // Store chart instance on canvas element for capture
