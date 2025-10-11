@@ -10,6 +10,36 @@ export function formatDate(timestamp: number): string {
   });
 }
 
+// Helper function to calculate color brightness and determine text color
+function getContrastTextColor(backgroundColor: string): string {
+  // Convert hex color to RGB
+  let r, g, b;
+  
+  if (backgroundColor.startsWith('#')) {
+    const hex = backgroundColor.slice(1);
+    r = parseInt(hex.substr(0, 2), 16);
+    g = parseInt(hex.substr(2, 2), 16);
+    b = parseInt(hex.substr(4, 2), 16);
+  } else if (backgroundColor.startsWith('rgb')) {
+    const matches = backgroundColor.match(/\d+/g);
+    if (matches && matches.length >= 3) {
+      r = parseInt(matches[0]);
+      g = parseInt(matches[1]);
+      b = parseInt(matches[2]);
+    } else {
+      return 'white'; // fallback
+    }
+  } else {
+    return 'white'; // fallback for unknown format
+  }
+  
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  // Return white for dark backgrounds, black for light backgrounds
+  return luminance > 0.5 ? 'black' : 'white';
+}
+
 // Generate default data points for a given period
 function generateDefaultDataPoints(period: '7d' | '30d' | '3M' | '6M'): number[] {
   const now = Date.now();
@@ -397,38 +427,6 @@ export function generateChartData(
   
   const labels = timestamps.map(formatDate);
 
-
-  // Helper function to calculate color brightness and determine text color
-  function getContrastTextColor(backgroundColor: string): string {
-    // Convert hex color to RGB
-    let r, g, b;
-    
-    if (backgroundColor.startsWith('#')) {
-      const hex = backgroundColor.slice(1);
-      r = parseInt(hex.substr(0, 2), 16);
-      g = parseInt(hex.substr(2, 2), 16);
-      b = parseInt(hex.substr(4, 2), 16);
-    } else if (backgroundColor.startsWith('rgb')) {
-      const matches = backgroundColor.match(/\d+/g);
-      if (matches && matches.length >= 3) {
-        r = parseInt(matches[0]);
-        g = parseInt(matches[1]);
-        b = parseInt(matches[2]);
-      } else {
-        return 'white'; // fallback
-      }
-    } else {
-      // Handle named colors or fallback
-      return 'white';
-    }
-    
-    // Calculate brightness using luminance formula
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    
-    // Return white text for dark backgrounds, black text for light backgrounds
-    return brightness > 128 ? 'black' : 'white';
-  }
-
   // Check if we need to generate treemap data
   if (chartType === 'treemap') {
     console.log('[generateChartData] Starting DApp Growth treemap generation');
@@ -539,11 +537,21 @@ export function generateChartData(
           display: true,
           align: 'center',
           position: 'middle',
+          formatter: (ctx: any) => {
+            console.log(`[generateChartData] DApp formatter called, ctx:`, ctx);
+            // Chart.js treemap에서는 raw 데이터에 직접 접근
+            if (ctx.raw) {
+              const label = ctx.raw.label || '';
+              const value = ctx.raw.value || 0;
+              console.log(`[generateChartData] DApp formatter returning:`, [label, value.toLocaleString()]);
+              return [label, value.toLocaleString()];
+            }
+            console.log('[generateChartData] DApp formatter returning empty');
+            return '';
+          },
           color: (ctx: any) => {
-            const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < topProjects.length) {
-              const backgroundColor = topProjects[index].color;
-              const textColor = getContrastTextColor(backgroundColor);
+            if (ctx.raw && ctx.raw.backgroundColor) {
+              const textColor = getContrastTextColor(ctx.raw.backgroundColor);
               return textColor;
             }
             return 'white';
@@ -560,31 +568,7 @@ export function generateChartData(
             },
             weight: 'bold'
           },
-          // Add text outline for better visibility
-          backgroundColor: (ctx: any) => {
-            // Add semi-transparent background behind text
-            const index = ctx.dataIndex;
-            if (typeof index === 'number' && index < topProjects.length) {
-              const bgColor = topProjects[index].color;
-              const textColor = getContrastTextColor(bgColor);
-              // Return opposite color with transparency for outline effect
-              return textColor === 'white' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
-            }
-            return 'rgba(0, 0, 0, 0.5)';
-          },
           padding: 4
-        },
-        formatter: (ctx: any) => {
-          console.log(`[generateChartData] DApp formatter called, ctx:`, ctx);
-          // Chart.js treemap에서는 raw 데이터에 직접 접근
-          if (ctx.raw) {
-            const label = ctx.raw.label || '';
-            const value = ctx.raw.value || 0;
-            console.log(`[generateChartData] DApp formatter returning:`, [label, value.toLocaleString()]);
-            return [label, value.toLocaleString()];
-          }
-          console.log('[generateChartData] DApp formatter returning empty');
-          return '';
         }
       }]
     };
@@ -812,12 +796,18 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           display: false
         },
         tooltip: {
+          displayColors: false,
           callbacks: {
             title: function(context: any) {
-              return context[0]?.raw?.label || '';
+              const item = context[0];
+              // Access the label directly from raw data
+              if (item?.raw?.label) {
+                return item.raw.label;
+              }
+              return '';
             },
             label: function(context: any) {
-              const value = context.raw?.value || context.raw?.data || 0;
+              const value = context.raw?.value || 0;
               return `Count: ${value.toLocaleString()}`;
             }
           }
@@ -1134,11 +1124,6 @@ export function generateCategoryGrowthData(
         key: 'value',
         labels: {
           display: true,
-          color: 'white',
-          font: {
-            size: 14,
-            weight: 'bold'
-          },
           formatter: (ctx: any) => {
             console.log(`[generateCategoryGrowthData] formatter called, ctx:`, ctx);
             // Chart.js treemap에서는 raw 데이터에 직접 접근
@@ -1149,6 +1134,17 @@ export function generateCategoryGrowthData(
               return [label, value.toLocaleString()];
             }
             return '';
+          },
+          color: (ctx: any) => {
+            if (ctx.raw && ctx.raw.backgroundColor) {
+              const textColor = getContrastTextColor(ctx.raw.backgroundColor);
+              return textColor;
+            }
+            return 'white';
+          },
+          font: {
+            size: 14,
+            weight: 'bold'
           }
         }
       }]
