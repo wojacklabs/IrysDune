@@ -862,12 +862,7 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              // Check if this is a percentage-based chart
-              if (context.dataset.yAxisID === 'percentage') {
-                label += context.parsed.y.toFixed(1) + '%';
-              } else {
-                label += new Intl.NumberFormat('en-US').format(context.parsed.y);
-              }
+              label += new Intl.NumberFormat('en-US').format(context.parsed.y);
             }
             return label;
           }
@@ -903,45 +898,12 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           maxTicksLimit: isMobile ? 6 : 12 // Show fewer ticks on mobile
         }
       },
-      percentage: {
-        type: 'linear' as const,
-        display: true,
-        position: 'left' as const,
-        stacked: true,
-        title: {
-          display: !isMobile,
-          text: 'Percentage (%)',
-          font: {
-            family: 'Inter',
-            size: isMobile ? 10 : 12,
-            weight: 'bold' as const
-          },
-          color: '#64748b'
-        },
-        min: 0,
-        max: 100,
-        grid: {
-          color: 'rgba(148, 163, 184, 0.1)',
-          drawBorder: false,
-          display: !isMobile
-        },
-        ticks: {
-          font: {
-            family: 'Inter',
-            size: isMobile ? 9 : 10
-          },
-          color: '#64748b',
-          callback: function(value: any) {
-            return value + '%';
-          }
-        }
-      },
       ...(isCumulative ? {
         cumulative: {
           type: 'linear' as const,
           display: true,
           position: 'left' as const,
-          stacked: true, // Enable stacking for cumulative charts
+          stacked: false, // Don't stack Y axis - show actual cumulative values
           title: {
             display: !isMobile,
             text: 'Cumulative Transactions',
@@ -1063,80 +1025,6 @@ export function calculateTotalActivity(data: { [key: string]: QueryResult[] }): 
     });
   });
   return total;
-}
-
-// Generate percentage-based stacked area chart for Whole Ecosystem
-export function generateWholeEcosystemPercentageData(
-  data: { [key: string]: QueryResult[] }
-): ChartData {
-  // Get all unique timestamps
-  const allTimestamps = new Set<number>();
-  Object.values(data).forEach(results => {
-    results.forEach(result => allTimestamps.add(result.timestamp));
-  });
-  
-  const timestamps = Array.from(allTimestamps).sort((a, b) => a - b);
-  
-  if (timestamps.length === 0) {
-    const now = Date.now();
-    const emptyTimestamps = [now - 24 * 60 * 60 * 1000, now];
-    return { labels: emptyTimestamps.map(formatDate), datasets: [] };
-  }
-  
-  const labels = timestamps.map(formatDate);
-  
-  // Initialize category data structure
-  const categoryData: { [categoryId: string]: { [timestamp: number]: number } } = {};
-  
-  // Process each project's data
-  Object.entries(data).forEach(([projectId, results]) => {
-    const mapping = TAG_ACTIVITY_MAPPINGS.find((m: any) => m.projectId === projectId);
-    const categoryId = mapping ? mapping.activityId : 'other';
-    
-    if (!categoryData[categoryId]) {
-      categoryData[categoryId] = {};
-      timestamps.forEach(ts => {
-        categoryData[categoryId][ts] = 0;
-      });
-    }
-    
-    results.forEach(result => {
-      if (categoryData[categoryId][result.timestamp] !== undefined) {
-        categoryData[categoryId][result.timestamp] += result.count;
-      }
-    });
-  });
-  
-  // Calculate total for each timestamp
-  const totals = timestamps.map(timestamp => {
-    return Object.keys(categoryData).reduce((sum, categoryId) => {
-      return sum + (categoryData[categoryId][timestamp] || 0);
-    }, 0);
-  });
-  
-  // Create datasets with percentage-based values
-  const datasets = Object.entries(ACTIVITY_CATEGORIES)
-    .filter(([categoryId]) => categoryData[categoryId])
-    .map(([categoryId, category]) => {
-      const data = timestamps.map((timestamp, index) => {
-        const categoryValue = categoryData[categoryId][timestamp] || 0;
-        const total = totals[index];
-        // Return percentage (0-100)
-        return total > 0 ? (categoryValue / total) * 100 : 0;
-      });
-      
-      return {
-        label: category.name,
-        data: data,
-        backgroundColor: category.color + '80',
-        borderColor: category.color,
-        borderWidth: 2,
-        fill: true,
-        yAxisID: 'percentage'
-      };
-    });
-  
-  return { labels, datasets };
 }
 
 export function generateCategoryGrowthData(
