@@ -862,7 +862,12 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
               label += ': ';
             }
             if (context.parsed.y !== null) {
-              label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+              // Check if this is a percentage-based chart
+              if (context.dataset.yAxisID === 'percentage') {
+                label += context.parsed.y.toFixed(1) + '%';
+              } else {
+                label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+              }
             }
             return label;
           }
@@ -896,6 +901,39 @@ export function getChartOptions(isMultipleDatasets: boolean, chartType: ChartTyp
           maxRotation: isMobile ? 45 : 0, // Rotate labels on mobile if needed
           autoSkip: true,
           maxTicksLimit: isMobile ? 6 : 12 // Show fewer ticks on mobile
+        }
+      },
+      percentage: {
+        type: 'linear' as const,
+        display: true,
+        position: 'left' as const,
+        stacked: true,
+        title: {
+          display: !isMobile,
+          text: 'Percentage (%)',
+          font: {
+            family: 'Inter',
+            size: isMobile ? 10 : 12,
+            weight: 'bold' as const
+          },
+          color: '#64748b'
+        },
+        min: 0,
+        max: 100,
+        grid: {
+          color: 'rgba(148, 163, 184, 0.1)',
+          drawBorder: false,
+          display: !isMobile
+        },
+        ticks: {
+          font: {
+            family: 'Inter',
+            size: isMobile ? 9 : 10
+          },
+          color: '#64748b',
+          callback: function(value: any) {
+            return value + '%';
+          }
         }
       },
       ...(isCumulative ? {
@@ -1029,7 +1067,8 @@ export function calculateTotalActivity(data: { [key: string]: QueryResult[] }): 
 
 export function generateCategoryGrowthData(
   data: { [key: string]: QueryResult[] },
-  chartType: ChartType = 'stacked'
+  chartType: ChartType = 'stacked',
+  usePercentage: boolean = false
 ): ChartData {
   
   // Get all unique timestamps
@@ -1186,7 +1225,41 @@ export function generateCategoryGrowthData(
     });
   });
   
-  // Create datasets for each category
+  // For percentage-based stacked charts (Whole Ecosystem only)
+  if (chartType === 'stacked' && usePercentage) {
+    // Calculate total for each timestamp
+    const totals = timestamps.map(timestamp => {
+      return Object.keys(categoryData).reduce((sum, categoryId) => {
+        return sum + (categoryData[categoryId][timestamp] || 0);
+      }, 0);
+    });
+    
+    // Create datasets with percentage-based values
+    const datasets = Object.entries(ACTIVITY_CATEGORIES)
+      .filter(([categoryId]) => categoryData[categoryId]) // Only include categories with data
+      .map(([categoryId, category]) => {
+        const data = timestamps.map((timestamp, index) => {
+          const categoryValue = categoryData[categoryId][timestamp] || 0;
+          const total = totals[index];
+          // Return percentage (0-100)
+          return total > 0 ? (categoryValue / total) * 100 : 0;
+        });
+        
+        return {
+          label: category.name,
+          data: data,
+          backgroundColor: category.color + '80', // Add transparency
+          borderColor: category.color,
+          borderWidth: 2,
+          fill: true,
+          yAxisID: 'percentage'
+        };
+      });
+    
+    return { labels, datasets };
+  }
+  
+  // Create datasets for each category (absolute values)
   const datasets = Object.entries(ACTIVITY_CATEGORIES)
     .filter(([categoryId]) => categoryData[categoryId]) // Only include categories with data
     .map(([categoryId, category]) => {
