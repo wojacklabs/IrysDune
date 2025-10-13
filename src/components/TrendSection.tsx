@@ -310,11 +310,10 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     chartShape === 'treemap' ? 'treemap' : chartType
   );
   console.log('[TrendSection] DApp chart data generated:', chartData);
-  // Whole Ecosystem shows category-based percentage stacked area chart
+  // Whole Ecosystem now shows category-based cumulative area chart
   const wholeEcosystemData = generateCategoryGrowthData(
     ecosystemFilteredData, 
-    ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType,
-    true // Use percentage-based stacking for Whole Ecosystem
+    ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType
   );
   
   const categoryDateRange = categoryTimePeriod === 'custom' ? {
