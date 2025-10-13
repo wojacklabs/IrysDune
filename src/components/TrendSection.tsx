@@ -7,7 +7,7 @@ import { fetchAllProjectsData } from '../services/dataService';
 import { 
   generateChartData, 
   generateShareText, 
-  generateCategoryGrowthData,
+  generateWholeEcosystemPercentageData,
   filterDataByPeriod 
 } from '../utils/chartUtils';
 import { ACTIVITY_CATEGORIES, TAG_ACTIVITY_MAPPINGS } from '../constants/tagActivityMapping';
@@ -310,10 +310,9 @@ const TrendSection: React.FC<TrendSectionProps> = ({ onDataUpdate }) => {
     chartShape === 'treemap' ? 'treemap' : chartType
   );
   console.log('[TrendSection] DApp chart data generated:', chartData);
-  // Whole Ecosystem now shows category-based cumulative area chart
-  const wholeEcosystemData = generateCategoryGrowthData(
-    ecosystemFilteredData, 
-    ecosystemChartShape === 'treemap' ? 'treemap' : ecosystemChartType
+  // Whole Ecosystem shows category-based percentage stacked area chart
+  const wholeEcosystemData = generateWholeEcosystemPercentageData(
+    ecosystemFilteredData
   );
   
   const categoryDateRange = categoryTimePeriod === 'custom' ? {
